@@ -312,6 +312,29 @@ Gán array `WorldGenerator.biomes` trong scene để bật. Để trống → fa
 ### Save/Load mới round-trip
 - `bodyTemp`, `seasonIndex`, `weatherIndex`, per-slot `freshRemaining` + `durability`.
 
+## 🍲 Survival depth (Phase Polish 2)
+
+### Cooking nhiều bước
+- `RecipeSO.cookTimeSeconds` — recipe có timer; player bấm craft → tiêu liệu ngay, output add sau N giây (StartCoroutine trong `CraftingSystem`).
+- `RecipeSO.flavorNote` — string mô tả buff cho UI tooltip.
+- Station mới `CraftStation.CookingPot` + `CookingPot` MonoBehaviour: chỉ active khi đặt gần `Campfire.IsLit` ≤ `requiredHeatRadius` (default 1.5m). Recipe stew/canh đặt `requiredStation = CookingPot`.
+- Quy ước recipe: Raw → Grilled (Campfire, cookTime ~5s) → Stew (CookingPot, cookTime ~15s, ăn buff lâu).
+
+### Fishing
+- `FishingSpot` (gắn vào WaterSpring hoặc prefab nước riêng) có `castRangeFromSpot` + `lootTable` weighted.
+- `FishingAction` (gắn player), phím **F**: cần `rodItem` (nên `hasDurability=true`) + đứng trong `castRangeFromSpot` → cast 3–8s (random per spot) → drop random 1 item theo weight + tốn 1 durability rod.
+- Nhấn F lần nữa khi đang cast = cancel (không tốn durability).
+
+### Shelter / nhà
+- `Shelter` MonoBehaviour có `radius` aura. Đặt prefab vào scene (có thể đặt thêm Campfire bên trong).
+- Trong aura: block tác động Rain/Storm (`PlayerStats.UpdateWeatherEffects` skip), block thermal penalty của mưa/bão, cộng `warmthBonus` vào ambient temp.
+- Sleep trong shelter: bonus hồi HP/SAN x `sleepRecoveryMultiplier` (default x2). Shelter cũng đủ điều kiện ngủ thay cho Campfire (hữu ích khi shelter có lửa bên trong nhưng khoảng aura riêng).
+
+### Encumbrance
+- `ItemSO.weight` (default 1) → `Inventory.TotalWeight`.
+- `PlayerController.maxCarryWeight` (≤ → tốc độ bình thường) → `overEncumberedHardCap` (≥ → tốc độ tối thiểu `overweightSpeedMin`). Lerp tuyến tính giữa 2 ngưỡng.
+- Quy ước weight: gỗ/đá ~1, thịt sống ~0.5, vũ khí ~3, đan dược ~0.1. Cây cối / tài nguyên nặng ~2.
+
 ## 👹 Boss bí cảnh
 
 - `BossPortal` (IInteractable): tốn 1 vật phẩm key (vd Linh Thạch) để mở, spawn `BossMobAI` cách player ~3m.

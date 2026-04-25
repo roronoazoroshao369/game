@@ -56,18 +56,22 @@ namespace WildernessCultivation.Player
             prevHP = stats.HP;
 
             if (time != null && !time.isNight) { Wake(); return; }
-            if (requireCampfire && !stats.IsWarm) { Wake(); return; }
+            if (requireCampfire && !stats.IsWarm && !Shelter.IsSheltered(transform.position)) { Wake(); return; }
 
             float dt = Time.deltaTime;
-            stats.Heal(hpPerSec * dt);
-            stats.RestoreSanity(sanityPerSec * dt);
+            // Bonus hồi nếu trong shelter
+            var shelter = Shelter.NearestSheltering(transform.position);
+            float mult = shelter != null ? Mathf.Max(0.1f, shelter.sleepRecoveryMultiplier) : 1f;
+            stats.Heal(hpPerSec * mult * dt);
+            stats.RestoreSanity(sanityPerSec * mult * dt);
         }
 
         public bool CanSleep()
         {
             if (IsSleeping) return false;
             if (requireNight && (time == null || !time.isNight)) return false;
-            if (requireCampfire && !stats.IsWarm) return false;
+            // Shelter cũng đủ để ngủ — không bắt buộc Campfire nếu trong shelter
+            if (requireCampfire && !stats.IsWarm && !Shelter.IsSheltered(transform.position)) return false;
             return true;
         }
 

@@ -150,11 +150,17 @@ namespace WildernessCultivation.Player
                         t += biomeOff;
                     }
                 }
-                // Mưa làm lạnh thêm
-                if (timeManager.currentWeather == Weather.Rain)  t -= 5f;
-                if (timeManager.currentWeather == Weather.Storm) t -= 10f;
+                // Mưa làm lạnh thêm — bị block nếu trong shelter
+                bool sheltered = Shelter.IsSheltered(transform.position);
+                if (!sheltered)
+                {
+                    if (timeManager.currentWeather == Weather.Rain)  t -= 5f;
+                    if (timeManager.currentWeather == Weather.Storm) t -= 10f;
+                }
             }
             t += LightSource.TotalWarmthAt(transform.position);
+            var shelter = Shelter.NearestSheltering(transform.position);
+            if (shelter != null) t += shelter.warmthBonus;
             return t;
         }
 
@@ -178,6 +184,8 @@ namespace WildernessCultivation.Player
         void UpdateWeatherEffects(float dt)
         {
             if (timeManager == null) return;
+            // Trong shelter → không dính mưa/bão
+            if (Shelter.IsSheltered(transform.position)) return;
             switch (timeManager.currentWeather)
             {
                 case Weather.Rain:

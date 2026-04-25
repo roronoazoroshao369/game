@@ -33,6 +33,18 @@ namespace WildernessCultivation.Items
         public event Action OnInventoryChanged;
         public IReadOnlyList<InventorySlot> Slots => slots;
 
+        /// <summary>Tổng khối lượng inventory (sum item.weight * count). Dùng cho encumbrance.</summary>
+        public float TotalWeight
+        {
+            get
+            {
+                float w = 0f;
+                foreach (var s in slots)
+                    if (!s.IsEmpty && s.item != null) w += s.item.weight * s.count;
+                return w;
+            }
+        }
+
         void Awake()
         {
             while (slots.Count < slotCount) slots.Add(new InventorySlot());

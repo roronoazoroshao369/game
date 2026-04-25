@@ -19,6 +19,8 @@ namespace WildernessCultivation.Items
         [Header("Stack")]
         public int maxStack = 99;
         public ItemCategory category;
+        [Tooltip("Khối lượng / kg per 1 đơn vị. Inventory.TotalWeight cộng dồn weight*count cho encumbrance.")]
+        public float weight = 1f;
 
         [Header("Consumable effects (nếu là food/drink/consumable)")]
         public float restoreHunger;
