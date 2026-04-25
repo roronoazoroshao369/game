@@ -68,6 +68,7 @@ namespace WildernessCultivation.Player
         void Update()
         {
             input = ReadInput();
+            if (MovementLocked) input = Vector2.zero;
             if (input.sqrMagnitude > 0.01f)
             {
                 lastFacing = input.normalized;
