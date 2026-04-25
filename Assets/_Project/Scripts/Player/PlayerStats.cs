@@ -80,12 +80,18 @@ namespace WildernessCultivation.Player
         bool maxHPApplied;
         float baseMaxHP;
 
-        void Start()
+        void Awake()
         {
-            timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            // Init component refs + cache base maxHP ở Awake để ReapplySpiritRootMaxHP gọi từ
+            // SaveLoadController.Start (có thể chạy trước PlayerStats.Start) vẫn có dữ liệu hợp lệ.
             spiritRoot = GetComponent<SpiritRoot>();
             statusManager = GetComponent<StatusEffectManager>();
             baseMaxHP = maxHP;
+        }
+
+        void Start()
+        {
+            timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
             ApplySpiritRootMaxHP();
         }
 

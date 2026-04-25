@@ -105,7 +105,7 @@ namespace WildernessCultivation.Player
         /// đã được áp riêng tại <see cref="WildernessCultivation.Cultivation.RealmSystem.AddTechniqueXp"/>.</remarks>
         public float WeaponDamageMultiplierForElement(SpiritElement element)
         {
-            if (spiritRoot == null || spiritRoot.Current == null) return 1f;
+            if (spiritRoot == null || spiritRoot.Current == null || element == SpiritElement.None) return 1f;
             return spiritRoot.Current.primaryElement == element
                 ? spiritRoot.Current.sameElementDamageMultiplier
                 : 1f;
