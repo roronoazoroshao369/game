@@ -40,7 +40,29 @@ jobs:
         with:
           lfs: true
 
+      - name: Detect Unity project
+        id: detect
+        run: |
+          if [ -f "ProjectSettings/ProjectVersion.txt" ]; then
+            echo "ready=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ProjectSettings/ProjectVersion.txt not found — skipping Unity tests."
+          fi
+
+      - name: Detect Unity license secret
+        id: license
+        if: steps.detect.outputs.ready == 'true'
+        run: |
+          if [ -n "$UNITY_LICENSE" ] || { [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ] && [ -n "$UNITY_SERIAL" ]; }; then
+            echo "ready=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No Unity license secret configured — skipping tests."
+          fi
+
       - name: Cache Library
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: actions/cache@v4
         with:
           path: Library
@@ -50,6 +72,7 @@ jobs:
             Library-
 
       - name: Run tests
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: game-ci/unity-test-runner@v4
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}

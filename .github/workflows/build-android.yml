@@ -44,7 +44,32 @@ jobs:
           lfs: true
           fetch-depth: 0
 
+      # Workflow này gate sau khi project đã được sinh đầy đủ trong Unity Editor
+      # (tạo ProjectSettings/ProjectVersion.txt, Packages/manifest.json, …) và secret license đã add.
+      # Nếu chưa có → các step Unity bị skip, job vẫn pass để PR check không đỏ.
+      - name: Detect Unity project
+        id: detect
+        run: |
+          if [ -f "ProjectSettings/ProjectVersion.txt" ]; then
+            echo "ready=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ProjectSettings/ProjectVersion.txt not found — skipping Unity build. Open project in Unity Editor first to generate ProjectSettings."
+          fi
+
+      - name: Detect Unity license secret
+        id: license
+        if: steps.detect.outputs.ready == 'true'
+        run: |
+          if [ -n "$UNITY_LICENSE" ] || { [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ] && [ -n "$UNITY_SERIAL" ]; }; then
+            echo "ready=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No Unity license secret (UNITY_LICENSE or UNITY_EMAIL/PASSWORD/SERIAL) configured — skipping build. See README section 'GameCI'."
+          fi
+
       - name: Cache Library
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: actions/cache@v4
         with:
           path: Library
@@ -54,6 +79,7 @@ jobs:
             Library-
 
       - name: Build Unity (Android, IL2CPP)
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: game-ci/unity-builder@v4
         with:
           targetPlatform: Android
@@ -61,12 +87,11 @@ jobs:
           androidTargetSdkVersion: AndroidApiLevel34
           buildName: WildernessCultivation
           allowDirtyBuild: true
-          # Cho phép build tiếp khi chưa có activation file (sẽ fail rõ ràng nếu thiếu cả 2 nhóm secret)
           unityVersion: auto
 
       - name: Upload APK artifact
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: WildernessCultivation-${{ github.sha }}-apk
           path: build/Android
