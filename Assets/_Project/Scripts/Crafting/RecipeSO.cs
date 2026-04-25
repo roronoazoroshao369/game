@@ -30,7 +30,13 @@ namespace WildernessCultivation.Crafting
 
         [Header("Yêu cầu trạm (tùy chọn)")]
         public CraftStation requiredStation = CraftStation.None;
+
+        [Header("Cooking / Timed crafting (chỉ áp dụng cho station thật, vd Campfire / AlchemyFurnace / CookingPot)")]
+        [Tooltip("Số giây phải chờ (in real-time) sau khi bấm craft mới ra item. 0 = ra ngay lập tức.")]
+        public float cookTimeSeconds = 0f;
+        [Tooltip("Tooltip ngắn cho UI giải thích bonus / quality (vd: '+10% Hunger restore', 'Cộng 20 maxHP/120s').")]
+        public string flavorNote;
     }
 
-    public enum CraftStation { None, Campfire, AlchemyFurnace, Workbench }
+    public enum CraftStation { None, Campfire, AlchemyFurnace, Workbench, CookingPot }
 }

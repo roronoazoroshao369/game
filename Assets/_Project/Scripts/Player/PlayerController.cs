@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Items;
 using WildernessCultivation.UI;
 
 namespace WildernessCultivation.Player
@@ -13,6 +14,16 @@ namespace WildernessCultivation.Player
         [Header("Movement")]
         public float moveSpeed = 4f;
         public float runMultiplier = 1.5f;
+
+        [Header("Encumbrance")]
+        [Tooltip("Reference Inventory để tính TotalWeight. Auto-detect trong Awake nếu null.")]
+        public Inventory inventory;
+        [Tooltip("Khối lượng tối đa không bị slow.")]
+        public float maxCarryWeight = 30f;
+        [Tooltip("Khối lượng vượt threshold này → đứng yên (over-encumbered cứng).")]
+        public float overEncumberedHardCap = 60f;
+        [Tooltip("Multiplier tốc độ khi đạt overEncumberedHardCap. Tuyến tính từ 1 → giá trị này.")]
+        [Range(0.1f, 1f)] public float overweightSpeedMin = 0.4f;
 
         [Header("Input")]
         [Tooltip("Để trống nếu chưa có UI joystick — sẽ fallback về WASD/Arrow keys.")]
@@ -34,6 +45,21 @@ namespace WildernessCultivation.Player
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
+            if (inventory == null) inventory = GetComponent<Inventory>();
+        }
+
+        /// <summary>Multiplier tốc độ theo encumbrance hiện tại. 1 = bình thường, &lt;1 = chậm.</summary>
+        public float EncumbranceMultiplier
+        {
+            get
+            {
+                if (inventory == null) return 1f;
+                float w = inventory.TotalWeight;
+                if (w <= maxCarryWeight) return 1f;
+                if (w >= overEncumberedHardCap) return overweightSpeedMin;
+                float t = (w - maxCarryWeight) / Mathf.Max(0.001f, overEncumberedHardCap - maxCarryWeight);
+                return Mathf.Lerp(1f, overweightSpeedMin, t);
+            }
         }
 
         void Update()
@@ -56,7 +82,7 @@ namespace WildernessCultivation.Player
 
         void FixedUpdate()
         {
-            rb.velocity = input * moveSpeed;
+            rb.velocity = input * moveSpeed * EncumbranceMultiplier;
         }
 
         Vector2 ReadInput()

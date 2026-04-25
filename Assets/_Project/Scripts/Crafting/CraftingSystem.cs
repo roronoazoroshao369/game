@@ -39,12 +39,30 @@ namespace WildernessCultivation.Crafting
             foreach (var ing in recipe.ingredients)
                 inv.TryConsume(ing.item, ing.count);
 
+            // Có cookTime → defer việc Add output bằng coroutine (vẫn tiêu liệu ngay để khoá recipe)
+            if (recipe.cookTimeSeconds > 0f)
+            {
+                StartCoroutine(DeferredCookCoroutine(recipe));
+                Debug.Log($"[Craft] Bắt đầu nấu/chế {recipe.output.displayName} (chờ {recipe.cookTimeSeconds}s)");
+                return true;
+            }
+
             int leftover = inv.Add(recipe.output, recipe.outputCount);
             if (leftover > 0)
                 Debug.LogWarning($"[Craft] Inventory full, {leftover}x {recipe.output.displayName} bị mất.");
 
             Debug.Log($"[Craft] Đã chế: {recipe.output.displayName} x{recipe.outputCount}");
             return true;
+        }
+
+        System.Collections.IEnumerator DeferredCookCoroutine(RecipeSO recipe)
+        {
+            // Realtime để Sleep (Time.timeScale x8) không bypass cook timer
+            yield return new WaitForSecondsRealtime(recipe.cookTimeSeconds);
+            int leftover = inv.Add(recipe.output, recipe.outputCount);
+            if (leftover > 0)
+                Debug.LogWarning($"[Craft] Inventory full, {leftover}x {recipe.output.displayName} bị mất.");
+            Debug.Log($"[Craft] Hoàn thành: {recipe.output.displayName} x{recipe.outputCount}");
         }
 
         bool IsStationInRange(CraftStation station)
