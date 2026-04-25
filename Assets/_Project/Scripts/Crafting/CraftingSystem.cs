@@ -19,7 +19,29 @@ namespace WildernessCultivation.Crafting
 
         Inventory inv;
 
+        // Track recipe đang nấu để deliver output kể cả khi GameObject bị disable mid-cook.
+        readonly List<RecipeSO> pendingCooks = new();
+
         void Awake() { inv = GetComponent<Inventory>(); }
+
+        void OnDisable()
+        {
+            // Tránh mất output: nếu bị disable / destroy giữa chừng → deliver ngay tất cả cook đang chờ.
+            // StopAllCoroutines trước khi fast-deliver để tránh duplicate khi chỉ component (không phải GameObject) bị disable —
+            // coroutine vẫn chạy tiếp đến khi GameObject inactive, sẽ Add output lần 2.
+            StopAllCoroutines();
+            if (pendingCooks.Count == 0 || inv == null) return;
+            foreach (var recipe in pendingCooks)
+            {
+                if (recipe == null || recipe.output == null) continue;
+                int leftover = inv.Add(recipe.output, recipe.outputCount);
+                if (leftover > 0)
+                    Debug.LogWarning($"[Craft] OnDisable fast-deliver {recipe.output.displayName}: inventory đầy, {leftover} bị mất.");
+                else
+                    Debug.Log($"[Craft] OnDisable fast-deliver {recipe.output.displayName} x{recipe.outputCount}");
+            }
+            pendingCooks.Clear();
+        }
 
         public bool CanCraft(RecipeSO recipe)
         {
@@ -57,8 +79,10 @@ namespace WildernessCultivation.Crafting
 
         System.Collections.IEnumerator DeferredCookCoroutine(RecipeSO recipe)
         {
+            pendingCooks.Add(recipe);
             // Realtime để Sleep (Time.timeScale x8) không bypass cook timer
             yield return new WaitForSecondsRealtime(recipe.cookTimeSeconds);
+            pendingCooks.Remove(recipe);
             int leftover = inv.Add(recipe.output, recipe.outputCount);
             if (leftover > 0)
                 Debug.LogWarning($"[Craft] Inventory full, {leftover}x {recipe.output.displayName} bị mất.");
