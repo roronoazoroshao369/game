@@ -57,7 +57,8 @@ namespace WildernessCultivation.Crafting
 
         System.Collections.IEnumerator DeferredCookCoroutine(RecipeSO recipe)
         {
-            yield return new WaitForSeconds(recipe.cookTimeSeconds);
+            // Realtime để Sleep (Time.timeScale x8) không bypass cook timer
+            yield return new WaitForSecondsRealtime(recipe.cookTimeSeconds);
             int leftover = inv.Add(recipe.output, recipe.outputCount);
             if (leftover > 0)
                 Debug.LogWarning($"[Craft] Inventory full, {leftover}x {recipe.output.displayName} bị mất.");

@@ -67,7 +67,8 @@ namespace WildernessCultivation.Player
         IEnumerator CastCoroutine(FishingSpot spot, int rodSlot, float seconds)
         {
             Debug.Log($"[Fishing] Đang câu… ({seconds:0.0}s)");
-            yield return new WaitForSeconds(seconds);
+            // Realtime: tránh sleep timeScale làm câu cá xong sau 0.5s
+            yield return new WaitForSecondsRealtime(seconds);
 
             var entry = spot.RollLoot();
             if (entry.HasValue && entry.Value.item != null)
@@ -78,8 +79,15 @@ namespace WildernessCultivation.Player
             }
             else Debug.Log("[Fishing] Không có loot table — không câu được gì.");
 
-            // Hao mòn cần
-            inventory.UseDurability(rodSlot);
+            // Hao mòn cần — re-validate slot vì inventory có thể đã shuffle trong lúc chờ
+            int validSlot = rodSlot;
+            if (validSlot < 0 || validSlot >= inventory.Slots.Count
+                || inventory.Slots[validSlot].item != rodItem)
+            {
+                validSlot = FindRodSlot();
+            }
+            if (validSlot >= 0) inventory.UseDurability(validSlot);
+            else Debug.Log("[Fishing] Cần câu không còn trong inventory — bỏ qua durability cost.");
 
             IsCasting = false;
             castCo = null;
