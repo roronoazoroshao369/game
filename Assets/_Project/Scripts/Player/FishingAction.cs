@@ -52,6 +52,7 @@ namespace WildernessCultivation.Player
             float t = Random.Range(spot.castTimeSeconds.x, spot.castTimeSeconds.y);
             castCo = StartCoroutine(CastCoroutine(spot, rodSlot, t));
             IsCasting = true;
+            if (controller != null) controller.MovementLocked = true;
             return true;
         }
 
@@ -61,7 +62,13 @@ namespace WildernessCultivation.Player
             if (castCo != null) StopCoroutine(castCo);
             castCo = null;
             IsCasting = false;
+            if (controller != null) controller.MovementLocked = false;
             Debug.Log("[Fishing] Huỷ cast.");
+        }
+
+        void OnDisable()
+        {
+            if (IsCasting) CancelCast();
         }
 
         IEnumerator CastCoroutine(FishingSpot spot, int rodSlot, float seconds)
@@ -91,6 +98,7 @@ namespace WildernessCultivation.Player
 
             IsCasting = false;
             castCo = null;
+            if (controller != null) controller.MovementLocked = false;
         }
 
         int FindRodSlot()

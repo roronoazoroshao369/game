@@ -40,6 +40,9 @@ namespace WildernessCultivation.Player
         public Vector2 Facing => lastFacing;
         public Vector2 InputDir => input;
 
+        /// <summary>Khi true, controller bỏ qua input + zero velocity. Dùng cho action chặn move (vd câu cá).</summary>
+        public bool MovementLocked { get; set; }
+
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
@@ -82,6 +85,7 @@ namespace WildernessCultivation.Player
 
         void FixedUpdate()
         {
+            if (MovementLocked) { rb.velocity = Vector2.zero; return; }
             rb.velocity = input * moveSpeed * EncumbranceMultiplier;
         }
 
