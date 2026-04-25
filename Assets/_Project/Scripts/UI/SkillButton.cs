@@ -9,7 +9,7 @@ namespace WildernessCultivation.UI
     /// </summary>
     public class SkillButton : MonoBehaviour
     {
-        public enum Action { MeleeAttack, CastTechnique, ToggleMeditation, Interact, Sleep, UseMagicTreasure, Breakthrough }
+        public enum Action { MeleeAttack, CastTechnique, ToggleMeditation, Interact, Sleep, UseMagicTreasure, Breakthrough, ToggleTorch }
         public Action action;
         public Button button;
 
@@ -41,6 +41,12 @@ namespace WildernessCultivation.UI
                     break;
                 case Action.UseMagicTreasure: treasure?.TryUse(); break;
                 case Action.Breakthrough:     realm?.TryBreakthrough(); break;
+                case Action.ToggleTorch:
+                {
+                    var torch = FindObjectOfType<TorchAction>();
+                    torch?.Toggle();
+                    break;
+                }
             }
         }
     }

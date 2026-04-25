@@ -41,6 +41,12 @@ namespace WildernessCultivation.World
         [Tooltip("Damage SAN/giây thêm khi đứng trong biome này vào ban đêm — biome 'tử khí' nên cao.")]
         public float ambientNightSanDamage = 0f;
 
+        [Header("Temperature modifier")]
+        [Tooltip("Cộng vào nhiệt độ ban ngày của biome (vd Hoang Mạc +25 → giữa trưa rất nóng).")]
+        public float temperatureDayOffset = 0f;
+        [Tooltip("Cộng vào nhiệt độ ban đêm của biome (vd Hoang Mạc -20 → đêm rất lạnh).")]
+        public float temperatureNightOffset = 0f;
+
         [Header("Selection (Perlin)")]
         [Tooltip("Khoảng [min,max] giá trị Perlin để biome này chiếm. Phải nằm trong [0,1] và 2 biome không nên overlap nhiều.")]
         public Vector2 selectionRange = new(0f, 1f);

@@ -1,11 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using WildernessCultivation.Core;
+using WildernessCultivation.Player;
+using WildernessCultivation.World;
 
 namespace WildernessCultivation.Mobs
 {
     /// <summary>
     /// Spawn quái theo cap. Day spawn rabbit/wolf, Night thêm foxSpirit.
+    /// Khi player đứng trong "deep dark" (đêm + ngoài tất cả LightSource) → spawn nhanh hơn
+    /// (multiplier <see cref="darknessSpawnRateMult"/>).
     /// </summary>
     public class MobSpawner : MonoBehaviour
     {
@@ -21,8 +25,12 @@ namespace WildernessCultivation.Mobs
         public float spawnInterval = 5f;
         public Transform parent;
 
+        [Tooltip("Khi player đứng trong deep dark (đêm + ngoài LightSource) → spawnInterval / mult.")]
+        public float darknessSpawnRateMult = 2f;
+
         Vector2 worldMin, worldMax;
         TimeManager time;
+        PlayerStats playerRef;
         readonly List<GameObject> alive = new();
         float nextSpawnAt;
 
@@ -35,13 +43,21 @@ namespace WildernessCultivation.Mobs
         {
             time = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
             if (parent == null) parent = transform;
+            playerRef = FindObjectOfType<PlayerStats>();
+        }
+
+        bool IsPlayerInDeepDark()
+        {
+            if (time == null || !time.isNight || playerRef == null) return false;
+            return !LightSource.AnyLightAt(playerRef.transform.position);
         }
 
         void Update()
         {
             alive.RemoveAll(g => g == null);
             if (Time.time < nextSpawnAt) return;
-            nextSpawnAt = Time.time + spawnInterval;
+            float interval = IsPlayerInDeepDark() ? spawnInterval / Mathf.Max(0.1f, darknessSpawnRateMult) : spawnInterval;
+            nextSpawnAt = Time.time + interval;
 
             bool isNight = time != null && time.isNight;
             foreach (var e in entries)

@@ -284,6 +284,34 @@ Gán array `WorldGenerator.biomes` trong scene để bật. Để trống → fa
 - `AlchemyFurnace`: `MonoBehaviour` + `CraftStationMarker.station = AlchemyFurnace`. Cần tiếp gỗ (`refuelPerWoodSeconds`) để cháy. Khi tắt thì recipe đan dược (RecipeSO với `requiredStation = AlchemyFurnace`) sẽ KHÔNG craft được — gate qua `IStationGate`.
 - Đan dược chỉ là data: tạo ItemSO consumable + RecipeSO trong Editor.
 
+## ❄️ Survival core (Phase Polish)
+
+### Temperature & Weather
+- **BodyTemp** trên `PlayerStats` chạy thang [0..100], 50 = thoải mái. Driff về `ComputeAmbientTemperature()`.
+  Ambient = `SeasonBaselineTemperature` + biome day/night offset + tổng `LightSource.warmthBonus` đang chứa player + (-5/-10 nếu trời mưa/bão).
+- **Hậu quả**: `BodyTemp ≤ 10` → mất HP + SAN; `BodyTemp ≥ 90` → Thirst tụt nhanh + SAN tụt.
+- **Mùa**: TimeManager tự đổi mỗi `daysPerSeason` ngày (Xuân→Hạ→Thu→Đông), mỗi mùa baseline khác (30..70).
+- **Thời tiết**: Roll mỗi sáng (Clear/Rain/Storm) — mưa refill Thirst nhẹ + decay fire 2x; bão thêm SAN penalty đêm.
+- **Dark fear**: Đêm + ngoài tất cả `LightSource` đang phát → SAN tụt nhanh + MobSpawner spawn x2.
+
+### Food spoilage & Equipment durability
+- `ItemSO.isPerishable + freshSeconds` — `Inventory.Update` đếm ngược; `slot.IsSpoiled` → ăn vẫn được nhưng restore /2 + trừ SAN.
+- `ItemSO.hasDurability + maxDurability + durabilityPerUse` — `Inventory.UseDurability(slot)` hao 1 lần dùng, hết = item biến mất.
+  `PlayerCombat.TryMeleeAttack` tự gọi UseDurability trên `equippedWeaponSlotIndex` khi đánh trúng.
+- Perishable / durable items KHÔNG stack (mỗi instance giữ tracking riêng).
+
+### Storage chest
+- `StorageChest` (require Inventory component) IInteractable mở rương — emit event `OnAnyChestOpened` để UI subscribe & hiển thị grid.
+
+### Farming linh thảo
+- `PlantNode` IInteractable: trồng 1 `seedItem` → cần `growDays` + `waterNeeded` lần tưới (consume `waterBucketItem` hoặc đứng cạnh WaterSpring) → harvest `harvestItem`. Sprite stage cho từng giai đoạn.
+
+### Torch (đèn cầm tay)
+- `TorchAction` toggle (phím **T** hoặc `SkillButton.ToggleTorch`) — tốn 1 `torchItem` → bật `LightSource` aura quanh player (radius/warmth) + tốn fuel theo thời gian.
+
+### Save/Load mới round-trip
+- `bodyTemp`, `seasonIndex`, `weatherIndex`, per-slot `freshRemaining` + `durability`.
+
 ## 👹 Boss bí cảnh
 
 - `BossPortal` (IInteractable): tốn 1 vật phẩm key (vd Linh Thạch) để mở, spawn `BossMobAI` cách player ~3m.

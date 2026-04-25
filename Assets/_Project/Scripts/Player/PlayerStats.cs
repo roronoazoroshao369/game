@@ -35,6 +35,28 @@ namespace WildernessCultivation.Player
         public float starveDamagePerSec = 1.5f;
         public float dehydrateDamagePerSec = 2.5f;
 
+        [Header("Body Temperature [0..100]; 50 = thoải mái")]
+        public float BodyTemp = 50f;
+        public float comfortMin = 30f;
+        public float comfortMax = 70f;
+        [Tooltip("Tốc độ kéo BodyTemp về ambient temperature (đơn vị/giây).")]
+        public float thermalDriftRate = 4f;
+        [Tooltip("Damage HP / giây khi BodyTemp < freezeThreshold.")]
+        public float freezeThreshold = 10f;
+        public float freezeDamagePerSec = 1.5f;
+        [Tooltip("Trên ngưỡng này → mất Thirst nhanh + tụt SAN nhẹ.")]
+        public float heatThreshold = 90f;
+        public float heatThirstMult = 2.5f;
+        public float heatSanityPenaltyPerSec = 0.5f;
+
+        [Header("Weather effects")]
+        [Tooltip("Khi trời mưa + đứng ngoài (không trong shelter/nhà) → refill Thirst chậm.")]
+        public float rainThirstRefillPerSec = 0.6f;
+        [Tooltip("Khi bão đêm → trừ SAN bonus.")]
+        public float stormSanityPenaltyPerSec = 0.4f;
+        [Tooltip("Khi đứng ngoài aura sáng vào đêm sâu (deep dark) → trừ SAN bonus.")]
+        public float darknessSanityPenaltyPerSec = 0.8f;
+
         public event Action OnDeath;
         public event Action OnStatsChanged;
 
@@ -76,6 +98,10 @@ namespace WildernessCultivation.Player
                     Sanity = Mathf.Max(0f, Sanity - biome.ambientNightSanDamage * dt);
             }
 
+            UpdateThermal(dt);
+            UpdateWeatherEffects(dt);
+            UpdateDarkness(dt);
+
             if (Hunger <= 0f) HP = Mathf.Max(0f, HP - starveDamagePerSec * dt);
             if (Thirst <= 0f) HP = Mathf.Max(0f, HP - dehydrateDamagePerSec * dt);
 
@@ -103,6 +129,74 @@ namespace WildernessCultivation.Player
             if (dmg > 0f) HP = Mathf.Max(0f, HP - dmg);
             OnStatsChanged?.Invoke();
             if (HP <= 0f) Die();
+        }
+
+        /// <summary>Nhiệt độ ambient hiện tại tại vị trí player (mùa + biome day/night offset + lightSource warmth).</summary>
+        public float ComputeAmbientTemperature()
+        {
+            float t = 50f;
+            if (timeManager != null)
+            {
+                t = timeManager.SeasonBaselineTemperature;
+                // Biên độ ngày/đêm: theo dayProgress (cosine-based, peak noon)
+                float day01 = timeManager.GetLightIntensity(); // 0=midnight, 1=noon
+                if (WorldGenerator.Instance != null)
+                {
+                    var biome = WorldGenerator.Instance.BiomeAt(transform.position);
+                    if (biome != null)
+                    {
+                        // Lerp giữa nightOffset và dayOffset theo day01
+                        float biomeOff = Mathf.Lerp(biome.temperatureNightOffset, biome.temperatureDayOffset, day01);
+                        t += biomeOff;
+                    }
+                }
+                // Mưa làm lạnh thêm
+                if (timeManager.currentWeather == Weather.Rain)  t -= 5f;
+                if (timeManager.currentWeather == Weather.Storm) t -= 10f;
+            }
+            t += LightSource.TotalWarmthAt(transform.position);
+            return t;
+        }
+
+        void UpdateThermal(float dt)
+        {
+            float ambient = ComputeAmbientTemperature();
+            BodyTemp = Mathf.Lerp(BodyTemp, ambient, Mathf.Clamp01(thermalDriftRate * dt / 100f));
+
+            if (BodyTemp <= freezeThreshold)
+            {
+                HP = Mathf.Max(0f, HP - freezeDamagePerSec * dt);
+                Sanity = Mathf.Max(0f, Sanity - 0.3f * dt);
+            }
+            else if (BodyTemp >= heatThreshold)
+            {
+                Thirst = Mathf.Max(0f, Thirst - thirstDecay * (heatThirstMult - 1f) * dt);
+                Sanity = Mathf.Max(0f, Sanity - heatSanityPenaltyPerSec * dt);
+            }
+        }
+
+        void UpdateWeatherEffects(float dt)
+        {
+            if (timeManager == null) return;
+            switch (timeManager.currentWeather)
+            {
+                case Weather.Rain:
+                    Thirst = Mathf.Min(maxThirst, Thirst + rainThirstRefillPerSec * dt);
+                    break;
+                case Weather.Storm:
+                    Thirst = Mathf.Min(maxThirst, Thirst + rainThirstRefillPerSec * dt);
+                    if (timeManager.isNight)
+                        Sanity = Mathf.Max(0f, Sanity - stormSanityPenaltyPerSec * dt);
+                    break;
+            }
+        }
+
+        void UpdateDarkness(float dt)
+        {
+            if (timeManager == null || !timeManager.isNight) return;
+            if (LightSource.AnyLightAt(transform.position)) return;
+            // Đêm + ngoài tất cả nguồn sáng → "deep dark"
+            Sanity = Mathf.Max(0f, Sanity - darknessSanityPenaltyPerSec * dt);
         }
 
         /// <summary>Tạo / cộng dồn shield. Lấy max(durationSec) để không bị shield mới ngắn hơn ghi đè shield cũ dài hơn.</summary>
