@@ -16,8 +16,10 @@ namespace WildernessCultivation.World
     /// được gán vào <see cref="auraRenderer"/>.
     /// </summary>
     [RequireComponent(typeof(CraftStationMarker))]
-    public class Campfire : MonoBehaviour, IInteractable
+    public class Campfire : MonoBehaviour, IInteractable, IStationGate
     {
+        public bool StationActive => IsLit;
+
         [Header("Aura")]
         [Tooltip("Bán kính hào quang lửa — trong vùng này SAN sẽ hồi nhẹ và không decay vào ban đêm.")]
         public float warmRadius = 3f;

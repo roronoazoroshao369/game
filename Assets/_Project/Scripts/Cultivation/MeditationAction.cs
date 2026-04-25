@@ -1,6 +1,7 @@
 using UnityEngine;
 using WildernessCultivation.Core;
 using WildernessCultivation.Player;
+using WildernessCultivation.World;
 
 namespace WildernessCultivation.Cultivation
 {
@@ -54,6 +55,14 @@ namespace WildernessCultivation.Cultivation
                 }
 
                 float mult = time != null ? time.GetSpiritualEnergyMultiplier() : 1f;
+                if (WorldGenerator.Instance != null)
+                {
+                    var biome = WorldGenerator.Instance.BiomeAt(transform.position);
+                    if (biome != null) mult *= biome.spiritEnergyMultiplier;
+                }
+                // SpiritArray buff (đặt trận pháp) — multiply lên trên
+                mult *= WildernessCultivation.Combat.SpiritArray.SpiritMultiplierAt(transform.position);
+
                 stats.AddMana(manaPerSec * mult * Time.deltaTime);
                 realm.AddCultivationXp(xpPerSec * mult * Time.deltaTime);
             }

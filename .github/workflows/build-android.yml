@@ -1,0 +1,74 @@
+name: Build Android APK
+
+# Trigger build on every push to main + every PR. Manual dispatch also supported.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/build-android.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/build-android.yml'
+  workflow_dispatch:
+
+# Cancel in-flight builds when a new commit lands on the same ref
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Build Android (IL2CPP, ARM64)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 90
+    env:
+      # GameCI cần ít nhất một trong hai: UNITY_LICENSE (Personal, dán nội dung file .ulf)
+      # hoặc UNITY_EMAIL + UNITY_PASSWORD + UNITY_SERIAL (Pro/Plus). Xem README phần "CI / GameCI".
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+            Library-
+
+      - name: Build Unity (Android, IL2CPP)
+        uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: Android
+          androidExportType: androidPackage
+          androidTargetSdkVersion: AndroidApiLevel34
+          buildName: WildernessCultivation
+          allowDirtyBuild: true
+          # Cho phép build tiếp khi chưa có activation file (sẽ fail rõ ràng nếu thiếu cả 2 nhóm secret)
+          unityVersion: auto
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: WildernessCultivation-${{ github.sha }}-apk
+          path: build/Android
+          if-no-files-found: warn
+          retention-days: 14

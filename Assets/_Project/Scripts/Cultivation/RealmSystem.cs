@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using WildernessCultivation.Items;
 using WildernessCultivation.Player;
 
 namespace WildernessCultivation.Cultivation
@@ -9,7 +10,7 @@ namespace WildernessCultivation.Cultivation
     /// Mỗi tầng yêu cầu 1 lượng XP nhất định + đột phá thành công (tỉ lệ).
     /// Lên tầng → buff maxHP, maxMana, dame.
     /// </summary>
-    public class RealmSystem : MonoBehaviour
+    public class RealmSystem : MonoBehaviour, MagicTreasureSO.RealmSystemHook
     {
         [Serializable]
         public struct RealmDefinition
@@ -38,6 +39,23 @@ namespace WildernessCultivation.Cultivation
 
         public event Action<int> OnRealmAdvanced;
         public event Action<bool> OnBreakthroughAttempted; // success?
+
+        // Bonus chance đột phá tạm thời do pháp bảo BreakthroughAid cấp.
+        float tempBreakthroughBonus;
+        float tempBreakthroughEndsAt;
+
+        public float TemporaryBreakthroughBonus =>
+            Time.time < tempBreakthroughEndsAt ? tempBreakthroughBonus : 0f;
+
+        /// <summary>Implement <see cref="MagicTreasureSO.RealmSystemHook"/>.</summary>
+        public void AddTemporaryBreakthroughBonus(float bonusChance, float durationSec)
+        {
+            if (bonusChance <= 0f || durationSec <= 0f) return;
+            // Lấy max — không cộng dồn nhiều pháp bảo cùng lúc
+            tempBreakthroughBonus = Mathf.Max(tempBreakthroughBonus, bonusChance);
+            tempBreakthroughEndsAt = Mathf.Max(tempBreakthroughEndsAt, Time.time + durationSec);
+            Debug.Log($"[Realm] Bonus đột phá +{bonusChance:P0} trong {durationSec}s.");
+        }
 
         PlayerStats stats;
         PlayerCombat combat;
@@ -68,7 +86,11 @@ namespace WildernessCultivation.Cultivation
 
             float spent = nextRealm.xpRequired;
             currentXp -= spent;
-            bool success = UnityEngine.Random.value <= nextRealm.breakthroughChance;
+            float effectiveChance = Mathf.Clamp01(nextRealm.breakthroughChance + TemporaryBreakthroughBonus);
+            bool success = UnityEngine.Random.value <= effectiveChance;
+            // Bonus pháp bảo chỉ dùng được 1 lần / 1 lần đột phá
+            tempBreakthroughBonus = 0f;
+            tempBreakthroughEndsAt = 0f;
             OnBreakthroughAttempted?.Invoke(success);
 
             if (success)
@@ -119,6 +141,10 @@ namespace WildernessCultivation.Cultivation
                 new RealmDefinition{ name="Luyện Khí Tầng 7",  xpRequired=1050, breakthroughChance=0.60f, hpBonus=25, manaBonus=20, damageBonus=5 },
                 new RealmDefinition{ name="Luyện Khí Tầng 8",  xpRequired=1500, breakthroughChance=0.50f, hpBonus=25, manaBonus=25, damageBonus=5 },
                 new RealmDefinition{ name="Luyện Khí Tầng 9",  xpRequired=2100, breakthroughChance=0.40f, hpBonus=30, manaBonus=30, damageBonus=8 },
+                // Trúc Cơ — đại đột phá. Yêu cầu XP cao + chance thấp; cần đan dược/pháp bảo hỗ trợ (tăng chance qua effect).
+                new RealmDefinition{ name="Trúc Cơ Sơ Kỳ",     xpRequired=3000, breakthroughChance=0.30f, hpBonus=60, manaBonus=60, damageBonus=12 },
+                new RealmDefinition{ name="Trúc Cơ Trung Kỳ",  xpRequired=4200, breakthroughChance=0.25f, hpBonus=70, manaBonus=70, damageBonus=14 },
+                new RealmDefinition{ name="Trúc Cơ Hậu Kỳ",    xpRequired=5800, breakthroughChance=0.20f, hpBonus=80, manaBonus=80, damageBonus=16 },
             };
         }
     }

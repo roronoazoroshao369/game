@@ -9,7 +9,7 @@ namespace WildernessCultivation.UI
     /// </summary>
     public class SkillButton : MonoBehaviour
     {
-        public enum Action { MeleeAttack, CastTechnique, ToggleMeditation, Interact, Sleep }
+        public enum Action { MeleeAttack, CastTechnique, ToggleMeditation, Interact, Sleep, UseMagicTreasure, Breakthrough }
         public Action action;
         public Button button;
 
@@ -27,6 +27,8 @@ namespace WildernessCultivation.UI
             var med = FindObjectOfType<WildernessCultivation.Cultivation.MeditationAction>();
             var interact = FindObjectOfType<InteractAction>();
             var sleep = FindObjectOfType<SleepAction>();
+            var treasure = FindObjectOfType<MagicTreasureAction>();
+            var realm = FindObjectOfType<WildernessCultivation.Cultivation.RealmSystem>();
             switch (action)
             {
                 case Action.MeleeAttack:      combat?.TryMeleeAttack(); break;
@@ -37,6 +39,8 @@ namespace WildernessCultivation.UI
                     if (sleep != null && !sleep.IsSleeping) sleep.TrySleep();
                     else sleep?.Wake();
                     break;
+                case Action.UseMagicTreasure: treasure?.TryUse(); break;
+                case Action.Breakthrough:     realm?.TryBreakthrough(); break;
             }
         }
     }

@@ -43,6 +43,13 @@ namespace WildernessCultivation.Player
         /// <summary>True nếu player đang trong aura của 1 <see cref="Campfire"/> đang cháy.</summary>
         public bool IsWarm => Campfire.FindWarmthAt(transform.position) != null;
 
+        [Header("Shield (do pháp bảo cấp tạm thời — không persist save)")]
+        [Tooltip("Giá trị chắn còn lại; dame trừ vào shield trước, rồi mới HP.")]
+        public float Shield;
+        [Tooltip("Time.time mà shield hết hạn.")]
+        public float ShieldEndsAt;
+        public bool HasShield => Shield > 0f && Time.time < ShieldEndsAt;
+
         TimeManager timeManager;
 
         void Start()
@@ -61,6 +68,14 @@ namespace WildernessCultivation.Player
             if (timeManager != null && timeManager.isNight && !IsWarm)
                 Sanity = Mathf.Max(0f, Sanity - sanityNightDecay * dt);
 
+            // Biome ambient SAN damage (vd Hoang Mạc Tử Khí về đêm). Lửa trại không chống được.
+            if (timeManager != null && timeManager.isNight && WorldGenerator.Instance != null)
+            {
+                var biome = WorldGenerator.Instance.BiomeAt(transform.position);
+                if (biome != null && biome.ambientNightSanDamage > 0f)
+                    Sanity = Mathf.Max(0f, Sanity - biome.ambientNightSanDamage * dt);
+            }
+
             if (Hunger <= 0f) HP = Mathf.Max(0f, HP - starveDamagePerSec * dt);
             if (Thirst <= 0f) HP = Mathf.Max(0f, HP - dehydrateDamagePerSec * dt);
 
@@ -74,9 +89,29 @@ namespace WildernessCultivation.Player
         public void TakeDamage(float dmg)
         {
             if (IsDead) return;
-            HP = Mathf.Max(0f, HP - dmg);
+            if (HasShield)
+            {
+                float absorbed = Mathf.Min(Shield, dmg);
+                Shield -= absorbed;
+                dmg -= absorbed;
+            }
+            else if (Shield > 0f)
+            {
+                // Shield đã hết hạn → reset
+                Shield = 0f;
+            }
+            if (dmg > 0f) HP = Mathf.Max(0f, HP - dmg);
             OnStatsChanged?.Invoke();
             if (HP <= 0f) Die();
+        }
+
+        /// <summary>Tạo / cộng dồn shield. Lấy max(durationSec) để không bị shield mới ngắn hơn ghi đè shield cũ dài hơn.</summary>
+        public void AddShield(float amount, float durationSec)
+        {
+            if (amount <= 0f || durationSec <= 0f) return;
+            Shield = Mathf.Max(Shield, 0f) + amount;
+            ShieldEndsAt = Mathf.Max(ShieldEndsAt, Time.time + durationSec);
+            OnStatsChanged?.Invoke();
         }
 
         public void Heal(float amount)
