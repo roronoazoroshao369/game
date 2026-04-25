@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player;
@@ -11,6 +12,18 @@ namespace WildernessCultivation.World
     /// </summary>
     public class WaterSpring : MonoBehaviour, IInteractable
     {
+        static readonly List<WaterSpring> active = new();
+        void OnEnable() { if (!active.Contains(this)) active.Add(this); }
+        void OnDisable() { active.Remove(this); }
+
+        public static bool AnyWaterSpringNear(Vector3 pos, float radius)
+        {
+            float r2 = radius * radius;
+            foreach (var w in active)
+                if (w != null && ((Vector2)pos - (Vector2)w.transform.position).sqrMagnitude <= r2) return true;
+            return false;
+        }
+
         [Header("Drink")]
         [Tooltip("Lượng Khát hồi mỗi lần uống tại chỗ.")]
         public float thirstPerDrink = 25f;

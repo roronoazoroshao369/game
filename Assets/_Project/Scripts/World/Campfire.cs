@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Crafting;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player;
@@ -47,9 +48,14 @@ namespace WildernessCultivation.World
         static readonly List<Campfire> active = new();
         public static IReadOnlyList<Campfire> Active => active;
 
+        LightSource lightSource;
+
         void Awake()
         {
             if (auraRenderer != null) auraRenderer.color = auraColor;
+            lightSource = GetComponent<LightSource>() ?? gameObject.AddComponent<LightSource>();
+            lightSource.radius = warmRadius;
+            lightSource.warmthBonus = 18f;
         }
 
         void OnEnable() { if (!active.Contains(this)) active.Add(this); }
@@ -80,10 +86,25 @@ namespace WildernessCultivation.World
             float dt = Time.deltaTime;
             if (IsLit)
             {
-                fuelSeconds = Mathf.Max(0f, fuelSeconds - dt);
+                // Mưa / bão làm fuel cháy nhanh hơn
+                float decay = dt * GetWeatherDecayMultiplier();
+                fuelSeconds = Mathf.Max(0f, fuelSeconds - decay);
                 ApplyAuraToPlayers(dt);
             }
+            if (lightSource != null) lightSource.emitting = IsLit;
             UpdateVisual();
+        }
+
+        float GetWeatherDecayMultiplier()
+        {
+            var tm = GameManager.Instance != null ? GameManager.Instance.timeManager : null;
+            if (tm == null) return 1f;
+            return tm.currentWeather switch
+            {
+                Weather.Rain  => 2f,
+                Weather.Storm => 3f,
+                _             => 1f,
+            };
         }
 
         void ApplyAuraToPlayers(float dt)

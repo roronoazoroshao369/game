@@ -59,6 +59,7 @@ namespace WildernessCultivation.Core
                     thirst = playerStats?.Thirst ?? 0,
                     sanity = playerStats?.Sanity ?? 0,
                     mana = playerStats?.Mana ?? 0,
+                    bodyTemp = playerStats?.BodyTemp ?? 50f,
                     realmTier = realm?.currentTier ?? 0,
                     cultivationXp = realm?.currentXp ?? 0,
                     spiritRoot = realm?.SpiritRoot ?? "Hỏa",
@@ -68,6 +69,8 @@ namespace WildernessCultivation.Core
                     timeOfDay01 = timeManager?.currentTime01 ?? 0f,
                     seed = worldGenerator != null ? worldGenerator.seed : 0,
                     daysSurvived = timeManager != null ? timeManager.daysSurvived : 0,
+                    seasonIndex = timeManager != null ? (int)timeManager.currentSeason : 0,
+                    weatherIndex = timeManager != null ? (int)timeManager.currentWeather : 0,
                 },
             };
 
@@ -76,7 +79,13 @@ namespace WildernessCultivation.Core
                 foreach (var s in inventory.Slots)
                 {
                     if (s.IsEmpty) continue;
-                    data.inventory.Add(new InventorySlotData { itemId = s.item.itemId, count = s.count });
+                    data.inventory.Add(new InventorySlotData
+                    {
+                        itemId = s.item.itemId,
+                        count = s.count,
+                        freshRemaining = s.IsPerishable ? s.freshRemaining : -1f,
+                        durability = s.IsDurable ? s.durability : -1f,
+                    });
                 }
             }
 
@@ -99,6 +108,7 @@ namespace WildernessCultivation.Core
                 playerStats.Thirst = data.player.thirst;
                 playerStats.Sanity = data.player.sanity;
                 playerStats.Mana = data.player.mana;
+                playerStats.BodyTemp = data.player.bodyTemp <= 0 ? 50f : data.player.bodyTemp;
             }
             if (realm != null && data.player != null)
             {
@@ -110,6 +120,8 @@ namespace WildernessCultivation.Core
             {
                 timeManager.currentTime01 = data.world.timeOfDay01;
                 timeManager.daysSurvived = data.world.daysSurvived;
+                timeManager.currentSeason = (Season)Mathf.Clamp(data.world.seasonIndex, 0, 3);
+                timeManager.currentWeather = (Weather)Mathf.Clamp(data.world.weatherIndex, 0, 2);
             }
             if (worldGenerator != null && data.world != null && data.world.seed != 0)
                 worldGenerator.seed = data.world.seed;
@@ -141,6 +153,20 @@ namespace WildernessCultivation.Core
                 int leftover = inventory.Add(item, s.count);
                 if (leftover > 0)
                     Debug.LogWarning($"[Save] Inventory đầy khi restore {s.itemId}, {leftover} item bị mất.");
+
+                // Restore freshness/durability vào slot vừa add (slot đầu tiên match item)
+                if (s.freshRemaining >= 0f || s.durability >= 0f)
+                {
+                    foreach (var slot in inventory.Slots)
+                    {
+                        if (slot.item == item && slot.count > 0)
+                        {
+                            if (s.freshRemaining >= 0f && slot.IsPerishable) slot.freshRemaining = s.freshRemaining;
+                            if (s.durability >= 0f && slot.IsDurable) slot.durability = s.durability;
+                            break;
+                        }
+                    }
+                }
             }
         }
     }

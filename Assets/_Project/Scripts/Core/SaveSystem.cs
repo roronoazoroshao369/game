@@ -58,6 +58,7 @@ namespace WildernessCultivation.Core
     {
         public Vector3 position;
         public float hp, hunger, thirst, sanity, mana;
+        public float bodyTemp = 50f;
         public int realmTier;          // 0=Phàm Nhân, 1..9 = Luyện Khí 1..9
         public float cultivationXp;
         public string spiritRoot;      // "Hỏa", "Thủy", ...
@@ -69,6 +70,8 @@ namespace WildernessCultivation.Core
         public float timeOfDay01;
         public int seed;
         public int daysSurvived;
+        public int seasonIndex;        // 0=Spring..3=Winter
+        public int weatherIndex;       // 0=Clear, 1=Rain, 2=Storm
     }
 
     [Serializable]
@@ -76,5 +79,7 @@ namespace WildernessCultivation.Core
     {
         public string itemId;
         public int count;
+        public float freshRemaining = -1f;
+        public float durability = -1f;
     }
 }

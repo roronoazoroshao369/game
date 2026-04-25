@@ -30,5 +30,22 @@ namespace WildernessCultivation.Items
         [Header("Tool/Weapon")]
         public float toolPower = 0f;     // dùng để chặt cây / đập đá nhanh hơn
         public float weaponDamage = 0f;
+
+        [Header("Durability (cho tool/weapon)")]
+        [Tooltip("True = item có độ bền, hỏng khi durability = 0.")]
+        public bool hasDurability = false;
+        [Tooltip("Độ bền tối đa khi mới tạo / craft.")]
+        public float maxDurability = 50f;
+        [Tooltip("Lượng durability mất mỗi lần dùng (1 đòn melee, 1 lần chop, …).")]
+        public float durabilityPerUse = 1f;
+
+        [Header("Food spoilage (cho food/drink/consumable)")]
+        [Tooltip("True = item bị hỏng theo thời gian (thịt sống nhanh, đồ nướng chậm).")]
+        public bool isPerishable = false;
+        [Tooltip("Tổng giây tươi trước khi hỏng. 600 = 10 phút real-time.")]
+        public float freshSeconds = 600f;
+        [Tooltip("Khi hỏng, restore* và sanity penalty áp dụng.")]
+        public float spoiledRestoreMultiplier = 0.5f;
+        public float spoiledSanityPenalty = 8f;
     }
 }

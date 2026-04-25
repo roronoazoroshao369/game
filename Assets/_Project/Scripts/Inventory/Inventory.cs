@@ -9,7 +9,15 @@ namespace WildernessCultivation.Items
     {
         public ItemSO item;
         public int count;
+        [Tooltip("Giây tươi còn lại (chỉ dùng khi item.isPerishable). <=0 = đã hỏng.")]
+        public float freshRemaining = -1f;
+        [Tooltip("Độ bền còn lại (chỉ dùng khi item.hasDurability). <=0 = hỏng.")]
+        public float durability = -1f;
         public bool IsEmpty => item == null || count <= 0;
+        public bool IsPerishable => item != null && item.isPerishable;
+        public bool IsDurable => item != null && item.hasDurability;
+        public bool IsSpoiled => IsPerishable && freshRemaining <= 0f;
+        public bool IsBroken => IsDurable && durability <= 0f;
     }
 
     /// <summary>
@@ -36,15 +44,22 @@ namespace WildernessCultivation.Items
             if (item == null || count <= 0) return count;
             int remaining = count;
 
-            // Stack vào slot đã có
-            foreach (var s in slots)
+            // Perishable / durable không nên stack (để giữ tracking riêng cho mỗi slot)
+            bool noStack = item.isPerishable || item.hasDurability;
+            int effectiveStack = noStack ? 1 : item.maxStack;
+
+            if (!noStack)
             {
-                if (remaining <= 0) break;
-                if (s.item == item && s.count < item.maxStack)
+                // Stack vào slot đã có (chỉ cho item thường)
+                foreach (var s in slots)
                 {
-                    int can = Mathf.Min(item.maxStack - s.count, remaining);
-                    s.count += can;
-                    remaining -= can;
+                    if (remaining <= 0) break;
+                    if (s.item == item && s.count < effectiveStack)
+                    {
+                        int can = Mathf.Min(effectiveStack - s.count, remaining);
+                        s.count += can;
+                        remaining -= can;
+                    }
                 }
             }
 
@@ -55,8 +70,10 @@ namespace WildernessCultivation.Items
                 if (s.IsEmpty)
                 {
                     s.item = item;
-                    int can = Mathf.Min(item.maxStack, remaining);
+                    int can = Mathf.Min(effectiveStack, remaining);
                     s.count = can;
+                    s.freshRemaining = item.isPerishable ? item.freshSeconds : -1f;
+                    s.durability = item.hasDurability ? item.maxDurability : -1f;
                     remaining -= can;
                 }
             }
@@ -106,9 +123,51 @@ namespace WildernessCultivation.Items
             var s = slots[slotIndex];
             if (s.IsEmpty || s.count < count) return false;
             s.count -= count;
-            if (s.count <= 0) { s.item = null; s.count = 0; }
+            if (s.count <= 0) ResetSlot(s);
             OnInventoryChanged?.Invoke();
             return true;
+        }
+
+        /// <summary>Tick freshness mỗi frame; flag spoiled khi freshRemaining về 0.</summary>
+        void Update()
+        {
+            float dt = Time.deltaTime;
+            bool anyChanged = false;
+            foreach (var s in slots)
+            {
+                if (!s.IsPerishable || s.IsEmpty) continue;
+                if (s.freshRemaining <= 0f) continue; // đã spoiled, không tick nữa
+                s.freshRemaining = Mathf.Max(0f, s.freshRemaining - dt);
+                if (s.freshRemaining == 0f) anyChanged = true;
+            }
+            if (anyChanged) OnInventoryChanged?.Invoke();
+        }
+
+        /// <summary>Hao mòn 1 lần dùng tool/weapon ở slot. Khi durability cạn → slot bị xoá (đồ vỡ).</summary>
+        public bool UseDurability(int slotIndex, float amountOverride = -1f)
+        {
+            if (slotIndex < 0 || slotIndex >= slots.Count) return false;
+            var s = slots[slotIndex];
+            if (!s.IsDurable || s.IsEmpty || s.IsBroken) return false;
+            float amount = amountOverride > 0f ? amountOverride : s.item.durabilityPerUse;
+            s.durability = Mathf.Max(0f, s.durability - amount);
+            if (s.durability <= 0f)
+            {
+                Debug.Log($"[Inventory] {s.item.displayName} bị hỏng.");
+                ResetSlot(s);
+            }
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        public InventorySlot GetSlot(int i) => (i >= 0 && i < slots.Count) ? slots[i] : null;
+
+        void ResetSlot(InventorySlot s)
+        {
+            s.item = null;
+            s.count = 0;
+            s.freshRemaining = -1f;
+            s.durability = -1f;
         }
     }
 }
