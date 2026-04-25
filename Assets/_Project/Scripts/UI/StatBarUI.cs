@@ -62,11 +62,15 @@ namespace WildernessCultivation.UI
             {
                 float t01 = Mathf.Clamp01(stats.BodyTemp / 100f);
                 bodyTempFill.fillAmount = t01;
+                // Dùng EffectiveFreezeThreshold/EffectiveHeatThreshold (đã cộng spirit root delta)
+                // để UI khớp với gameplay damage zone (Hoả căn +heatThresholdDelta...).
+                float effFreeze = stats.EffectiveFreezeThreshold;
+                float effHeat = stats.EffectiveHeatThreshold;
                 Color c;
-                if (stats.BodyTemp <= stats.freezeThreshold) c = tempColdColor;
-                else if (stats.BodyTemp >= stats.heatThreshold) c = tempHotColor;
-                else if (stats.BodyTemp < stats.comfortMin) c = Color.Lerp(tempColdColor, tempComfortColor, (stats.BodyTemp - stats.freezeThreshold) / Mathf.Max(0.1f, stats.comfortMin - stats.freezeThreshold));
-                else if (stats.BodyTemp > stats.comfortMax) c = Color.Lerp(tempComfortColor, tempHotColor, (stats.BodyTemp - stats.comfortMax) / Mathf.Max(0.1f, stats.heatThreshold - stats.comfortMax));
+                if (stats.BodyTemp <= effFreeze) c = tempColdColor;
+                else if (stats.BodyTemp >= effHeat) c = tempHotColor;
+                else if (stats.BodyTemp < stats.comfortMin) c = Color.Lerp(tempColdColor, tempComfortColor, (stats.BodyTemp - effFreeze) / Mathf.Max(0.1f, stats.comfortMin - effFreeze));
+                else if (stats.BodyTemp > stats.comfortMax) c = Color.Lerp(tempComfortColor, tempHotColor, (stats.BodyTemp - stats.comfortMax) / Mathf.Max(0.1f, effHeat - stats.comfortMax));
                 else c = tempComfortColor;
                 bodyTempFill.color = c;
             }
