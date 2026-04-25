@@ -33,7 +33,33 @@ game/
 
 ---
 
-## 🚀 Hướng dẫn setup lần đầu
+## ⚡ Quickstart: Bootstrap Default Scene (1 click)
+
+Repo đã có sẵn `Editor/BootstrapWizard.cs`. Sau khi clone xong và mở project trong Unity 2022 LTS:
+
+1. Đợi Unity import xong (lần đầu sẽ generate `Library/`).
+2. Menu **Tools → Wilderness Cultivation → Bootstrap Default Scene**.
+3. Đợi 5-10s. Sẽ sinh ra:
+   - Sprites placeholder (PNG ô vuông màu) tại `Assets/_Project/Sprites/`
+   - ScriptableObject assets (Items / Recipes / SpiritRoots / StatusEffects / Biomes / ItemDatabase) tại `Assets/_Project/SOs/`
+   - Prefabs (Player / Tree / Rock / Rabbit / Campfire / WaterSpring / Projectile) tại `Assets/_Project/Prefabs/`
+   - `Assets/Scenes/MainScene.unity` đã wire sẵn GameManager + WorldGenerator + Player + Camera follow + UI bars
+4. Mở `Assets/Scenes/MainScene.unity` → bấm **Play**.
+
+> ⚠️ Sprites là placeholder solid-color — thay bằng art thật khi có. Wizard có thể chạy lại nhiều lần (idempotent, ghi đè asset cũ).
+
+Hệ thống phím cơ bản trong scene mặc định:
+- **WASD / arrow** → di chuyển
+- **E** → tương tác (lửa trại, suối nước)
+- **T** → bật/tắt đuốc
+- **J** → đánh (mặc định `PlayerCombat.attackKey`)
+- **B** → dùng pháp bảo (cần item đã craft)
+- **F** → câu cá (gần WaterSpring)
+- **M** → ngồi thiền (cần xa boss/mob)
+
+---
+
+## 🚀 Hướng dẫn setup lần đầu (manual / advanced)
 
 ### 1. Cài Unity Hub & Unity 2022 LTS
 - Tải **Unity Hub**: https://unity.com/download
