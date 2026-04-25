@@ -14,12 +14,12 @@ game/
 │   │   ├── Core/         GameManager, TimeManager (day/night), SaveSystem, ItemDatabase
 │   │   ├── Player/       PlayerController (touch joystick + WASD), PlayerStats, PlayerCombat
 │   │   ├── Survival/     (HP/Hunger/Thirst/Sanity/Mana đã tích hợp trong PlayerStats)
-│   │   ├── Cultivation/  RealmSystem (XP refund-on-fail), TechniqueSO, MeditationAction, SwordQiSlashSO
-│   │   ├── Combat/       IDamageable
-│   │   ├── Inventory/    ItemSO, Inventory (16 slot)
-│   │   ├── Crafting/     RecipeSO, CraftingSystem, CraftStationMarker
-│   │   ├── World/        WorldGenerator, ResourceNode, IInteractable, Campfire, WaterSpring
-│   │   ├── Mobs/         MobBase, RabbitAI, WolfAI, FoxSpiritAI, MobSpawner
+│   │   ├── Cultivation/  RealmSystem (12 tier: Phàm Nhân + Luyện Khí 1–9 + Trúc Cơ Sơ/Trung/Hậu), TechniqueSO, MeditationAction, SwordQiSlashSO, FireBallSO, SpiritGatheringArraySO
+│   │   ├── Combat/       IDamageable, Projectile, SpiritArray
+│   │   ├── Inventory/    ItemSO, Inventory (16 slot), MagicTreasureSO (pháp bảo)
+│   │   ├── Crafting/     RecipeSO, CraftingSystem, CraftStationMarker (Campfire/AlchemyFurnace gate qua IStationGate)
+│   │   ├── World/        WorldGenerator (multi-biome), BiomeSO, ResourceNode, IInteractable, Campfire, WaterSpring, AlchemyFurnace, BossPortal
+│   │   ├── Mobs/         MobBase, RabbitAI, WolfAI, FoxSpiritAI, MobSpawner, BossMobAI (đa pha)
 │   │   ├── Player/       PlayerController, PlayerStats (IsWarm), PlayerCombat, InteractAction, SleepAction
 │   │   └── UI/           VirtualJoystick, StatBarUI, InventoryUI, CraftingUI, RealmUI, SkillButton, InteractPromptUI
 │   ├── Art/              (sprites — bạn tự thêm)
@@ -241,6 +241,53 @@ Trên `_GameManager`:
 3. Keystore: tạo keystore mới (Edit → Project Settings → Player → Publishing Settings → Keystore Manager)
 4. Build → chọn folder, xuất `.apk`
 5. `adb install game.apk` hoặc copy vào điện thoại cài tay.
+
+---
+
+## 🤖 GameCI (auto-build APK trên mỗi PR)
+
+Repo có sẵn `.github/workflows/build-android.yml` (build APK ARM64 IL2CPP) và `test.yml` (Edit/PlayMode tests).
+Workflow CHƯA tự chạy được cho đến khi bạn add Unity license secret. Cách add:
+
+### Personal license (.ulf, miễn phí)
+1. Sinh `.alf` request file 1 lần qua [game-ci/unity-request-activation-file](https://github.com/marketplace/actions/unity-request-activation-file) hoặc:
+   ```bash
+   docker run --rm -v $(pwd):/root/project unityci/editor:2022.3.20f1-android-1.1.0 \
+     unity-editor -batchmode -nographics -createManualActivationFile -logFile -
+   ```
+   File `Unity_v*.alf` xuất ra trong project.
+2. Lên https://license.unity3d.com/manual upload `.alf` → tải về `Unity_v*.ulf`.
+3. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**:
+   - Name: `UNITY_LICENSE`
+   - Value: dán **toàn bộ nội dung file .ulf** (kể cả XML header)
+
+### Pro/Plus license (email + serial)
+Add 3 secrets thay vì `UNITY_LICENSE`:
+- `UNITY_EMAIL` — email Unity ID
+- `UNITY_PASSWORD` — password
+- `UNITY_SERIAL` — serial Pro/Plus
+
+Sau khi add, push 1 commit bất kỳ vào PR → workflow `Build Android (IL2CPP, ARM64)` sẽ chạy ~25 phút và upload artifact `WildernessCultivation-<sha>-apk` vào tab Actions.
+
+## 🌲 Biome system
+
+`BiomeSO` (asset trong `Assets/_Project/Data/SO/Biomes/`) chia map thành các vùng theo Perlin noise. 2 biome khởi đầu (theo ROADMAP):
+
+- **Rừng Linh Mộc**: linh khí dày (`spiritEnergyMultiplier = 1.5`), nhiều cây/grass, mob FoxSpirit/Wolf — vùng dễ tu luyện.
+- **Hoang Mạc Tử Khí**: linh khí loãng (0.7), `ambientNightSanDamage = 0.4` SAN/giây ban đêm (lửa trại không chống được), drop hiếm hơn — vùng trừng phạt.
+
+Gán array `WorldGenerator.biomes` trong scene để bật. Để trống → fallback prefab cũ (giữ tương thích cho scene Game cũ).
+
+## 🔥 Pháp bảo + Luyện đan
+
+- `MagicTreasureSO`: ItemSO con với `kind` ∈ {HealBurst, ManaBurst, BreakthroughAid, ShieldAura}. Trang bị qua `MagicTreasureAction` (phím **B**), có cooldown + charges.
+- `AlchemyFurnace`: `MonoBehaviour` + `CraftStationMarker.station = AlchemyFurnace`. Cần tiếp gỗ (`refuelPerWoodSeconds`) để cháy. Khi tắt thì recipe đan dược (RecipeSO với `requiredStation = AlchemyFurnace`) sẽ KHÔNG craft được — gate qua `IStationGate`.
+- Đan dược chỉ là data: tạo ItemSO consumable + RecipeSO trong Editor.
+
+## 👹 Boss bí cảnh
+
+- `BossPortal` (IInteractable): tốn 1 vật phẩm key (vd Linh Thạch) để mở, spawn `BossMobAI` cách player ~3m.
+- `BossMobAI`: 3 phase theo HP threshold (60% / 25%) — phase 2 summon minion, phase 3 bắn volley 8 viên + tốc độ x1.5. Drop `bonusDropItem` (vd 1 pháp bảo).
 
 ---
 

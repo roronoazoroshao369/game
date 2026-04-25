@@ -1,0 +1,99 @@
+name: Build Android APK
+
+# Trigger build on every push to main + every PR. Manual dispatch also supported.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/build-android.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/build-android.yml'
+  workflow_dispatch:
+
+# Cancel in-flight builds when a new commit lands on the same ref
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Build Android (IL2CPP, ARM64)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 90
+    env:
+      # GameCI cần ít nhất một trong hai: UNITY_LICENSE (Personal, dán nội dung file .ulf)
+      # hoặc UNITY_EMAIL + UNITY_PASSWORD + UNITY_SERIAL (Pro/Plus). Xem README phần "CI / GameCI".
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      # Workflow này gate sau khi project đã được sinh đầy đủ trong Unity Editor
+      # (tạo ProjectSettings/ProjectVersion.txt, Packages/manifest.json, …) và secret license đã add.
+      # Nếu chưa có → các step Unity bị skip, job vẫn pass để PR check không đỏ.
+      - name: Detect Unity project
+        id: detect
+        run: |
+          if [ -f "ProjectSettings/ProjectVersion.txt" ]; then
+            echo "ready=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ProjectSettings/ProjectVersion.txt not found — skipping Unity build. Open project in Unity Editor first to generate ProjectSettings."
+          fi
+
+      - name: Detect Unity license secret
+        id: license
+        if: steps.detect.outputs.ready == 'true'
+        run: |
+          if [ -n "$UNITY_LICENSE" ] || { [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ] && [ -n "$UNITY_SERIAL" ]; }; then
+            echo "ready=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No Unity license secret (UNITY_LICENSE or UNITY_EMAIL/PASSWORD/SERIAL) configured — skipping build. See README section 'GameCI'."
+          fi
+
+      - name: Cache Library
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+            Library-
+
+      - name: Build Unity (Android, IL2CPP)
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
+        uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: Android
+          androidExportType: androidPackage
+          androidTargetSdkVersion: AndroidApiLevel34
+          buildName: WildernessCultivation
+          allowDirtyBuild: true
+          unityVersion: auto
+
+      - name: Upload APK artifact
+        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: WildernessCultivation-${{ github.sha }}-apk
+          path: build/Android
+          if-no-files-found: warn
+          retention-days: 14
