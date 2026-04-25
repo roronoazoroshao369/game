@@ -588,6 +588,21 @@ namespace WildernessCultivation.EditorTools
             craft.knownRecipes = recipes;
             craft.stationMask = ~0;
 
+            // Wire inventory ref vào các action component cần item-từ-inventory.
+            var inv = player.GetComponent<Inventory>();
+            var torch = player.GetComponent<TorchAction>();
+            if (torch != null)
+            {
+                torch.torchItem = items["torch"];
+                torch.inventory = inv;
+            }
+            var combatRef = player.GetComponent<PlayerCombat>();
+            if (combatRef != null) combatRef.inventory = inv;
+            var ctrlRef = player.GetComponent<PlayerController>();
+            if (ctrlRef != null) ctrlRef.inventory = inv;
+            var magic = player.GetComponent<MagicTreasureAction>();
+            if (magic != null) magic.inventory = inv;
+
             // Wire SpiritRoot candidate pool (random roll on start)
             var sr = player.GetComponent<SpiritRoot>();
             sr.candidatePool = spiritRoots.ToArray();

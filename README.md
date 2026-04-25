@@ -52,7 +52,7 @@ Hệ thống phím cơ bản trong scene mặc định:
 - **WASD / arrow** → di chuyển
 - **E** → tương tác (lửa trại, suối nước)
 - **T** → bật/tắt đuốc
-- **Space** → đánh
+- **J** → đánh (mặc định `PlayerCombat.attackKey`)
 - **B** → dùng pháp bảo (cần item đã craft)
 - **F** → câu cá (gần WaterSpring)
 - **M** → ngồi thiền (cần xa boss/mob)
