@@ -21,11 +21,14 @@ namespace WildernessCultivation.World
         public GameObject treePrefab;
         public GameObject rockPrefab;
         public GameObject grassBushPrefab;
+        [Tooltip("Suối / vũng nước nhỏ — uống tại chỗ.")]
+        public GameObject waterSpringPrefab;
 
         [Header("Density [0..1]")]
         [Range(0f, 1f)] public float treeDensity = 0.10f;
         [Range(0f, 1f)] public float rockDensity = 0.04f;
         [Range(0f, 1f)] public float grassDensity = 0.20f;
+        [Range(0f, 1f)] public float waterDensity = 0.005f;
 
         [Header("Mob spawner")]
         public MobSpawner mobSpawner;
@@ -61,7 +64,9 @@ namespace WildernessCultivation.World
             {
                 float n = Mathf.PerlinNoise((x + seed) * noiseScale, (y + seed) * noiseScale);
 
-                if (treePrefab != null && n > 0.6f && Random.value < treeDensity)
+                if (waterSpringPrefab != null && n < 0.15f && Random.value < waterDensity)
+                    Spawn(waterSpringPrefab, x, y);
+                else if (treePrefab != null && n > 0.6f && Random.value < treeDensity)
                     Spawn(treePrefab, x, y);
                 else if (rockPrefab != null && n < 0.25f && Random.value < rockDensity)
                     Spawn(rockPrefab, x, y);

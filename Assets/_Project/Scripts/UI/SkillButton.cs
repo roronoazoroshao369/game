@@ -9,7 +9,7 @@ namespace WildernessCultivation.UI
     /// </summary>
     public class SkillButton : MonoBehaviour
     {
-        public enum Action { MeleeAttack, CastTechnique, ToggleMeditation }
+        public enum Action { MeleeAttack, CastTechnique, ToggleMeditation, Interact, Sleep }
         public Action action;
         public Button button;
 
@@ -25,11 +25,18 @@ namespace WildernessCultivation.UI
         {
             var combat = FindObjectOfType<PlayerCombat>();
             var med = FindObjectOfType<WildernessCultivation.Cultivation.MeditationAction>();
+            var interact = FindObjectOfType<InteractAction>();
+            var sleep = FindObjectOfType<SleepAction>();
             switch (action)
             {
                 case Action.MeleeAttack:      combat?.TryMeleeAttack(); break;
                 case Action.CastTechnique:    combat?.TryCastSkill(); break;
                 case Action.ToggleMeditation: med?.Toggle(); break;
+                case Action.Interact:         interact?.TryInteract(); break;
+                case Action.Sleep:
+                    if (sleep != null && !sleep.IsSleeping) sleep.TrySleep();
+                    else sleep?.Wake();
+                    break;
             }
         }
     }

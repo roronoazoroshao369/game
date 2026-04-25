@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using WildernessCultivation.Core;
+using WildernessCultivation.World;
 
 namespace WildernessCultivation.Player
 {
@@ -39,6 +40,9 @@ namespace WildernessCultivation.Player
 
         public bool IsDead => HP <= 0f;
 
+        /// <summary>True nếu player đang trong aura của 1 <see cref="Campfire"/> đang cháy.</summary>
+        public bool IsWarm => Campfire.FindWarmthAt(transform.position) != null;
+
         TimeManager timeManager;
 
         void Start()
@@ -54,7 +58,7 @@ namespace WildernessCultivation.Player
             Hunger = Mathf.Max(0f, Hunger - hungerDecay * dt);
             Thirst = Mathf.Max(0f, Thirst - thirstDecay * dt);
 
-            if (timeManager != null && timeManager.isNight)
+            if (timeManager != null && timeManager.isNight && !IsWarm)
                 Sanity = Mathf.Max(0f, Sanity - sanityNightDecay * dt);
 
             if (Hunger <= 0f) HP = Mathf.Max(0f, HP - starveDamagePerSec * dt);
