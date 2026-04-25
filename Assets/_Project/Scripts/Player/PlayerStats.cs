@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using WildernessCultivation.Core;
+using WildernessCultivation.Cultivation;
+using WildernessCultivation.Player.Status;
 using WildernessCultivation.World;
 
 namespace WildernessCultivation.Player
@@ -73,10 +75,29 @@ namespace WildernessCultivation.Player
         public bool HasShield => Shield > 0f && Time.time < ShieldEndsAt;
 
         TimeManager timeManager;
+        SpiritRoot spiritRoot;
+        StatusEffectManager statusManager;
+        bool maxHPApplied;
 
         void Start()
         {
             timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            spiritRoot = GetComponent<SpiritRoot>();
+            statusManager = GetComponent<StatusEffectManager>();
+            ApplySpiritRootMaxHP();
+        }
+
+        void ApplySpiritRootMaxHP()
+        {
+            if (maxHPApplied || spiritRoot == null) return;
+            float mul = spiritRoot.MaxHPMul;
+            if (Mathf.Abs(mul - 1f) > 0.001f)
+            {
+                float oldMax = maxHP;
+                maxHP *= mul;
+                HP = Mathf.Min(maxHP, HP * (maxHP / Mathf.Max(0.001f, oldMax)));
+            }
+            maxHPApplied = true;
         }
 
         void Update()
@@ -84,11 +105,15 @@ namespace WildernessCultivation.Player
             if (IsDead) return;
             float dt = Time.deltaTime;
 
-            Hunger = Mathf.Max(0f, Hunger - hungerDecay * dt);
-            Thirst = Mathf.Max(0f, Thirst - thirstDecay * dt);
+            float hungerMul = spiritRoot != null ? spiritRoot.HungerDecayMul : 1f;
+            float thirstMul = spiritRoot != null ? spiritRoot.ThirstDecayMul : 1f;
+            float sanityMul = spiritRoot != null ? spiritRoot.SanityDecayMul : 1f;
+
+            Hunger = Mathf.Max(0f, Hunger - hungerDecay * hungerMul * dt);
+            Thirst = Mathf.Max(0f, Thirst - thirstDecay * thirstMul * dt);
 
             if (timeManager != null && timeManager.isNight && !IsWarm)
-                Sanity = Mathf.Max(0f, Sanity - sanityNightDecay * dt);
+                Sanity = Mathf.Max(0f, Sanity - sanityNightDecay * sanityMul * dt);
 
             // Biome ambient SAN damage (vd Hoang Mạc Tử Khí về đêm). Lửa trại không chống được.
             if (timeManager != null && timeManager.isNight && WorldGenerator.Instance != null)
@@ -115,6 +140,8 @@ namespace WildernessCultivation.Player
         public void TakeDamage(float dmg)
         {
             if (IsDead) return;
+            // Status effect modifier (Burn x1.2…)
+            if (statusManager != null) dmg *= statusManager.IncomingDamageMultiplier;
             if (HasShield)
             {
                 float absorbed = Mathf.Min(Shield, dmg);
@@ -169,12 +196,16 @@ namespace WildernessCultivation.Player
             float ambient = ComputeAmbientTemperature();
             BodyTemp = Mathf.Lerp(BodyTemp, ambient, Mathf.Clamp01(thermalDriftRate * dt / 100f));
 
-            if (BodyTemp <= freezeThreshold)
+            float effFreezeT = freezeThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.freezeThresholdDelta : 0f);
+            float effHeatT = heatThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.heatThresholdDelta : 0f);
+            float freezeMul = spiritRoot != null ? spiritRoot.FreezeDamageMul : 1f;
+
+            if (BodyTemp <= effFreezeT)
             {
-                HP = Mathf.Max(0f, HP - freezeDamagePerSec * dt);
+                HP = Mathf.Max(0f, HP - freezeDamagePerSec * freezeMul * dt);
                 Sanity = Mathf.Max(0f, Sanity - 0.3f * dt);
             }
-            else if (BodyTemp >= heatThreshold)
+            else if (BodyTemp >= effHeatT)
             {
                 Thirst = Mathf.Max(0f, Thirst - thirstDecay * (heatThirstMult - 1f) * dt);
                 Sanity = Mathf.Max(0f, Sanity - heatSanityPenaltyPerSec * dt);

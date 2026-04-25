@@ -73,6 +73,16 @@ namespace WildernessCultivation.UI
                     if (item.restoreMana > 0) playerStats.AddMana(item.restoreMana * mult);
                     if (spoiled && item.spoiledSanityPenalty > 0)
                         playerStats.Sanity = Mathf.Max(0f, playerStats.Sanity - item.spoiledSanityPenalty);
+
+                    // Status effects khi tiêu thụ
+                    var statusMgr = playerStats.GetComponent<WildernessCultivation.Player.Status.StatusEffectManager>();
+                    if (statusMgr != null)
+                    {
+                        if (item.consumeStatusEffect != null && Random.value <= item.consumeStatusChance)
+                            statusMgr.Apply(item.consumeStatusEffect);
+                        if (spoiled && item.spoiledStatusEffect != null)
+                            statusMgr.Apply(item.spoiledStatusEffect);
+                    }
                     inventory.TryConsumeSlot(index, 1);
                     break;
                 }

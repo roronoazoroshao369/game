@@ -59,11 +59,13 @@ namespace WildernessCultivation.Cultivation
 
         PlayerStats stats;
         PlayerCombat combat;
+        SpiritRoot spiritRootHolder;
 
         void Awake()
         {
             stats = GetComponent<PlayerStats>();
             combat = GetComponent<PlayerCombat>();
+            spiritRootHolder = GetComponent<SpiritRoot>();
             if (realms == null || realms.Length == 0) realms = DefaultRealms();
         }
 
@@ -74,7 +76,16 @@ namespace WildernessCultivation.Cultivation
         /// <summary>Cộng XP tu luyện. Gọi từ MeditationAction hoặc khi giết quái.</summary>
         public void AddCultivationXp(float amount)
         {
-            currentXp += amount;
+            float mul = spiritRootHolder != null ? spiritRootHolder.XpGainMul : 1f;
+            currentXp += amount * mul;
+        }
+
+        /// <summary>Cộng XP từ technique cùng element (FireBall + Hoả căn → x2). Caller truyền element của technique.</summary>
+        public void AddTechniqueXp(float amount, SpiritElement element)
+        {
+            float baseMul = spiritRootHolder != null ? spiritRootHolder.XpGainMul : 1f;
+            float aff = spiritRootHolder != null ? spiritRootHolder.TechniqueAffinityMulFor(element) : 1f;
+            currentXp += amount * baseMul * aff;
         }
 
         /// <summary>Người chơi chủ động bấm "Đột phá". Trả về true nếu thành công.</summary>
@@ -82,9 +93,11 @@ namespace WildernessCultivation.Cultivation
         {
             if (!HasNext) return false;
             var nextRealm = Next;
-            if (currentXp < nextRealm.xpRequired) return false;
+            float costMul = spiritRootHolder != null ? spiritRootHolder.BreakthroughCostMul : 1f;
+            float xpRequired = nextRealm.xpRequired * costMul;
+            if (currentXp < xpRequired) return false;
 
-            float spent = nextRealm.xpRequired;
+            float spent = xpRequired;
             currentXp -= spent;
             float effectiveChance = Mathf.Clamp01(nextRealm.breakthroughChance + TemporaryBreakthroughBonus);
             bool success = UnityEngine.Random.value <= effectiveChance;

@@ -32,6 +32,7 @@ namespace WildernessCultivation.Player
 
         PlayerController controller;
         PlayerStats stats;
+        SpiritRoot spiritRoot;
         float meleeReadyAt;
         float skillReadyAt;
 
@@ -39,6 +40,7 @@ namespace WildernessCultivation.Player
         {
             controller = GetComponent<PlayerController>();
             stats = GetComponent<PlayerStats>();
+            spiritRoot = GetComponent<SpiritRoot>();
         }
 
         void Update()
@@ -60,6 +62,8 @@ namespace WildernessCultivation.Player
                 if (weaponSlot != null && !weaponSlot.IsEmpty && !weaponSlot.IsBroken && weaponSlot.item.weaponDamage > 0)
                     damage += weaponSlot.item.weaponDamage;
             }
+            // Linh căn Kim multiplier
+            if (spiritRoot != null) damage *= spiritRoot.WeaponDamageMul;
 
             meleeReadyAt = Time.time + meleeCooldown;
 
@@ -76,7 +80,10 @@ namespace WildernessCultivation.Player
 
             // Hao mòn vũ khí 1 đòn (chỉ khi thực sự đánh trúng để tránh "quẩy không")
             if (actualHits > 0 && weaponSlot != null && weaponSlot.IsDurable)
-                inventory.UseDurability(equippedWeaponSlotIndex);
+            {
+                float wear = weaponSlot.item.durabilityPerUse * (spiritRoot != null ? spiritRoot.DurabilityWearMul : 1f);
+                inventory.UseDurability(equippedWeaponSlotIndex, wear);
+            }
         }
 
         public bool TryCastSkill()
@@ -92,6 +99,18 @@ namespace WildernessCultivation.Player
 
         public PlayerController Controller => controller;
         public PlayerStats Stats => stats;
+
+        /// <summary>Multiplier dame cho 1 technique theo linh căn caster (cùng element → bonus, ngoài ra 1).</summary>
+        public float WeaponDamageMultiplierForElement(SpiritElement element)
+        {
+            if (spiritRoot == null) return 1f;
+            float aff = spiritRoot.TechniqueAffinityMulFor(element);
+            // sameElementDamageMultiplier ~ Hoả căn vd 1.5 vào tech Hoả
+            float same = (spiritRoot.Current != null && spiritRoot.Current.primaryElement == element)
+                ? spiritRoot.Current.sameElementDamageMultiplier
+                : 1f;
+            return aff * same;
+        }
 
         void OnDrawGizmosSelected()
         {

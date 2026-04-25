@@ -1,7 +1,9 @@
 using System.Collections;
 using UnityEngine;
 using WildernessCultivation.Combat;
+using WildernessCultivation.Cultivation;
 using WildernessCultivation.Player;
+using WildernessCultivation.Player.Status;
 
 namespace WildernessCultivation.Mobs
 {
@@ -38,6 +40,25 @@ namespace WildernessCultivation.Mobs
         public WildernessCultivation.Items.ItemSO bonusDropItem;
         public int bonusDropCount = 1;
 
+        [Header("Element resistance (linh căn boss)")]
+        [Tooltip("Linh căn của boss. Player technique cùng element → dame x sameElementResistance (vd 0.5 = giảm 50%).")]
+        public SpiritElement element = SpiritElement.None;
+        [Range(0.05f, 1f)] public float sameElementResistance = 0.5f;
+        [Tooltip("Multiplier dame nhận từ technique tương khắc (vd Hoả ⇄ Thuỷ → 1.5x).")]
+        public float counterElementVulnerability = 1.5f;
+
+        [Header("Aura status (apply lên player trong radius)")]
+        [Tooltip("Status effect áp lên player khi đứng trong radius (vd Băng Phách Long → Freeze).")]
+        public StatusEffectSO auraStatusEffect;
+        public float auraRadius = 2.5f;
+        public float auraTickInterval = 1.5f;
+        public float auraStatusDuration = 4f;
+        float nextAuraTickAt;
+
+        [Header("On-hit status (áp khi boss đập trúng player)")]
+        public StatusEffectSO onHitStatusEffect;
+        public float onHitStatusDuration = 5f;
+
         public int CurrentPhase { get; private set; } = 1;
         float nextSummonAt;
         float nextVolleyAt;
@@ -63,6 +84,47 @@ namespace WildernessCultivation.Mobs
             // Phase-specific actions
             if (CurrentPhase >= 2 && Time.time >= nextSummonAt) Summon();
             if (CurrentPhase >= 3 && Time.time >= nextVolleyAt) ShootVolley();
+            if (auraStatusEffect != null && Time.time >= nextAuraTickAt) TickAura();
+        }
+
+        void TickAura()
+        {
+            nextAuraTickAt = Time.time + Mathf.Max(0.1f, auraTickInterval);
+            if (target == null) return;
+            float d = Vector2.Distance(transform.position, target.position);
+            if (d > auraRadius) return;
+            var mgr = target.GetComponent<StatusEffectManager>() ?? target.GetComponentInParent<StatusEffectManager>();
+            if (mgr != null) mgr.Apply(auraStatusEffect, auraStatusDuration);
+        }
+
+        public override void TakeDamage(float amount, GameObject source)
+        {
+            // Nếu source là Projectile → đọc element + dùng owner làm "aggro source".
+            GameObject aggroSource = source;
+            if (source != null)
+            {
+                var proj = source.GetComponent<Projectile>();
+                if (proj != null)
+                {
+                    if (element != SpiritElement.None && proj.element != SpiritElement.None)
+                    {
+                        if (proj.element == element) amount *= sameElementResistance;
+                        else if (IsCounter(proj.element, element)) amount *= counterElementVulnerability;
+                    }
+                    if (proj.Owner != null) aggroSource = proj.Owner;
+                }
+            }
+            base.TakeDamage(amount, aggroSource);
+        }
+
+        // Quan hệ tương khắc đơn giản: Hoả ⇄ Thuỷ, Mộc ⇄ Kim, Thổ ⇄ Mộc.
+        static bool IsCounter(SpiritElement a, SpiritElement b)
+        {
+            return (a == SpiritElement.Hoa && b == SpiritElement.Thuy) ||
+                   (a == SpiritElement.Thuy && b == SpiritElement.Hoa) ||
+                   (a == SpiritElement.Kim && b == SpiritElement.Moc) ||
+                   (a == SpiritElement.Moc && b == SpiritElement.Tho) ||
+                   (a == SpiritElement.Tho && b == SpiritElement.Thuy);
         }
 
         void UpdatePhase()
@@ -96,6 +158,13 @@ namespace WildernessCultivation.Mobs
                 // Player implement TakeDamage trên PlayerStats nhưng không qua IDamageable — fallback
                 var ps = target.GetComponent<PlayerStats>() ?? target.GetComponentInParent<PlayerStats>();
                 ps?.TakeDamage(damage);
+            }
+
+            // On-hit status: vd boss có Bleeding nanh → áp Bleeding khi đập trúng.
+            if (onHitStatusEffect != null)
+            {
+                var mgr = target.GetComponent<StatusEffectManager>() ?? target.GetComponentInParent<StatusEffectManager>();
+                if (mgr != null) mgr.Apply(onHitStatusEffect, onHitStatusDuration);
             }
         }
 

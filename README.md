@@ -339,6 +339,50 @@ Gán array `WorldGenerator.biomes` trong scene để bật. Để trống → fa
 
 - `BossPortal` (IInteractable): tốn 1 vật phẩm key (vd Linh Thạch) để mở, spawn `BossMobAI` cách player ~3m.
 - `BossMobAI`: 3 phase theo HP threshold (60% / 25%) — phase 2 summon minion, phase 3 bắn volley 8 viên + tốc độ x1.5. Drop `bonusDropItem` (vd 1 pháp bảo).
+- **(mới)** Element resistance: `BossMobAI.element` + `sameElementResistance` (cùng linh tố projectile → giảm dame) + `counterElementVulnerability` (tương khắc → tăng dame). Quan hệ tương khắc: Hoả ⇄ Thuỷ, Mộc ⇄ Kim, Thổ ⇄ Mộc.
+- **(mới)** Aura status & on-hit status: `auraStatusEffect` (Băng Phách Long → Freeze trong radius), `onHitStatusEffect` (Hắc Lang → Bleeding khi cắn).
+
+### 3 boss preset (gợi ý wiring trong Editor)
+| Tên | Realm tier | Linh tố | Aura/On-hit | Drop |
+|---|---|---|---|---|
+| Hắc Lang | Luyện Khí 9 | Kim | onHit Bleeding, summon sói nhỏ phase 2 | Sói Lang Nha |
+| Hoàng Sa Yêu | Trúc Cơ Sơ | Thổ | aura slow (StatusEffect Freeze nhẹ moveSpeed=0.7), kháng Hoả 50% | Hoàng Sa Châu |
+| Băng Phách Long | Trúc Cơ Hậu | Thuỷ | aura Freeze (moveSpeed=0.4 + sanity tick), kháng Thuỷ, yếu Hoả x1.5 | Băng Phách Châu (MagicTreasure ManaBurst) |
+
+## 🌟 Linh căn ngũ hành
+
+`SpiritRootSO` (Right-click > Create > WildernessCultivation > Spirit Root). Gắn `SpiritRoot` MonoBehaviour vào Player; điền `candidatePool` để roll random khi nhân vật mới (vd 1 Tạp + 5 Đơn linh căn + 1 Thiên).
+
+PlayerStats / RealmSystem / PlayerCombat / PlayerController tự đọc multiplier:
+- `maxHPMultiplier`, `carryWeightMultiplier` (Thổ ↑)
+- `freezeThresholdDelta` / `heatThresholdDelta` / `freezeDamageMultiplier` (Hoả/Thuỷ)
+- `thirstDecayMultiplier`, `hungerDecayMultiplier`, `sanityDecayMultiplier`
+- `weaponDamageMultiplier`, `durabilityWearMultiplier` (Kim ↑ dame, ↓ hao)
+- `xpGainMultiplier`, `breakthroughCostMultiplier`, `techniqueAffinityMultiplier`
+- `sameElementDamageMultiplier` (FireBall + Hoả căn → cộng)
+
+`TechniqueSO.element` chỉ ra linh tố của công pháp (FireBall = Hoả). `RealmSystem.AddTechniqueXp(amount, element)` áp `techniqueAffinityMultiplier` nếu cùng element. `Projectile.element` được FireBallSO inject xuống projectile để boss áp resistance.
+
+Save/load round-trip: `SaveLoadController.spiritRootCatalog[]` resolve theo `SpiritRootSO.name`.
+
+## 🤢 Status effects
+
+`StatusEffectSO` (Right-click > Create > WildernessCultivation > Status Effect). `StatusEffectManager` gắn cùng GameObject với PlayerStats — tick damage + multiplier moveSpeed/incomingDamage.
+
+Built-in hooks:
+- `ItemSO.consumeStatusEffect` + `consumeStatusChance`: ăn raw meat → Sickness, uống nước bẩn → Poison.
+- `ItemSO.spoiledStatusEffect`: chồng thêm khi item ĐÃ HỎNG (vd raw meat hỏng → Food Poisoning).
+- `Projectile.onHitStatusEffect`: FireBall + Burn SO → áp Burn 4s lên target khi trúng.
+- `BossMobAI.auraStatusEffect`: tick mỗi `auraTickInterval` lên player trong `auraRadius`.
+- `BossMobAI.onHitStatusEffect`: áp khi boss đập trúng.
+
+UI: gắn `StatusEffectBarUI` lên Canvas với `iconContainer` (HorizontalLayoutGroup) + `iconPrefab` (Image + Text con).
+
+## 📊 HUD mới
+
+`StatBarUI` mở rộng: thêm `bodyTempFill` (đổi màu lạnh/ấm/nóng theo BodyTemp) + `encumbranceFill` (đổi màu khi vượt cap).
+
+`EnvironmentBadgeUI` (mới): badge góc màn hình hiển thị Ngày/Mùa/Weather/Linh căn (text + optional icon).
 
 ---
 

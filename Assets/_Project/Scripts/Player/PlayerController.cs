@@ -1,5 +1,7 @@
 using UnityEngine;
+using WildernessCultivation.Cultivation;
 using WildernessCultivation.Items;
+using WildernessCultivation.Player.Status;
 using WildernessCultivation.UI;
 
 namespace WildernessCultivation.Player
@@ -43,13 +45,21 @@ namespace WildernessCultivation.Player
         /// <summary>Khi true, controller bỏ qua input + zero velocity. Dùng cho action chặn move (vd câu cá).</summary>
         public bool MovementLocked { get; set; }
 
+        SpiritRoot spiritRoot;
+        StatusEffectManager statusManager;
+
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             if (inventory == null) inventory = GetComponent<Inventory>();
+            spiritRoot = GetComponent<SpiritRoot>();
+            statusManager = GetComponent<StatusEffectManager>();
         }
+
+        /// <summary>maxCarryWeight có cộng modifier linh căn (Thổ x1.5 …).</summary>
+        public float EffectiveMaxCarryWeight => maxCarryWeight * (spiritRoot != null ? spiritRoot.CarryMul : 1f);
 
         /// <summary>Multiplier tốc độ theo encumbrance hiện tại. 1 = bình thường, &lt;1 = chậm.</summary>
         public float EncumbranceMultiplier
@@ -58,12 +68,16 @@ namespace WildernessCultivation.Player
             {
                 if (inventory == null) return 1f;
                 float w = inventory.TotalWeight;
-                if (w <= maxCarryWeight) return 1f;
-                if (w >= overEncumberedHardCap) return overweightSpeedMin;
-                float t = (w - maxCarryWeight) / Mathf.Max(0.001f, overEncumberedHardCap - maxCarryWeight);
+                float cap = EffectiveMaxCarryWeight;
+                float hard = overEncumberedHardCap * (spiritRoot != null ? spiritRoot.CarryMul : 1f);
+                if (w <= cap) return 1f;
+                if (w >= hard) return overweightSpeedMin;
+                float t = (w - cap) / Mathf.Max(0.001f, hard - cap);
                 return Mathf.Lerp(1f, overweightSpeedMin, t);
             }
         }
+
+        public float StatusSpeedMultiplier => statusManager != null ? statusManager.MoveSpeedMultiplier : 1f;
 
         void Update()
         {
@@ -87,7 +101,7 @@ namespace WildernessCultivation.Player
         void FixedUpdate()
         {
             if (MovementLocked) { rb.velocity = Vector2.zero; return; }
-            rb.velocity = input * moveSpeed * EncumbranceMultiplier;
+            rb.velocity = input * moveSpeed * EncumbranceMultiplier * StatusSpeedMultiplier;
         }
 
         Vector2 ReadInput()

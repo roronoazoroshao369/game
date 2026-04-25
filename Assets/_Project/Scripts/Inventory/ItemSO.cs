@@ -49,5 +49,14 @@ namespace WildernessCultivation.Items
         [Tooltip("Khi hỏng, restore* và sanity penalty áp dụng.")]
         public float spoiledRestoreMultiplier = 0.5f;
         public float spoiledSanityPenalty = 8f;
+
+        [Header("Status effects khi tiêu thụ")]
+        [Tooltip("Áp 1 status khi ăn/uống dù item còn tươi (vd thịt sống → Sickness, nước bẩn → Poison).")]
+        public WildernessCultivation.Player.Status.StatusEffectSO consumeStatusEffect;
+        [Range(0f, 1f)]
+        [Tooltip("Xác suất áp consumeStatusEffect khi tiêu thụ (1 = luôn).")]
+        public float consumeStatusChance = 1f;
+        [Tooltip("Áp 1 status khi item ĐÃ HỎNG (chỉ có ý nghĩa nếu isPerishable=true). Chồng lên consumeStatusEffect.")]
+        public WildernessCultivation.Player.Status.StatusEffectSO spoiledStatusEffect;
     }
 }

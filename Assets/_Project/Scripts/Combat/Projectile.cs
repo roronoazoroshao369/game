@@ -1,4 +1,6 @@
 using UnityEngine;
+using WildernessCultivation.Cultivation;
+using WildernessCultivation.Player.Status;
 
 namespace WildernessCultivation.Combat
 {
@@ -16,8 +18,16 @@ namespace WildernessCultivation.Combat
         [Tooltip("Có dame nhiều mục tiêu trước khi huỷ không?")]
         public bool piercing = false;
 
+        [Header("Element / status")]
+        [Tooltip("Linh tố của projectile. BossMobAI.element = same → giảm dame; tương khắc → tăng.")]
+        public SpiritElement element = SpiritElement.None;
+        [Tooltip("Optional status áp lên target khi trúng (vd FireBall → Burn).")]
+        public StatusEffectSO onHitStatusEffect;
+        public float onHitStatusDuration = 4f;
+
         Vector2 dir;
         GameObject owner;
+        public GameObject Owner => owner;
         Rigidbody2D body;
         float dieAt;
         readonly System.Collections.Generic.HashSet<GameObject> hitOnce = new();
@@ -48,7 +58,13 @@ namespace WildernessCultivation.Combat
             if (!hitOnce.Add(other.gameObject)) return;
 
             var dmg = other.GetComponent<IDamageable>() ?? other.GetComponentInParent<IDamageable>();
-            if (dmg != null) dmg.TakeDamage(damage, owner);
+            if (dmg != null) dmg.TakeDamage(damage, gameObject);
+
+            if (onHitStatusEffect != null)
+            {
+                var mgr = other.GetComponent<StatusEffectManager>() ?? other.GetComponentInParent<StatusEffectManager>();
+                if (mgr != null) mgr.Apply(onHitStatusEffect, onHitStatusDuration);
+            }
 
             if (!piercing) Destroy(gameObject);
         }
