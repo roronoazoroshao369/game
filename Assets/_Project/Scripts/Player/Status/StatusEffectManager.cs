@@ -47,7 +47,7 @@ namespace WildernessCultivation.Player.Status
                 if (Time.time >= a.nextTickAt)
                 {
                     a.nextTickAt = Time.time + Mathf.Max(0.05f, a.effect.tickIntervalSec);
-                    if (a.effect.hpDamagePerTick > 0f) stats.TakeDamage(a.effect.hpDamagePerTick);
+                    if (a.effect.hpDamagePerTick > 0f) stats.TakeDamageRaw(a.effect.hpDamagePerTick);
                     if (a.effect.sanityDamagePerTick > 0f) stats.Sanity = Mathf.Max(0f, stats.Sanity - a.effect.sanityDamagePerTick);
                     if (a.effect.hungerDamagePerTick > 0f) stats.Hunger = Mathf.Max(0f, stats.Hunger - a.effect.hungerDamagePerTick);
                     if (a.effect.thirstDamagePerTick > 0f) stats.Thirst = Mathf.Max(0f, stats.Thirst - a.effect.thirstDamagePerTick);

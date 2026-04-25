@@ -78,16 +78,20 @@ namespace WildernessCultivation.Player
         SpiritRoot spiritRoot;
         StatusEffectManager statusManager;
         bool maxHPApplied;
+        float baseMaxHP;
 
         void Start()
         {
             timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
             spiritRoot = GetComponent<SpiritRoot>();
             statusManager = GetComponent<StatusEffectManager>();
+            baseMaxHP = maxHP;
             ApplySpiritRootMaxHP();
         }
 
-        void ApplySpiritRootMaxHP()
+        /// <summary>Áp linh căn lên maxHP. Chỉ scale maxHP — không scale HP để tránh
+        /// xung đột thứ tự Start với SaveLoadController (SaveLoadController sẽ set HP sau theo save data).</summary>
+        public void ApplySpiritRootMaxHP()
         {
             if (maxHPApplied || spiritRoot == null) return;
             float mul = spiritRoot.MaxHPMul;
@@ -95,9 +99,21 @@ namespace WildernessCultivation.Player
             {
                 float oldMax = maxHP;
                 maxHP *= mul;
-                HP = Mathf.Min(maxHP, HP * (maxHP / Mathf.Max(0.001f, oldMax)));
+                // Chỉ scale HP theo nếu nhân vật đang ở full health (fresh game / chưa bị thương).
+                // Trường hợp save load đã set HP < oldMax → giữ nguyên, SaveLoadController sẽ phụ trách.
+                if (HP >= oldMax - 0.01f) HP = maxHP;
+                else HP = Mathf.Min(HP, maxHP);
             }
             maxHPApplied = true;
+        }
+
+        /// <summary>Reset & re-apply linh căn lên maxHP. Gọi từ SaveLoadController sau khi SetSpiritRoot,
+        /// hoặc khi player đổi linh căn runtime (hiếm gặp).</summary>
+        public void ReapplySpiritRootMaxHP()
+        {
+            maxHPApplied = false;
+            if (baseMaxHP > 0f) maxHP = baseMaxHP;
+            ApplySpiritRootMaxHP();
         }
 
         void Update()
@@ -139,9 +155,15 @@ namespace WildernessCultivation.Player
 
         public void TakeDamage(float dmg)
         {
-            if (IsDead) return;
-            // Status effect modifier (Burn x1.2…)
+            // Status effect modifier (Burn x1.2…) chỉ áp cho dame ngoài (melee/projectile/env).
             if (statusManager != null) dmg *= statusManager.IncomingDamageMultiplier;
+            TakeDamageRaw(dmg);
+        }
+
+        /// <summary>Nhận dame KHÔNG nhân IncomingDamageMultiplier (dùng cho tick status để tránh tự khuếch đại).</summary>
+        public void TakeDamageRaw(float dmg)
+        {
+            if (IsDead) return;
             if (HasShield)
             {
                 float absorbed = Mathf.Min(Shield, dmg);
@@ -150,7 +172,6 @@ namespace WildernessCultivation.Player
             }
             else if (Shield > 0f)
             {
-                // Shield đã hết hạn → reset
                 Shield = 0f;
             }
             if (dmg > 0f) HP = Mathf.Max(0f, HP - dmg);

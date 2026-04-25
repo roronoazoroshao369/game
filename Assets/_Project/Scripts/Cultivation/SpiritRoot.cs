@@ -23,7 +23,8 @@ namespace WildernessCultivation.Cultivation
             if (current == null && rollOnStart && candidatePool != null && candidatePool.Length > 0)
             {
                 current = candidatePool[Random.Range(0, candidatePool.Length)];
-                Debug.Log($"[SpiritRoot] Rolled: {current.displayName} ({current.grade}/{current.primaryElement})");
+                if (current != null)
+                    Debug.Log($"[SpiritRoot] Rolled: {current.displayName} ({current.grade}/{current.primaryElement})");
             }
             if (current == null)
             {

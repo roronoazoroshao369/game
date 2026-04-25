@@ -100,16 +100,15 @@ namespace WildernessCultivation.Player
         public PlayerController Controller => controller;
         public PlayerStats Stats => stats;
 
-        /// <summary>Multiplier dame cho 1 technique theo linh căn caster (cùng element → bonus, ngoài ra 1).</summary>
+        /// <summary>Multiplier dame cho 1 technique theo linh căn caster (cùng element → bonus dame).</summary>
+        /// <remarks>Chỉ dùng <c>sameElementDamageMultiplier</c> (Combat). XP affinity (<c>techniqueAffinityMultiplier</c>)
+        /// đã được áp riêng tại <see cref="WildernessCultivation.Cultivation.RealmSystem.AddTechniqueXp"/>.</remarks>
         public float WeaponDamageMultiplierForElement(SpiritElement element)
         {
-            if (spiritRoot == null) return 1f;
-            float aff = spiritRoot.TechniqueAffinityMulFor(element);
-            // sameElementDamageMultiplier ~ Hoả căn vd 1.5 vào tech Hoả
-            float same = (spiritRoot.Current != null && spiritRoot.Current.primaryElement == element)
+            if (spiritRoot == null || spiritRoot.Current == null) return 1f;
+            return spiritRoot.Current.primaryElement == element
                 ? spiritRoot.Current.sameElementDamageMultiplier
                 : 1f;
-            return aff * same;
         }
 
         void OnDrawGizmosSelected()

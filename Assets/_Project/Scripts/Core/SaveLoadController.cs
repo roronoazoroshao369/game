@@ -124,6 +124,12 @@ namespace WildernessCultivation.Core
             {
                 foreach (var so in spiritRootCatalog)
                     if (so != null && so.name == data.player.spiritRoot) { spiritRoot.SetSpiritRoot(so); break; }
+                // Re-apply maxHP scale theo linh căn vừa load, rồi set HP từ save (đè đúng giá trị).
+                if (playerStats != null)
+                {
+                    playerStats.ReapplySpiritRootMaxHP();
+                    playerStats.HP = Mathf.Min(data.player.hp, playerStats.maxHP);
+                }
             }
             if (timeManager != null && data.world != null)
             {
