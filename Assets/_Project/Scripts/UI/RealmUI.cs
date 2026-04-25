@@ -43,11 +43,11 @@ namespace WildernessCultivation.UI
             if (realmLabel != null) realmLabel.text = realm.Current.name;
             if (xpFill != null && realm.HasNext)
             {
-                float req = Mathf.Max(1f, realm.Next.xpRequired);
+                float req = Mathf.Max(1f, realm.EffectiveNextXpRequired);
                 xpFill.fillAmount = Mathf.Clamp01(realm.currentXp / req);
             }
             if (breakthroughButton != null && realm.HasNext)
-                breakthroughButton.interactable = realm.currentXp >= realm.Next.xpRequired;
+                breakthroughButton.interactable = realm.currentXp >= realm.EffectiveNextXpRequired;
         }
     }
 }

@@ -17,6 +17,9 @@ namespace WildernessCultivation.Core
         public TimeManager timeManager;
         public WorldGenerator worldGenerator;
         public ItemDatabase itemDatabase;
+        public SpiritRoot spiritRoot;
+        [Tooltip("Pool linh căn để resolve theo tên khi load.")]
+        public SpiritRootSO[] spiritRootCatalog;
 
         [Header("Behavior")]
         public float autosaveInterval = 120f;
@@ -32,6 +35,7 @@ namespace WildernessCultivation.Core
             if (inventory == null) inventory = FindObjectOfType<Inventory>();
             if (timeManager == null) timeManager = FindObjectOfType<TimeManager>();
             if (worldGenerator == null) worldGenerator = FindObjectOfType<WorldGenerator>();
+            if (spiritRoot == null) spiritRoot = FindObjectOfType<SpiritRoot>();
 
             if (autoLoadOnStart) LoadAndApply();
 
@@ -62,7 +66,7 @@ namespace WildernessCultivation.Core
                     bodyTemp = playerStats?.BodyTemp ?? 50f,
                     realmTier = realm?.currentTier ?? 0,
                     cultivationXp = realm?.currentXp ?? 0,
-                    spiritRoot = realm?.SpiritRoot ?? "Hỏa",
+                    spiritRoot = (spiritRoot != null && spiritRoot.Current != null) ? spiritRoot.Current.name : (realm?.SpiritRoot ?? "Hỏa"),
                 },
                 world = new WorldSaveData
                 {
@@ -115,6 +119,17 @@ namespace WildernessCultivation.Core
                 realm.currentTier = data.player.realmTier;
                 realm.currentXp = data.player.cultivationXp;
                 realm.SpiritRoot = data.player.spiritRoot;
+            }
+            if (spiritRoot != null && data.player != null && !string.IsNullOrEmpty(data.player.spiritRoot) && spiritRootCatalog != null)
+            {
+                foreach (var so in spiritRootCatalog)
+                    if (so != null && so.name == data.player.spiritRoot) { spiritRoot.SetSpiritRoot(so); break; }
+                // Re-apply maxHP scale theo linh căn vừa load, rồi set HP từ save (đè đúng giá trị).
+                if (playerStats != null)
+                {
+                    playerStats.ReapplySpiritRootMaxHP();
+                    playerStats.HP = Mathf.Min(data.player.hp, playerStats.maxHP);
+                }
             }
             if (timeManager != null && data.world != null)
             {

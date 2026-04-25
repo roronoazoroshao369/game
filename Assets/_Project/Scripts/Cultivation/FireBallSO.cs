@@ -1,6 +1,7 @@
 using UnityEngine;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Player;
+using WildernessCultivation.Player.Status;
 
 namespace WildernessCultivation.Cultivation
 {
@@ -22,6 +23,10 @@ namespace WildernessCultivation.Cultivation
         [Min(1)] public int volley = 1;
         [Tooltip("Góc quạt giữa các viên khi volley > 1.")]
         public float spreadDegrees = 12f;
+
+        [Header("On-hit status (vd Burn)")]
+        public StatusEffectSO onHitStatusEffect;
+        public float onHitStatusDuration = 4f;
 
         public override void Cast(PlayerCombat caster)
         {
@@ -51,10 +56,13 @@ namespace WildernessCultivation.Cultivation
                     continue;
                 }
                 p.speed = speed;
-                p.damage = damage;
+                p.damage = damage * caster.WeaponDamageMultiplierForElement(element);
                 p.lifetime = lifetime;
                 p.piercing = piercing;
                 p.hitMask = hitMask;
+                p.element = element;
+                p.onHitStatusEffect = onHitStatusEffect;
+                p.onHitStatusDuration = onHitStatusDuration;
                 p.Launch(dir, caster.gameObject);
             }
         }

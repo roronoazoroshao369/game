@@ -18,6 +18,9 @@ namespace WildernessCultivation.Cultivation
         public float manaCost = 20f;
         public float cooldown = 1.5f;
 
+        [Header("Element affinity (linh căn cùng element → bonus xpGain + dame)")]
+        public SpiritElement element = SpiritElement.None;
+
         public abstract void Cast(PlayerCombat caster);
     }
 }

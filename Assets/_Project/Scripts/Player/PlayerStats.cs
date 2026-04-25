@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using WildernessCultivation.Core;
+using WildernessCultivation.Cultivation;
+using WildernessCultivation.Player.Status;
 using WildernessCultivation.World;
 
 namespace WildernessCultivation.Player
@@ -73,10 +75,51 @@ namespace WildernessCultivation.Player
         public bool HasShield => Shield > 0f && Time.time < ShieldEndsAt;
 
         TimeManager timeManager;
+        SpiritRoot spiritRoot;
+        StatusEffectManager statusManager;
+        bool maxHPApplied;
+        float baseMaxHP;
+
+        void Awake()
+        {
+            // Init component refs + cache base maxHP ở Awake để ReapplySpiritRootMaxHP gọi từ
+            // SaveLoadController.Start (có thể chạy trước PlayerStats.Start) vẫn có dữ liệu hợp lệ.
+            spiritRoot = GetComponent<SpiritRoot>();
+            statusManager = GetComponent<StatusEffectManager>();
+            baseMaxHP = maxHP;
+        }
 
         void Start()
         {
             timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            ApplySpiritRootMaxHP();
+        }
+
+        /// <summary>Áp linh căn lên maxHP. Chỉ scale maxHP — không scale HP để tránh
+        /// xung đột thứ tự Start với SaveLoadController (SaveLoadController sẽ set HP sau theo save data).</summary>
+        public void ApplySpiritRootMaxHP()
+        {
+            if (maxHPApplied || spiritRoot == null) return;
+            float mul = spiritRoot.MaxHPMul;
+            if (Mathf.Abs(mul - 1f) > 0.001f)
+            {
+                float oldMax = maxHP;
+                maxHP *= mul;
+                // Chỉ scale HP theo nếu nhân vật đang ở full health (fresh game / chưa bị thương).
+                // Trường hợp save load đã set HP < oldMax → giữ nguyên, SaveLoadController sẽ phụ trách.
+                if (HP >= oldMax - 0.01f) HP = maxHP;
+                else HP = Mathf.Min(HP, maxHP);
+            }
+            maxHPApplied = true;
+        }
+
+        /// <summary>Reset & re-apply linh căn lên maxHP. Gọi từ SaveLoadController sau khi SetSpiritRoot,
+        /// hoặc khi player đổi linh căn runtime (hiếm gặp).</summary>
+        public void ReapplySpiritRootMaxHP()
+        {
+            maxHPApplied = false;
+            if (baseMaxHP > 0f) maxHP = baseMaxHP;
+            ApplySpiritRootMaxHP();
         }
 
         void Update()
@@ -84,11 +127,15 @@ namespace WildernessCultivation.Player
             if (IsDead) return;
             float dt = Time.deltaTime;
 
-            Hunger = Mathf.Max(0f, Hunger - hungerDecay * dt);
-            Thirst = Mathf.Max(0f, Thirst - thirstDecay * dt);
+            float hungerMul = spiritRoot != null ? spiritRoot.HungerDecayMul : 1f;
+            float thirstMul = spiritRoot != null ? spiritRoot.ThirstDecayMul : 1f;
+            float sanityMul = spiritRoot != null ? spiritRoot.SanityDecayMul : 1f;
+
+            Hunger = Mathf.Max(0f, Hunger - hungerDecay * hungerMul * dt);
+            Thirst = Mathf.Max(0f, Thirst - thirstDecay * thirstMul * dt);
 
             if (timeManager != null && timeManager.isNight && !IsWarm)
-                Sanity = Mathf.Max(0f, Sanity - sanityNightDecay * dt);
+                Sanity = Mathf.Max(0f, Sanity - sanityNightDecay * sanityMul * dt);
 
             // Biome ambient SAN damage (vd Hoang Mạc Tử Khí về đêm). Lửa trại không chống được.
             if (timeManager != null && timeManager.isNight && WorldGenerator.Instance != null)
@@ -114,6 +161,14 @@ namespace WildernessCultivation.Player
 
         public void TakeDamage(float dmg)
         {
+            // Status effect modifier (Burn x1.2…) chỉ áp cho dame ngoài (melee/projectile/env).
+            if (statusManager != null) dmg *= statusManager.IncomingDamageMultiplier;
+            TakeDamageRaw(dmg);
+        }
+
+        /// <summary>Nhận dame KHÔNG nhân IncomingDamageMultiplier (dùng cho tick status để tránh tự khuếch đại).</summary>
+        public void TakeDamageRaw(float dmg)
+        {
             if (IsDead) return;
             if (HasShield)
             {
@@ -123,7 +178,6 @@ namespace WildernessCultivation.Player
             }
             else if (Shield > 0f)
             {
-                // Shield đã hết hạn → reset
                 Shield = 0f;
             }
             if (dmg > 0f) HP = Mathf.Max(0f, HP - dmg);
@@ -169,12 +223,16 @@ namespace WildernessCultivation.Player
             float ambient = ComputeAmbientTemperature();
             BodyTemp = Mathf.Lerp(BodyTemp, ambient, Mathf.Clamp01(thermalDriftRate * dt / 100f));
 
-            if (BodyTemp <= freezeThreshold)
+            float effFreezeT = freezeThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.freezeThresholdDelta : 0f);
+            float effHeatT = heatThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.heatThresholdDelta : 0f);
+            float freezeMul = spiritRoot != null ? spiritRoot.FreezeDamageMul : 1f;
+
+            if (BodyTemp <= effFreezeT)
             {
-                HP = Mathf.Max(0f, HP - freezeDamagePerSec * dt);
+                HP = Mathf.Max(0f, HP - freezeDamagePerSec * freezeMul * dt);
                 Sanity = Mathf.Max(0f, Sanity - 0.3f * dt);
             }
-            else if (BodyTemp >= heatThreshold)
+            else if (BodyTemp >= effHeatT)
             {
                 Thirst = Mathf.Max(0f, Thirst - thirstDecay * (heatThirstMult - 1f) * dt);
                 Sanity = Mathf.Max(0f, Sanity - heatSanityPenaltyPerSec * dt);

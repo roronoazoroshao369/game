@@ -45,10 +45,17 @@ namespace WildernessCultivation.Mobs
 
         public virtual void TakeDamage(float amount, GameObject source)
         {
+            // Nếu source là Projectile → resolve về Owner cho aggro/loot, không lấy projectile gameObject.
+            GameObject resolvedSource = source;
+            if (source != null)
+            {
+                var proj = source.GetComponent<Projectile>();
+                if (proj != null && proj.Owner != null) resolvedSource = proj.Owner;
+            }
             HP -= amount;
             FlashHit();
-            if (source != null && target == null) target = source.transform; // aggro on hit
-            if (HP <= 0f) Die(source);
+            if (resolvedSource != null && target == null) target = resolvedSource.transform; // aggro on hit
+            if (HP <= 0f) Die(resolvedSource);
         }
 
         protected virtual void FlashHit()
