@@ -120,15 +120,22 @@ namespace WildernessCultivation.Core
                 realm.currentXp = data.player.cultivationXp;
                 realm.SpiritRoot = data.player.spiritRoot;
             }
-            if (spiritRoot != null && data.player != null && !string.IsNullOrEmpty(data.player.spiritRoot) && spiritRootCatalog != null)
+            // Re-build maxHP/maxMana từ base + linh căn + tích luỹ realm bonus, rồi set HP/Mana từ save.
+            // Thứ tự: SetSpiritRoot → ReapplySpiritRootMaxHP (reset về base + spiritMul)
+            //        → ReapplyAccumulatedBonuses (cộng hpBonus tier 1..currentTier) → set HP/Mana.
+            if (playerStats != null)
             {
-                foreach (var so in spiritRootCatalog)
-                    if (so != null && so.name == data.player.spiritRoot) { spiritRoot.SetSpiritRoot(so); break; }
-                // Re-apply maxHP scale theo linh căn vừa load, rồi set HP từ save (đè đúng giá trị).
-                if (playerStats != null)
+                if (spiritRoot != null && data.player != null && !string.IsNullOrEmpty(data.player.spiritRoot) && spiritRootCatalog != null)
                 {
-                    playerStats.ReapplySpiritRootMaxHP();
+                    foreach (var so in spiritRootCatalog)
+                        if (so != null && so.name == data.player.spiritRoot) { spiritRoot.SetSpiritRoot(so); break; }
+                }
+                playerStats.ReapplySpiritRootMaxHP();
+                if (realm != null) realm.ReapplyAccumulatedBonuses();
+                if (data.player != null)
+                {
                     playerStats.HP = Mathf.Min(data.player.hp, playerStats.maxHP);
+                    playerStats.Mana = Mathf.Min(data.player.mana, playerStats.maxMana);
                 }
             }
             if (timeManager != null && data.world != null)

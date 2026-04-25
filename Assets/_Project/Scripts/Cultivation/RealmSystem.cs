@@ -130,17 +130,33 @@ namespace WildernessCultivation.Cultivation
 
         void ApplyBonuses(RealmDefinition r)
         {
+            ApplyBonusToStats(r);
+            // Đột phá thành công → hồi đầy HP/Mana
+            if (stats != null)
+            {
+                stats.HP = stats.maxHP;
+                stats.Mana = stats.maxMana;
+            }
+        }
+
+        void ApplyBonusToStats(RealmDefinition r)
+        {
             if (stats != null)
             {
                 stats.maxHP += r.hpBonus;
                 stats.maxMana += r.manaBonus;
-                stats.HP = stats.maxHP;
-                stats.Mana = stats.maxMana;
             }
-            if (combat != null)
-            {
-                combat.meleeDamage += r.damageBonus;
-            }
+            if (combat != null) combat.meleeDamage += r.damageBonus;
+        }
+
+        /// <summary>Re-apply tích luỹ bonus từ tier 1..currentTier lên stats hiện tại (không reset HP/Mana).
+        /// Gọi từ <see cref="WildernessCultivation.Core.SaveLoadController"/> sau khi
+        /// <see cref="WildernessCultivation.Player.PlayerStats.ReapplySpiritRootMaxHP"/> để khôi phục
+        /// hpBonus/manaBonus/damageBonus tích luỹ qua các lần đột phá.</summary>
+        public void ReapplyAccumulatedBonuses()
+        {
+            for (int i = 1; i <= currentTier && i < realms.Length; i++)
+                ApplyBonusToStats(realms[i]);
         }
 
         static RealmDefinition[] DefaultRealms()

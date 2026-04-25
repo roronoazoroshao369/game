@@ -74,6 +74,14 @@ namespace WildernessCultivation.Player
         public float ShieldEndsAt;
         public bool HasShield => Shield > 0f && Time.time < ShieldEndsAt;
 
+        /// <summary>Freeze threshold đã cộng spirit root delta (UI nên đọc giá trị này thay vì raw).</summary>
+        public float EffectiveFreezeThreshold
+            => freezeThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.freezeThresholdDelta : 0f);
+
+        /// <summary>Heat threshold đã cộng spirit root delta (UI nên đọc giá trị này thay vì raw).</summary>
+        public float EffectiveHeatThreshold
+            => heatThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.heatThresholdDelta : 0f);
+
         TimeManager timeManager;
         SpiritRoot spiritRoot;
         StatusEffectManager statusManager;
@@ -223,8 +231,8 @@ namespace WildernessCultivation.Player
             float ambient = ComputeAmbientTemperature();
             BodyTemp = Mathf.Lerp(BodyTemp, ambient, Mathf.Clamp01(thermalDriftRate * dt / 100f));
 
-            float effFreezeT = freezeThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.freezeThresholdDelta : 0f);
-            float effHeatT = heatThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.heatThresholdDelta : 0f);
+            float effFreezeT = EffectiveFreezeThreshold;
+            float effHeatT = EffectiveHeatThreshold;
             float freezeMul = spiritRoot != null ? spiritRoot.FreezeDamageMul : 1f;
 
             if (BodyTemp <= effFreezeT)

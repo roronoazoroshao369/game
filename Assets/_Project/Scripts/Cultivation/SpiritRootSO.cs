@@ -69,6 +69,8 @@ namespace WildernessCultivation.Cultivation
         public static SpiritRootSO CreateDefault()
         {
             var so = ScriptableObject.CreateInstance<SpiritRootSO>();
+            // Đặt name để save/load round-trip không bị Apply skip do IsNullOrEmpty check.
+            so.name = "SpiritRoot_Default";
             so.displayName = "Tạp Linh Căn";
             so.grade = SpiritRootGrade.Tap;
             so.primaryElement = SpiritElement.None;
