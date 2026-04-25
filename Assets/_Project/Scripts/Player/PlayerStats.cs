@@ -87,6 +87,7 @@ namespace WildernessCultivation.Player
         StatusEffectManager statusManager;
         bool maxHPApplied;
         float baseMaxHP;
+        float baseMaxMana;
 
         void Awake()
         {
@@ -95,6 +96,7 @@ namespace WildernessCultivation.Player
             spiritRoot = GetComponent<SpiritRoot>();
             statusManager = GetComponent<StatusEffectManager>();
             baseMaxHP = maxHP;
+            baseMaxMana = maxMana;
         }
 
         void Start()
@@ -127,6 +129,9 @@ namespace WildernessCultivation.Player
         {
             maxHPApplied = false;
             if (baseMaxHP > 0f) maxHP = baseMaxHP;
+            // Reset maxMana về base — RealmSystem.ReapplyAccumulatedBonuses sẽ cộng lại bonus tier
+            // tránh stack double khi LoadAndApply được gọi nhiều lần trong cùng scene.
+            if (baseMaxMana > 0f) maxMana = baseMaxMana;
             ApplySpiritRootMaxHP();
         }
 

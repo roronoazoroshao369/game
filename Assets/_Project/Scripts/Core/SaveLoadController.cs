@@ -12,6 +12,7 @@ namespace WildernessCultivation.Core
     public class SaveLoadController : MonoBehaviour
     {
         public PlayerStats playerStats;
+        public PlayerCombat playerCombat;
         public RealmSystem realm;
         public Inventory inventory;
         public TimeManager timeManager;
@@ -31,6 +32,7 @@ namespace WildernessCultivation.Core
         void Start()
         {
             if (playerStats == null) playerStats = FindObjectOfType<PlayerStats>();
+            if (playerCombat == null) playerCombat = FindObjectOfType<PlayerCombat>();
             if (realm == null) realm = FindObjectOfType<RealmSystem>();
             if (inventory == null) inventory = FindObjectOfType<Inventory>();
             if (timeManager == null) timeManager = FindObjectOfType<TimeManager>();
@@ -131,6 +133,7 @@ namespace WildernessCultivation.Core
                         if (so != null && so.name == data.player.spiritRoot) { spiritRoot.SetSpiritRoot(so); break; }
                 }
                 playerStats.ReapplySpiritRootMaxHP();
+                if (playerCombat != null) playerCombat.ResetMeleeDamageToBase();
                 if (realm != null) realm.ReapplyAccumulatedBonuses();
                 if (data.player != null)
                 {

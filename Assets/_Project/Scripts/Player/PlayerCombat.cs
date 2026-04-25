@@ -35,12 +35,22 @@ namespace WildernessCultivation.Player
         SpiritRoot spiritRoot;
         float meleeReadyAt;
         float skillReadyAt;
+        float baseMeleeDamage;
 
         void Awake()
         {
             controller = GetComponent<PlayerController>();
             stats = GetComponent<PlayerStats>();
             spiritRoot = GetComponent<SpiritRoot>();
+            baseMeleeDamage = meleeDamage;
+        }
+
+        /// <summary>Reset meleeDamage về giá trị gốc (Awake-time). Gọi từ SaveLoadController
+        /// trước <see cref="WildernessCultivation.Cultivation.RealmSystem.ReapplyAccumulatedBonuses"/>
+        /// để tránh stack double khi LoadAndApply chạy nhiều lần trong cùng scene.</summary>
+        public void ResetMeleeDamageToBase()
+        {
+            if (baseMeleeDamage > 0f) meleeDamage = baseMeleeDamage;
         }
 
         void Update()
