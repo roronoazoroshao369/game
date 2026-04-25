@@ -54,8 +54,9 @@ Hệ thống phím cơ bản trong scene mặc định:
 - **T** → bật/tắt đuốc
 - **J** → đánh (mặc định `PlayerCombat.attackKey`)
 - **B** → dùng pháp bảo (cần item đã craft)
-- **F** → câu cá (gần WaterSpring)
 - **M** → ngồi thiền (cần xa boss/mob)
+
+> Câu cá (`FishingAction`, phím F), repair workbench, storage chest đã có code nhưng wizard chưa add vào scene mặc định. Tự gắn component + tạo prefab khi cần.
 
 ---
 
