@@ -415,11 +415,14 @@ namespace WildernessCultivation.EditorTools
             var col = go.AddComponent<CircleCollider2D>();
             col.radius = 0.4f;
 
-            // Order matters: PlayerStats trước SpiritRoot? PlayerStats.Awake gọi GetComponent<SpiritRoot>()
-            // nên SpiritRoot cần được AddComponent trước hoặc cùng lúc.
+            // Order matters:
+            //  1. SpiritRoot trước PlayerStats (PlayerStats.Awake() gọi GetComponent<SpiritRoot>()).
+            //  2. PlayerStats trước StatusEffectManager — StatusEffectManager có
+            //     [RequireComponent(typeof(PlayerStats))]; nếu thêm StatusEffectManager trước,
+            //     Unity sẽ auto-add một PlayerStats thứ hai (duplicate → double stat decay).
             go.AddComponent<SpiritRoot>();
-            go.AddComponent<StatusEffectManager>();
             go.AddComponent<PlayerStats>();
+            go.AddComponent<StatusEffectManager>();
             go.AddComponent<Inventory>();
             go.AddComponent<PlayerController>();
             go.AddComponent<PlayerCombat>();
@@ -486,12 +489,15 @@ namespace WildernessCultivation.EditorTools
             var col = go.AddComponent<CircleCollider2D>();
             col.radius = 0.5f;
             col.isTrigger = true;
+            // CraftStationMarker phải thêm trước Campfire — Campfire có
+            // [RequireComponent(typeof(CraftStationMarker))]; thêm Campfire trước sẽ
+            // auto-add một CraftStationMarker rồi line sau add thêm cái thứ hai (duplicate).
+            var marker = go.AddComponent<CraftStationMarker>();
+            marker.station = CraftStation.Campfire;
             var fire = go.AddComponent<Campfire>();
             fire.woodItem = woodItem;
             fire.flameRenderer = sr;
             go.AddComponent<LightSource>();
-            var marker = go.AddComponent<CraftStationMarker>();
-            marker.station = CraftStation.Campfire;
             return SaveAsPrefab(go, $"{PrefabsDir}/Campfire.prefab");
         }
 
@@ -617,9 +623,11 @@ namespace WildernessCultivation.EditorTools
             wg.mobSpawner = spawner;
             saveLoad.worldGenerator = wg;
 
-            // Place 1 campfire near spawn
+            // Place 1 campfire near spawn. WorldGenerator.Start() teleports player to
+            // (size.x*0.5, size.y*0.5, 0) = (20, 20, 0) với size 40x40, nên campfire phải
+            // đặt gần đó chứ không phải gần origin.
             var fire = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Campfire);
-            fire.transform.position = new Vector3(2.5f, 0, 0);
+            fire.transform.position = new Vector3(wg.size.x * 0.5f + 2.5f, wg.size.y * 0.5f, 0f);
 
             // UI Canvas
             var canvasGo = new GameObject("UICanvas");
