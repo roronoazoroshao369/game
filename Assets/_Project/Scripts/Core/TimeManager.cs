@@ -15,6 +15,9 @@ namespace WildernessCultivation.Core
         [Range(0f, 1f)]
         public float currentTime01;
 
+        [Tooltip("Số ngày in-game đã sống sót (tăng mỗi khi currentTime01 wrap qua 1).")]
+        public int daysSurvived;
+
         public float dayProgress => currentTime01;
         public bool isNight => currentTime01 < 0.25f || currentTime01 > 0.75f;
 
@@ -29,7 +32,11 @@ namespace WildernessCultivation.Core
         void Update()
         {
             currentTime01 += Time.deltaTime / dayLengthSeconds;
-            if (currentTime01 >= 1f) currentTime01 -= 1f;
+            if (currentTime01 >= 1f)
+            {
+                currentTime01 -= 1f;
+                daysSurvived++;
+            }
 
             if (isNight && !wasNight) OnNightStart?.Invoke();
             else if (!isNight && wasNight) OnDayStart?.Invoke();

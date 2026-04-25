@@ -29,6 +29,13 @@ namespace WildernessCultivation.Cultivation
 
         public string SpiritRoot = "Hỏa"; // random hoặc set lúc tạo nhân vật
 
+        [Header("Tuning")]
+        [Range(0f, 1f)]
+        [Tooltip("Tỉ lệ XP được hoàn lại khi đột phá thất bại. 0 = mất toàn bộ XP, 1 = không mất XP.")]
+        public float xpRefundOnFailure = 0.5f;
+        [Tooltip("Lượng SAN mất khi đột phá thất bại (cộng dồn theo độ khó next tier).")]
+        public float failureSanityPenalty = 15f;
+
         public event Action<int> OnRealmAdvanced;
         public event Action<bool> OnBreakthroughAttempted; // success?
 
@@ -59,7 +66,8 @@ namespace WildernessCultivation.Cultivation
             var nextRealm = Next;
             if (currentXp < nextRealm.xpRequired) return false;
 
-            currentXp -= nextRealm.xpRequired;
+            float spent = nextRealm.xpRequired;
+            currentXp -= spent;
             bool success = UnityEngine.Random.value <= nextRealm.breakthroughChance;
             OnBreakthroughAttempted?.Invoke(success);
 
@@ -72,9 +80,12 @@ namespace WildernessCultivation.Cultivation
             }
             else
             {
-                // Thất bại: mất một phần SAN
-                if (stats != null) stats.Sanity = Mathf.Max(0f, stats.Sanity - 15f);
-                Debug.Log($"[Realm] Đột phá thất bại lên {nextRealm.name}.");
+                // Thất bại: hoàn lại 1 phần XP, mất SAN
+                float refund = spent * Mathf.Clamp01(xpRefundOnFailure);
+                currentXp += refund;
+                if (stats != null)
+                    stats.Sanity = Mathf.Max(0f, stats.Sanity - failureSanityPenalty);
+                Debug.Log($"[Realm] Đột phá thất bại lên {nextRealm.name}. Refund {refund:F0} XP, mất {failureSanityPenalty} SAN.");
             }
             return success;
         }

@@ -2,6 +2,7 @@ using UnityEngine;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player;
+using WildernessCultivation.World;
 
 namespace WildernessCultivation.Core
 {
@@ -14,8 +15,14 @@ namespace WildernessCultivation.Core
         public RealmSystem realm;
         public Inventory inventory;
         public TimeManager timeManager;
+        public WorldGenerator worldGenerator;
+        public ItemDatabase itemDatabase;
 
+        [Header("Behavior")]
         public float autosaveInterval = 120f;
+        [Tooltip("Tự load save lúc scene start nếu có file.")]
+        public bool autoLoadOnStart = true;
+
         float nextSaveAt;
 
         void Start()
@@ -24,9 +31,9 @@ namespace WildernessCultivation.Core
             if (realm == null) realm = FindObjectOfType<RealmSystem>();
             if (inventory == null) inventory = FindObjectOfType<Inventory>();
             if (timeManager == null) timeManager = FindObjectOfType<TimeManager>();
+            if (worldGenerator == null) worldGenerator = FindObjectOfType<WorldGenerator>();
 
-            // Optional auto-load on start
-            // if (SaveSystem.TryLoad(out var data)) Apply(data);
+            if (autoLoadOnStart) LoadAndApply();
 
             nextSaveAt = Time.time + autosaveInterval;
         }
@@ -59,6 +66,8 @@ namespace WildernessCultivation.Core
                 world = new WorldSaveData
                 {
                     timeOfDay01 = timeManager?.currentTime01 ?? 0f,
+                    seed = worldGenerator != null ? worldGenerator.seed : 0,
+                    daysSurvived = timeManager != null ? timeManager.daysSurvived : 0,
                 },
             };
 
@@ -98,8 +107,41 @@ namespace WildernessCultivation.Core
                 realm.SpiritRoot = data.player.spiritRoot;
             }
             if (timeManager != null && data.world != null)
+            {
                 timeManager.currentTime01 = data.world.timeOfDay01;
-            // Inventory restore yêu cầu lookup ItemSO bằng itemId — implement khi có item DB.
+                timeManager.daysSurvived = data.world.daysSurvived;
+            }
+            if (worldGenerator != null && data.world != null && data.world.seed != 0)
+                worldGenerator.seed = data.world.seed;
+
+            RestoreInventory(data);
+        }
+
+        void RestoreInventory(SaveData data)
+        {
+            if (inventory == null || data.inventory == null) return;
+            if (itemDatabase == null)
+            {
+                Debug.LogWarning("[Save] ItemDatabase chưa được gán → không thể restore inventory.");
+                return;
+            }
+            // Xóa toàn bộ slot rồi nạp lại
+            for (int i = 0; i < inventory.Slots.Count; i++)
+                inventory.TryConsumeSlot(i, inventory.Slots[i].count);
+
+            foreach (var s in data.inventory)
+            {
+                if (string.IsNullOrEmpty(s.itemId) || s.count <= 0) continue;
+                var item = itemDatabase.GetById(s.itemId);
+                if (item == null)
+                {
+                    Debug.LogWarning($"[Save] ItemDatabase không có itemId='{s.itemId}', bỏ qua.");
+                    continue;
+                }
+                int leftover = inventory.Add(item, s.count);
+                if (leftover > 0)
+                    Debug.LogWarning($"[Save] Inventory đầy khi restore {s.itemId}, {leftover} item bị mất.");
+            }
         }
     }
 }

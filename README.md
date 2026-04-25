@@ -14,13 +14,14 @@ game/
 │   │   ├── Core/         GameManager, TimeManager (day/night), SaveSystem, ItemDatabase
 │   │   ├── Player/       PlayerController (touch joystick + WASD), PlayerStats, PlayerCombat
 │   │   ├── Survival/     (HP/Hunger/Thirst/Sanity/Mana đã tích hợp trong PlayerStats)
-│   │   ├── Cultivation/  RealmSystem, TechniqueSO, MeditationAction, SwordQiSlashSO
+│   │   ├── Cultivation/  RealmSystem (XP refund-on-fail), TechniqueSO, MeditationAction, SwordQiSlashSO
 │   │   ├── Combat/       IDamageable
 │   │   ├── Inventory/    ItemSO, Inventory (16 slot)
 │   │   ├── Crafting/     RecipeSO, CraftingSystem, CraftStationMarker
-│   │   ├── World/        WorldGenerator (procedural đồng cỏ), ResourceNode
+│   │   ├── World/        WorldGenerator, ResourceNode, IInteractable, Campfire, WaterSpring
 │   │   ├── Mobs/         MobBase, RabbitAI, WolfAI, FoxSpiritAI, MobSpawner
-│   │   └── UI/           VirtualJoystick, StatBarUI, InventoryUI, CraftingUI, RealmUI, SkillButton
+│   │   ├── Player/       PlayerController, PlayerStats (IsWarm), PlayerCombat, InteractAction, SleepAction
+│   │   └── UI/           VirtualJoystick, StatBarUI, InventoryUI, CraftingUI, RealmUI, SkillButton, InteractPromptUI
 │   ├── Art/              (sprites — bạn tự thêm)
 │   ├── Audio/
 │   ├── Data/SO/          (ScriptableObject assets — tạo trong Unity Editor)
@@ -180,6 +181,37 @@ Thêm:
 ### Bước 8 — Camera
 Camera Main: Orthographic, size=6, follow Player (dùng simple script hoặc Cinemachine 2D).
 
+### Bước 9 — Player actions: Interact + Sleep
+Trên `Player` GameObject thêm:
+- `InteractAction` — set `interactRadius` ~1.6, `interactKey` = E. Dùng `interactMask` = layer chứa `Campfire` + `WaterSpring` (vd thêm 1 layer mới `Interactable` rồi set lên prefab).
+- `SleepAction` — chỉnh `hpPerSec`, `sanityPerSec`, `timeMultiplier` theo balance bạn muốn. Yêu cầu mặc định: ban đêm + đứng trong aura của 1 `Campfire` đang cháy.
+
+### Bước 10 — Lửa trại & Suối nước
+**Campfire prefab:**
+- Empty `Campfire`, Layer: `Interactable` (hoặc `CraftStation`)
+- Add `CraftStationMarker` (set `station` = Campfire) + `Campfire` script
+- 1 SpriteRenderer cho ngọn lửa → drag vào `flameRenderer`
+- 1 SpriteRenderer phụ (tròn, mềm, mờ) làm aura → drag vào `auraRenderer`
+- Set `woodItem` = `Item_wood`, `warmRadius` ~3, `fuelSeconds` ~180.
+
+Tạo `RecipeSO` "Lửa trại" với `requiredStation = None`, output là `ItemSO` placeholder hoặc dùng custom logic place prefab (xem TODO trong `RecipeSO.cs`).
+
+**WaterSpring prefab:**
+- Empty `WaterSpring`, Layer: `Interactable`
+- CircleCollider2D (isTrigger = true, radius ~0.6)
+- Add `WaterSpring` script. Optional: set `cleanWaterItem` = `Item_clean_water` + `dispenseBottleOnDrink = true` để mỗi lần uống cũng nhận 1 bình nước mang đi.
+- Drag vào `WorldGenerator.waterSpringPrefab` để procedural rải khắp đồng cỏ (mật độ ~0.005 mặc định = vài chục suối nhỏ trên map 100×100).
+
+### Bước 11 — UI prompt tương tác
+Trong Canvas:
+- 1 TMP_Text "[E] Uống" gần joystick → add `InteractPromptUI`, drag `interactAction` từ Player. Tự ẩn khi không có target.
+- (Optional) 1 Button mobile cho Interact + 1 Button mobile cho Sleep, mỗi cái add `SkillButton` set `action` = `Interact` / `Sleep`.
+
+### Bước 12 — Save/Load
+Trên `_GameManager`:
+- Add `SaveLoadController`, drag `playerStats`, `realm`, `inventory`, `timeManager`, `worldGenerator`, **và `itemDatabase`** (cần để restore inventory).
+- Bật `autoLoadOnStart = true` nếu muốn auto-load.
+
 ---
 
 ## 🕹️ Điều khiển
@@ -189,12 +221,16 @@ Camera Main: Orthographic, size=6, follow Player (dùng simple script hoặc Cin
 - Nút Attack (J): đánh thường
 - Nút Cast (K): công pháp (Kiếm Khí Trảm)
 - Nút Meditate (M): bật/tắt thiền
+- Nút Interact (E): tương tác — uống nước tại suối, tiếp gỗ vào lửa trại
+- Nút Sleep (Z): ngủ qua đêm khi đang ở cạnh lửa trại đang cháy (hồi HP/SAN, time fast-forward)
 
 ### PC (test)
 - WASD / Arrow keys: di chuyển
 - J: đánh thường
 - K: công pháp
 - M: thiền
+- E: tương tác (hover prompt sẽ hiện ra)
+- Z: ngủ (qua `SleepAction`, bind vào `SkillButton.Action.Sleep`)
 
 ---
 
