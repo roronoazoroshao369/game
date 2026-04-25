@@ -27,6 +27,9 @@ namespace WildernessCultivation.Crafting
         void OnDisable()
         {
             // Tránh mất output: nếu bị disable / destroy giữa chừng → deliver ngay tất cả cook đang chờ.
+            // StopAllCoroutines trước khi fast-deliver để tránh duplicate khi chỉ component (không phải GameObject) bị disable —
+            // coroutine vẫn chạy tiếp đến khi GameObject inactive, sẽ Add output lần 2.
+            StopAllCoroutines();
             if (pendingCooks.Count == 0 || inv == null) return;
             foreach (var recipe in pendingCooks)
             {
