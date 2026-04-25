@@ -117,14 +117,15 @@ namespace WildernessCultivation.Mobs
             base.TakeDamage(amount, aggroSource);
         }
 
-        // Quan hệ tương khắc đơn giản: Hoả ⇄ Thuỷ, Mộc ⇄ Kim, Thổ ⇄ Mộc.
+        // Quan hệ tương khắc đơn giản (bidirectional): Hoả ⇄ Thuỷ, Mộc ⇄ Kim, Thổ ⇄ Mộc.
         static bool IsCounter(SpiritElement a, SpiritElement b)
         {
             return (a == SpiritElement.Hoa && b == SpiritElement.Thuy) ||
                    (a == SpiritElement.Thuy && b == SpiritElement.Hoa) ||
                    (a == SpiritElement.Kim && b == SpiritElement.Moc) ||
-                   (a == SpiritElement.Moc && b == SpiritElement.Tho) ||
-                   (a == SpiritElement.Tho && b == SpiritElement.Thuy);
+                   (a == SpiritElement.Moc && b == SpiritElement.Kim) ||
+                   (a == SpiritElement.Tho && b == SpiritElement.Moc) ||
+                   (a == SpiritElement.Moc && b == SpiritElement.Tho);
         }
 
         void UpdatePhase()

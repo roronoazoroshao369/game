@@ -73,6 +73,10 @@ namespace WildernessCultivation.Cultivation
         public bool HasNext => currentTier + 1 < realms.Length;
         public RealmDefinition Next => realms[Mathf.Clamp(currentTier + 1, 0, realms.Length - 1)];
 
+        /// <summary>XP cần có để đột phá realm kế tiếp, đã nhân BreakthroughCostMul từ linh căn.</summary>
+        public float EffectiveNextXpRequired
+            => HasNext ? Next.xpRequired * (spiritRootHolder != null ? spiritRootHolder.BreakthroughCostMul : 1f) : 0f;
+
         /// <summary>Cộng XP tu luyện. Gọi từ MeditationAction hoặc khi giết quái.</summary>
         public void AddCultivationXp(float amount)
         {
@@ -93,8 +97,7 @@ namespace WildernessCultivation.Cultivation
         {
             if (!HasNext) return false;
             var nextRealm = Next;
-            float costMul = spiritRootHolder != null ? spiritRootHolder.BreakthroughCostMul : 1f;
-            float xpRequired = nextRealm.xpRequired * costMul;
+            float xpRequired = EffectiveNextXpRequired;
             if (currentXp < xpRequired) return false;
 
             float spent = xpRequired;

@@ -27,6 +27,12 @@ namespace WildernessCultivation.World
 
         public void TakeDamage(float amount, GameObject source)
         {
+            // Nếu source là Projectile → resolve về Owner (player) để Harvest tìm được Inventory.
+            if (source != null)
+            {
+                var proj = source.GetComponent<Projectile>();
+                if (proj != null && proj.Owner != null) source = proj.Owner;
+            }
             currentHP -= amount;
             if (currentHP <= 0f) Harvest(source);
         }
