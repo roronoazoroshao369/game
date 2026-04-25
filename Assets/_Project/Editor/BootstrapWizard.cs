@@ -438,6 +438,13 @@ namespace WildernessCultivation.EditorTools
             var pc = go.GetComponent<PlayerController>();
             pc.spriteRenderer = sr;
 
+            // LayerMask defaults to 0 (Nothing) — Physics2D.OverlapCircle sẽ không trúng gì.
+            // Set sang Everything (~0) cho mặc định placeholder; user có thể thu hẹp sau.
+            var combat = go.GetComponent<PlayerCombat>();
+            combat.hitMask = ~0;
+            var interact = go.GetComponent<InteractAction>();
+            if (interact != null) interact.interactMask = ~0;
+
             return SaveAsPrefab(go, $"{PrefabsDir}/Player.prefab");
         }
 
@@ -477,6 +484,8 @@ namespace WildernessCultivation.EditorTools
             ai.maxHP = 12f;
             ai.HP = 12f;
             ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 2 } };
+            // playerMask default 0 → RabbitAI không detect player. Set Everything cho placeholder.
+            ai.playerMask = ~0;
             return SaveAsPrefab(go, $"{PrefabsDir}/Rabbit.prefab");
         }
 
@@ -573,9 +582,11 @@ namespace WildernessCultivation.EditorTools
             player.transform.position = Vector3.zero;
             gm.player = player.transform;
 
-            // Wire CraftingSystem.knownRecipes
+            // Wire CraftingSystem.knownRecipes + stationMask (default 0 → station-required
+            // recipe luôn fail vì OverlapCircleAll không tìm thấy CraftStationMarker nào).
             var craft = player.GetComponent<CraftingSystem>();
             craft.knownRecipes = recipes;
+            craft.stationMask = ~0;
 
             // Wire SpiritRoot candidate pool (random roll on start)
             var sr = player.GetComponent<SpiritRoot>();
