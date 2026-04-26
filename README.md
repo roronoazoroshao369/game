@@ -10,6 +10,26 @@
 
 ---
 
+## 🏃 Demo trong 60 giây
+
+1. Clone repo → mở bằng Unity Hub (**Unity 2022.3 LTS**, module Android Build Support).
+2. Chờ Unity import xong → menu **Tools → Wilderness Cultivation → Bootstrap Default Scene**.
+3. Mở `Assets/Scenes/MainScene.unity` → bấm **Play**.
+4. `TutorialHUD` sẽ hiện panel welcome (cheat sheet điều khiển) + checklist 5 mục tiêu ở góc phải trên.
+   Dismiss bằng nút **Bắt đầu demo**, rồi chơi tới khi banner **"MVP Demo hoàn thành"** hiện ra
+   (sau khi đột phá Luyện Khí Tầng 2).
+
+Mục tiêu demo:
+1. Thu thập 3 Gỗ
+2. Nướng được Thịt tại lửa trại
+3. Bắt đầu Tụ Linh Quyết (phím **M**)
+4. Đột phá Luyện Khí Tầng 1
+5. Đột phá Luyện Khí Tầng 2 (= demo COMPLETE)
+
+Xem trạng thái chi tiết từng hạng mục MVP: [Documentation/MVP_SCOPE.md](Documentation/MVP_SCOPE.md).
+
+---
+
 ## 📂 Cấu trúc dự án
 
 ```

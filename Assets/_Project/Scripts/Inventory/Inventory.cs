@@ -266,6 +266,56 @@ namespace WildernessCultivation.Items
             return leftover;
         }
 
+        /// <summary>
+        /// Hoán đổi nội dung 2 slot trong cùng 1 inventory (cho drag &amp; drop reorder).
+        /// Giữ nguyên freshRemaining / durability theo slot. Nếu 2 slot cùng <see cref="ItemSO"/>
+        /// và không phải perishable/durable → cố gắng merge vào slot đích (stack tối đa maxStack),
+        /// phần dư ở lại slot nguồn. Trả về true nếu có thay đổi.
+        /// </summary>
+        public bool SwapSlots(int a, int b)
+        {
+            if (a == b) return false;
+            if (a < 0 || a >= slots.Count) return false;
+            if (b < 0 || b >= slots.Count) return false;
+
+            var sa = slots[a];
+            var sb = slots[b];
+
+            // Merge 2 stack cùng item thường (không perishable / durable vì mỗi slot có tracking riêng).
+            if (!sa.IsEmpty && !sb.IsEmpty
+                && sa.item == sb.item
+                && !sa.item.isPerishable && !sa.item.hasDurability
+                && sb.count < sa.item.maxStack)
+            {
+                int room = sa.item.maxStack - sb.count;
+                int move = Mathf.Min(room, sa.count);
+                sb.count += move;
+                sa.count -= move;
+                if (sa.count <= 0) ResetSlot(sa);
+                OnInventoryChanged?.Invoke();
+                return true;
+            }
+
+            // Swap field-by-field (giữ ref của slot để không phá list order).
+            var tmpItem = sa.item;
+            var tmpCount = sa.count;
+            var tmpFresh = sa.freshRemaining;
+            var tmpDur = sa.durability;
+
+            sa.item = sb.item;
+            sa.count = sb.count;
+            sa.freshRemaining = sb.freshRemaining;
+            sa.durability = sb.durability;
+
+            sb.item = tmpItem;
+            sb.count = tmpCount;
+            sb.freshRemaining = tmpFresh;
+            sb.durability = tmpDur;
+
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
         void ResetSlot(InventorySlot s)
         {
             s.item = null;

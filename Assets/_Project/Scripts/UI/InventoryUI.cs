@@ -32,6 +32,7 @@ namespace WildernessCultivation.UI
                 var ui = go.GetComponent<InventorySlotUI>();
                 ui.slotIndex = i;
                 ui.onClick = OnSlotClicked;
+                ui.onDropFromSlot = OnSlotDropped;
                 spawned.Add(ui);
             }
             inventory.OnInventoryChanged += Refresh;
@@ -87,6 +88,12 @@ namespace WildernessCultivation.UI
                     break;
                 }
             }
+        }
+
+        void OnSlotDropped(int src, int dst)
+        {
+            if (inventory == null) return;
+            inventory.SwapSlots(src, dst);
         }
     }
 }

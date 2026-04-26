@@ -312,5 +312,116 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.AreEqual(5, leftover);
             Assert.AreEqual(5, inv.CountOf(stick));
         }
+
+        // ===== SwapSlots (drag & drop reorder) =====
+
+        [Test]
+        public void SwapSlots_DifferentItems_SwapsContents()
+        {
+            var stick = MakeItem("stick");
+            var stone = MakeItem("stone");
+            inv.Add(stick, 3);          // slot 0
+            inv.Add(stone, 2);          // slot 1
+
+            Assert.IsTrue(inv.SwapSlots(0, 1));
+            Assert.AreEqual(stone, inv.GetSlot(0).item);
+            Assert.AreEqual(2, inv.GetSlot(0).count);
+            Assert.AreEqual(stick, inv.GetSlot(1).item);
+            Assert.AreEqual(3, inv.GetSlot(1).count);
+        }
+
+        [Test]
+        public void SwapSlots_EmptyDst_MovesItem()
+        {
+            var stick = MakeItem("stick");
+            inv.Add(stick, 4);           // slot 0
+            Assert.IsTrue(inv.SwapSlots(0, 5));
+            Assert.IsTrue(inv.GetSlot(0).IsEmpty);
+            Assert.AreEqual(stick, inv.GetSlot(5).item);
+            Assert.AreEqual(4, inv.GetSlot(5).count);
+        }
+
+        [Test]
+        public void SwapSlots_SameIndex_ReturnsFalse()
+        {
+            var stick = MakeItem("stick");
+            inv.Add(stick, 3);
+            Assert.IsFalse(inv.SwapSlots(0, 0));
+            Assert.AreEqual(3, inv.GetSlot(0).count);
+        }
+
+        [Test]
+        public void SwapSlots_OutOfRange_ReturnsFalse()
+        {
+            var stick = MakeItem("stick");
+            inv.Add(stick, 3);
+            Assert.IsFalse(inv.SwapSlots(0, 999));
+            Assert.IsFalse(inv.SwapSlots(-1, 0));
+            Assert.AreEqual(3, inv.GetSlot(0).count);
+        }
+
+        [Test]
+        public void SwapSlots_StackableSameItem_MergesIntoDst()
+        {
+            var stick = MakeItem("stick", maxStack: 10);
+            inv.Add(stick, 4);           // slot 0 = 4
+            // Simulate 2 non-merged stacks (bình thường Add tự merge; bypass để test merge-trên-swap).
+            inv.GetSlot(1).item = stick;
+            inv.GetSlot(1).count = 3;
+
+            Assert.IsTrue(inv.SwapSlots(0, 1));
+            Assert.AreEqual(stick, inv.GetSlot(1).item);
+            Assert.AreEqual(7, inv.GetSlot(1).count, "merged 4+3 vào dst");
+            Assert.IsTrue(inv.GetSlot(0).IsEmpty, "src rỗng sau merge hết");
+        }
+
+        [Test]
+        public void SwapSlots_StackableMergeOverflow_LeavesRemainderInSrc()
+        {
+            var stick = MakeItem("stick", maxStack: 10);
+            inv.GetSlot(0).item = stick; inv.GetSlot(0).count = 6;
+            inv.GetSlot(1).item = stick; inv.GetSlot(1).count = 8;
+
+            Assert.IsTrue(inv.SwapSlots(0, 1));
+            Assert.AreEqual(10, inv.GetSlot(1).count, "dst lấp đầy maxStack");
+            Assert.AreEqual(stick, inv.GetSlot(0).item);
+            Assert.AreEqual(4, inv.GetSlot(0).count, "src còn 6+8-10=4");
+        }
+
+        [Test]
+        public void SwapSlots_PreservesPerishableFreshness()
+        {
+            var meat = MakeItem("meat", perishable: true);
+            inv.Add(meat, 1);             // slot 0
+            inv.GetSlot(0).freshRemaining = 42f;
+
+            Assert.IsTrue(inv.SwapSlots(0, 3));
+            Assert.AreEqual(42f, inv.GetSlot(3).freshRemaining, 0.001f);
+            Assert.IsTrue(inv.GetSlot(0).IsEmpty);
+        }
+
+        [Test]
+        public void SwapSlots_PreservesDurableDurability()
+        {
+            var rod = MakeItem("rod", durable: true);
+            inv.Add(rod, 1);
+            inv.UseDurability(0, 35f);    // dur 65
+            Assert.IsTrue(inv.SwapSlots(0, 7));
+            Assert.AreEqual(65f, inv.GetSlot(7).durability, 0.001f);
+            Assert.IsTrue(inv.GetSlot(0).IsEmpty);
+        }
+
+        [Test]
+        public void SwapSlots_PerishableSameItem_DoesNotMerge()
+        {
+            var meat = MakeItem("meat", perishable: true);
+            inv.GetSlot(0).item = meat; inv.GetSlot(0).count = 1; inv.GetSlot(0).freshRemaining = 50f;
+            inv.GetSlot(1).item = meat; inv.GetSlot(1).count = 1; inv.GetSlot(1).freshRemaining = 20f;
+
+            // Không merge vì perishable → swap thuần
+            Assert.IsTrue(inv.SwapSlots(0, 1));
+            Assert.AreEqual(20f, inv.GetSlot(0).freshRemaining, 0.001f);
+            Assert.AreEqual(50f, inv.GetSlot(1).freshRemaining, 0.001f);
+        }
     }
 }
