@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using WildernessCultivation.Combat;
 using WildernessCultivation.Core;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.Player.Status;
@@ -198,6 +199,7 @@ namespace WildernessCultivation.Player
         public void TakeDamageRaw(float dmg)
         {
             if (IsDead) return;
+            float incoming = dmg;
             if (HasShield)
             {
                 float absorbed = Mathf.Min(Shield, dmg);
@@ -210,6 +212,9 @@ namespace WildernessCultivation.Player
             }
             if (dmg > 0f) HP = Mathf.Max(0f, HP - dmg);
             OnStatsChanged?.Invoke();
+            // Bắn event juice (camera shake, damage numbers) — bao gồm cả damage bị shield ăn,
+            // để player vẫn thấy phản hồi visible khi đỡ đòn.
+            if (incoming > 0f) CombatEvents.RaiseDamage(transform.position, incoming, false);
             if (HP <= 0f) Die();
         }
 
