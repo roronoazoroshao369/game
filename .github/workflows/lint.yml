@@ -1,0 +1,72 @@
+name: Lint / format
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  whitespace:
+    name: Whitespace + EOL + final newline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No tab-indent in C#
+        run: |
+          set -e
+          if grep -rPl "^\t" Assets/_Project/Scripts Assets/_Project/Tests 2>/dev/null; then
+            echo "::error::Phát hiện tab indent trong C# file. Repo dùng 4 space (xem .editorconfig)."
+            exit 1
+          fi
+
+      - name: No trailing whitespace in C#
+        run: |
+          set -e
+          if grep -rPln "[ \t]+$" Assets/_Project/Scripts Assets/_Project/Tests --include="*.cs" 2>/dev/null; then
+            echo "::error::Phát hiện trailing whitespace trong C# file."
+            exit 1
+          fi
+
+      - name: No CRLF line endings in C#
+        run: |
+          set -e
+          if grep -rlP $'\r' Assets/_Project/Scripts Assets/_Project/Tests --include="*.cs" 2>/dev/null; then
+            echo "::error::Phát hiện CRLF line endings. .editorconfig yêu cầu LF."
+            exit 1
+          fi
+
+      - name: Final newline at EOF in C#
+        run: |
+          set -e
+          missing=()
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if [ -s "$f" ] && [ "$(tail -c1 "$f" | wc -l)" -eq 0 ]; then
+              missing+=("$f")
+            fi
+          done < <(find Assets/_Project/Scripts Assets/_Project/Tests -name "*.cs" 2>/dev/null)
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::C# file thiếu final newline:"
+            printf '  %s\n' "${missing[@]}"
+            exit 1
+          fi
+
+  dotnet-format:
+    name: dotnet format whitespace --verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: dotnet format whitespace
+        run: |
+          set -e
+          dotnet format whitespace \
+            --folder Assets/_Project \
+            --include "**/*.cs" \
+            --verify-no-changes \
+            --verbosity diagnostic
