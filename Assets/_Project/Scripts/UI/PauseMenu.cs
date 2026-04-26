@@ -32,6 +32,9 @@ namespace WildernessCultivation.UI
 
         float toastHideAt;
 
+        // Cache modal để không FindObjectOfType mỗi frame khi check collision Esc.
+        StorageChestUI cachedChestUI;
+
         void Awake()
         {
             if (gameManager == null) gameManager = FindObjectOfType<GameManager>();
@@ -47,9 +50,24 @@ namespace WildernessCultivation.UI
 
         void Update()
         {
-            if (Input.GetKeyDown(toggleKey) || Input.GetKeyDown(altToggleKey)) Toggle();
+            if (Input.GetKeyDown(toggleKey) || Input.GetKeyDown(altToggleKey))
+            {
+                // Không toggle pause khi đang mở modal khác (StorageChest) và đang ở state unpaused —
+                // tránh va chạm khi cả 2 cùng listen Esc trong 1 frame (Devin Review #30 finding).
+                // Nếu pause đang mở thì Esc vẫn resume bình thường.
+                if (gameManager != null && gameManager.isPaused) Toggle();
+                else if (!IsAnotherModalOpen()) Toggle();
+            }
             if (toastText != null && toastText.gameObject.activeSelf && Time.unscaledTime >= toastHideAt)
                 toastText.gameObject.SetActive(false);
+        }
+
+        bool IsAnotherModalOpen()
+        {
+            if (cachedChestUI == null) cachedChestUI = FindObjectOfType<StorageChestUI>();
+            if (cachedChestUI != null && cachedChestUI.panel != null && cachedChestUI.panel.activeSelf)
+                return true;
+            return false;
         }
 
         public void Toggle()
