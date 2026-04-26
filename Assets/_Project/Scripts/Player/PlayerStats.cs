@@ -74,6 +74,18 @@ namespace WildernessCultivation.Player
         public float ShieldEndsAt;
         public bool HasShield => Shield > 0f && Time.time < ShieldEndsAt;
 
+        [Header("Invulnerability (i-frames cho dodge / hồi sinh)")]
+        [Tooltip("Time.time mà i-frames hết hạn. Trong khoảng này TakeDamage bỏ qua.")]
+        public float InvulnerableUntil;
+        public bool IsInvulnerable => Time.time < InvulnerableUntil;
+
+        /// <summary>Set i-frames trong duration giây tính từ thời điểm gọi.</summary>
+        public void SetInvulnerable(float duration)
+        {
+            float end = Time.time + Mathf.Max(0f, duration);
+            if (end > InvulnerableUntil) InvulnerableUntil = end;
+        }
+
         /// <summary>Freeze threshold đã cộng spirit root delta (UI nên đọc giá trị này thay vì raw).</summary>
         public float EffectiveFreezeThreshold
             => freezeThreshold + (spiritRoot != null && spiritRoot.Current != null ? spiritRoot.Current.freezeThresholdDelta : 0f);
@@ -174,6 +186,9 @@ namespace WildernessCultivation.Player
 
         public void TakeDamage(float dmg)
         {
+            // I-frames: bỏ qua mọi dame ngoài (melee/projectile/env). Tick status (TakeDamageRaw)
+            // vẫn vào để tránh dodge cancel poison/burn đang stack.
+            if (IsInvulnerable) return;
             // Status effect modifier (Burn x1.2…) chỉ áp cho dame ngoài (melee/projectile/env).
             if (statusManager != null) dmg *= statusManager.IncomingDamageMultiplier;
             TakeDamageRaw(dmg);

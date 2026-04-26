@@ -5,7 +5,7 @@ Mục tiêu MVP: **Build được 1 APK Android chạy ổn định, demo core l
 ## Feature list MVP (cắt tối đa)
 
 ### ✓ MUST-HAVE (làm chắc)
-- [ ] Nhân vật: di chuyển virtual joystick, tấn công, né
+- [x] Nhân vật: di chuyển virtual joystick, tấn công, né (`DodgeAction`)
 - [ ] Camera follow top-down
 - [ ] 1 biome procedural (Đồng cỏ) — 100x100 tile, có cây/đá/cỏ
 - [ ] Inventory 16 ô, drag & drop trên touch

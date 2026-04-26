@@ -50,6 +50,7 @@ Repo đã có sẵn `Editor/BootstrapWizard.cs`. Sau khi clone xong và mở pro
 
 Hệ thống phím cơ bản trong scene mặc định:
 - **WASD / arrow** → di chuyển
+- **Left Shift** → né (dodge / roll — i-frames trong ~0.25s, tốn 5 Linh Khí)
 - **E** → tương tác (lửa trại, suối nước)
 - **T** → bật/tắt đuốc
 - **J** → đánh (mặc định `PlayerCombat.attackKey`)
@@ -122,6 +123,7 @@ Tạo empty `Player` (Tag: Player, Layer: Player):
   - `CraftingSystem` (set `stationMask` = Layer CraftStation)
   - `RealmSystem`
   - `MeditationAction`
+  - `DodgeAction` (né — phím Left Shift mặc định, tốn 5 Linh Khí)
 
 ### Bước 2 — World gen
 Tạo empty `World`:
