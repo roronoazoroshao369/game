@@ -49,7 +49,10 @@ namespace WildernessCultivation.UI
             if (rt != null)
             {
                 rt.Release();
-                Object.Destroy(rt);
+                // Object.Destroy log error trong EditMode (nơi EditMode test chạy OnDestroy);
+                // dùng DestroyImmediate khi không Playing để tương thích cả 2 mode.
+                if (Application.isPlaying) Object.Destroy(rt);
+                else Object.DestroyImmediate(rt);
                 rt = null;
             }
         }
