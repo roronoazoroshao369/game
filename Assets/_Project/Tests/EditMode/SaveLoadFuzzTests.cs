@@ -133,12 +133,20 @@ namespace WildernessCultivation.Tests.EditMode
                 var rng = new System.Random(seed);
                 var pos = new Vector3((float)(rng.NextDouble() * 100 - 50), (float)(rng.NextDouble() * 100 - 50), 0f);
                 stats.transform.position = pos;
-                stats.HP = (float)(rng.NextDouble() * stats.maxHP);
-                stats.Hunger = (float)(rng.NextDouble() * 100);
-                stats.Thirst = (float)(rng.NextDouble() * 100);
-                stats.Sanity = (float)(rng.NextDouble() * 100);
-                stats.Mana = (float)(rng.NextDouble() * stats.maxMana);
-                stats.BodyTemp = (float)(rng.NextDouble() * 100 + 1f); // > 0 để không trigger default-50
+                // HP/Mana clamp ở Apply về maxHP/maxMana (xem SaveLoadController:140-141), nên
+                // generate trong [0..max] để expected khớp actual sau load.
+                float expectedHP = (float)(rng.NextDouble() * stats.maxHP);
+                float expectedHunger = (float)(rng.NextDouble() * 100);
+                float expectedThirst = (float)(rng.NextDouble() * 100);
+                float expectedSanity = (float)(rng.NextDouble() * 100);
+                float expectedMana = (float)(rng.NextDouble() * stats.maxMana);
+                float expectedBodyTemp = (float)(rng.NextDouble() * 100 + 1f); // > 0 để không trigger default-50
+                stats.HP = expectedHP;
+                stats.Hunger = expectedHunger;
+                stats.Thirst = expectedThirst;
+                stats.Sanity = expectedSanity;
+                stats.Mana = expectedMana;
+                stats.BodyTemp = expectedBodyTemp;
 
                 controller.Save();
 
@@ -150,11 +158,12 @@ namespace WildernessCultivation.Tests.EditMode
 
                 Assert.AreEqual(pos.x, stats.transform.position.x, 0.001f, $"seed={seed} pos.x");
                 Assert.AreEqual(pos.y, stats.transform.position.y, 0.001f, $"seed={seed} pos.y");
-                Assert.AreEqual(stats.Hunger, stats.Hunger, 0.001f, $"seed={seed} hunger sane");
-                // HP/Mana clamp về maxHP/maxMana sau Apply (xem SaveLoadController:140-141)
-                Assert.LessOrEqual(stats.HP, stats.maxHP + 0.001f, $"seed={seed} HP <= maxHP");
-                Assert.LessOrEqual(stats.Mana, stats.maxMana + 0.001f, $"seed={seed} Mana <= maxMana");
-                Assert.GreaterOrEqual(stats.HP, 0f, $"seed={seed} HP >= 0");
+                Assert.AreEqual(expectedHP, stats.HP, 0.01f, $"seed={seed} HP");
+                Assert.AreEqual(expectedHunger, stats.Hunger, 0.01f, $"seed={seed} hunger");
+                Assert.AreEqual(expectedThirst, stats.Thirst, 0.01f, $"seed={seed} thirst");
+                Assert.AreEqual(expectedSanity, stats.Sanity, 0.01f, $"seed={seed} sanity");
+                Assert.AreEqual(expectedMana, stats.Mana, 0.01f, $"seed={seed} mana");
+                Assert.AreEqual(expectedBodyTemp, stats.BodyTemp, 0.01f, $"seed={seed} bodyTemp");
             }
         }
 
