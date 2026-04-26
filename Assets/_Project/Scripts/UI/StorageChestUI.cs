@@ -30,6 +30,11 @@ namespace WildernessCultivation.UI
         StorageChest currentChest;
         readonly List<InventorySlotUI> chestSlotUIs = new();
         readonly List<InventorySlotUI> playerSlotUIs = new();
+        // True khi Open() là cái set MovementLocked = true. Nếu lock đã có sẵn từ
+        // hệ khác (FishingAction, DodgeAction) thì Close() KHÔNG release để không
+        // ghi đè khoá của hệ kia. MovementLocked là bool dùng chung — chưa có
+        // ref-count nên đành dùng cờ ownership cục bộ.
+        bool ownsMovementLock;
 
         void Awake()
         {
@@ -68,7 +73,11 @@ namespace WildernessCultivation.UI
             currentChest = chest;
 
             if (panel != null) panel.SetActive(true);
-            if (playerController != null) playerController.MovementLocked = true;
+            if (playerController != null && !playerController.MovementLocked)
+            {
+                playerController.MovementLocked = true;
+                ownsMovementLock = true;
+            }
 
             EnsureSlotCount(chestSlotUIs, chestSlotsParent,
                 chest.ChestInventory.Slots.Count, OnChestSlotClicked);
@@ -84,7 +93,9 @@ namespace WildernessCultivation.UI
         public void Close()
         {
             if (panel != null) panel.SetActive(false);
-            if (playerController != null) playerController.MovementLocked = false;
+            if (ownsMovementLock && playerController != null)
+                playerController.MovementLocked = false;
+            ownsMovementLock = false;
             DetachInventoryListeners();
             currentChest = null;
         }
