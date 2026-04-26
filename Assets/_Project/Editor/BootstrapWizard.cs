@@ -848,6 +848,7 @@ namespace WildernessCultivation.EditorTools
             BuildRealmUI(canvas, player, whiteSprite);
             BuildStorageChestUI(canvas, player, whiteSprite);
             BuildTutorialHUD(canvas, player, whiteSprite);
+            BuildPauseMenu(canvas, whiteSprite);
         }
 
         static void BuildStatBars(GameObject canvas, GameObject player, Sprite whiteSprite)
@@ -1490,6 +1491,104 @@ namespace WildernessCultivation.EditorTools
             hud.victoryPanel = victoryOverlay;
             hud.victoryText = vText;
             hud.victoryDismissButton = vBtnGo.GetComponent<Button>();
+        }
+
+        // ---------- Pause menu (top-left pause button + center overlay) ----------
+        static void BuildPauseMenu(GameObject canvas, Sprite whiteSprite)
+        {
+            // Pause button (top-left, luôn hiện trên mobile)
+            var pauseBtnGo = new GameObject("PauseBtn",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            pauseBtnGo.transform.SetParent(canvas.transform, false);
+            var pbRT = (RectTransform)pauseBtnGo.transform;
+            pbRT.anchorMin = pbRT.anchorMax = new Vector2(0, 1);
+            pbRT.pivot = new Vector2(0, 1);
+            pbRT.anchoredPosition = new Vector2(10, -128);
+            pbRT.sizeDelta = new Vector2(52, 36);
+            var pbImg = pauseBtnGo.GetComponent<Image>();
+            pbImg.sprite = whiteSprite;
+            pbImg.color = new Color(0.2f, 0.2f, 0.2f, 0.85f);
+            AddTMPLabel(pauseBtnGo, "II", 20, Color.white,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            // Overlay dim
+            var overlayGo = new GameObject("PauseOverlay",
+                typeof(RectTransform), typeof(Image));
+            overlayGo.transform.SetParent(canvas.transform, false);
+            var oRT = (RectTransform)overlayGo.transform;
+            oRT.anchorMin = Vector2.zero;
+            oRT.anchorMax = Vector2.one;
+            oRT.offsetMin = Vector2.zero;
+            oRT.offsetMax = Vector2.zero;
+            var oImg = overlayGo.GetComponent<Image>();
+            oImg.sprite = whiteSprite;
+            oImg.color = new Color(0, 0, 0, 0.6f);
+
+            // Menu panel
+            var panelGo = new GameObject("PauseMenuPanel",
+                typeof(RectTransform), typeof(Image));
+            panelGo.transform.SetParent(overlayGo.transform, false);
+            var pRT = (RectTransform)panelGo.transform;
+            pRT.anchorMin = pRT.anchorMax = new Vector2(0.5f, 0.5f);
+            pRT.pivot = new Vector2(0.5f, 0.5f);
+            pRT.anchoredPosition = Vector2.zero;
+            pRT.sizeDelta = new Vector2(420, 320);
+            var pImg = panelGo.GetComponent<Image>();
+            pImg.sprite = whiteSprite;
+            pImg.color = new Color(0.12f, 0.12f, 0.15f, 0.95f);
+
+            AddTMPLabel(panelGo, "Tạm Dừng", 28, new Color(1f, 0.92f, 0.6f),
+                anchor: new Vector2(0.5f, 1), pivot: new Vector2(0.5f, 1),
+                anchoredPos: new Vector2(0, -18), size: new Vector2(380, 36));
+
+            Button resumeBtn = MakePauseMenuBtn(panelGo, whiteSprite,
+                "Tiếp tục", new Color(0.95f, 0.75f, 0.30f), offsetY: -80);
+            Button saveNowBtn = MakePauseMenuBtn(panelGo, whiteSprite,
+                "Lưu ngay", new Color(0.55f, 0.85f, 0.55f), offsetY: -140);
+            Button quitBtn = MakePauseMenuBtn(panelGo, whiteSprite,
+                "Thoát Demo", new Color(0.80f, 0.40f, 0.40f), offsetY: -200);
+
+            // Toast label
+            var toast = AddTMPLabel(panelGo, "", 18, new Color(0.85f, 1f, 0.85f),
+                anchor: new Vector2(0.5f, 0), pivot: new Vector2(0.5f, 0),
+                anchoredPos: new Vector2(0, 20), size: new Vector2(380, 22));
+            toast.gameObject.SetActive(false);
+
+            // Component — attach lên GameManager GameObject để tồn tại cùng scope Save/Load,
+            // nhưng target overlay/button nằm trên UICanvas.
+            var gmGo = GameObject.Find("GameManager");
+            var pm = gmGo != null
+                ? gmGo.AddComponent<PauseMenu>()
+                : canvas.AddComponent<PauseMenu>();
+            pm.overlay = overlayGo;
+            pm.pauseButton = pauseBtnGo.GetComponent<Button>();
+            pm.resumeButton = resumeBtn;
+            pm.saveNowButton = saveNowBtn;
+            pm.quitButton = quitBtn;
+            pm.toastText = toast;
+        }
+
+        static Button MakePauseMenuBtn(GameObject parent, Sprite whiteSprite,
+            string label, Color color, float offsetY)
+        {
+            var btnGo = new GameObject("PM_" + label,
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            btnGo.transform.SetParent(parent.transform, false);
+            var rt = (RectTransform)btnGo.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1);
+            rt.pivot = new Vector2(0.5f, 1);
+            rt.anchoredPosition = new Vector2(0, offsetY);
+            rt.sizeDelta = new Vector2(260, 44);
+            var img = btnGo.GetComponent<Image>();
+            img.sprite = whiteSprite;
+            img.color = color;
+            AddTMPLabel(btnGo, label, 20, Color.black,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+            return btnGo.GetComponent<Button>();
         }
 
         // ---------- Helpers ----------

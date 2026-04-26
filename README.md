@@ -26,6 +26,8 @@ Mục tiêu demo:
 4. Đột phá Luyện Khí Tầng 1
 5. Đột phá Luyện Khí Tầng 2 (= demo COMPLETE)
 
+Phím tắt demo: **Esc** hoặc **P** mở menu tạm dừng (Tiếp tục / Lưu ngay / Thoát). Autosave chạy 2 phút/lần.
+
 Xem trạng thái chi tiết từng hạng mục MVP: [Documentation/MVP_SCOPE.md](Documentation/MVP_SCOPE.md).
 
 ---

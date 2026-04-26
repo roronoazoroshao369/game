@@ -23,11 +23,13 @@ Mục tiêu MVP: **Build được 1 APK Android chạy ổn định, demo core l
 - [x] **1 công pháp: "Tụ Linh Quyết"** — ngồi thiền hồi linh khí + XP (`MeditationAction`, phím M)
 - [x] **1 chiêu thức: "Kiếm Khí Trảm"** — 20 linh khí, dmg xa (`SwordQiSlashSO`)
 - [x] Save/Load (`SaveSystem` + `SaveLoadController`, 1 slot JSON, round-trip test EditMode)
+- [x] Autosave mỗi 2 phút (`SaveLoadController.autosaveInterval = 120f`, tick trong `Update`)
 - [x] UI: thanh trạng thái, inventory, crafting menu, cảnh giới indicator, joystick, skill buttons
 - [x] **Tutorial HUD + checklist mục tiêu** (`TutorialHUD` + `DemoObjectivesTracker`) — demo-facing onboarding
+- [x] **Pause menu** (`PauseMenu`, phím Esc/P hoặc nút II góc trái, Resume + Lưu ngay + Thoát)
 - [ ] Build APK ARM64, target Android 8.0+ — infra sẵn trong `.github/workflows/build-android.yml`, skip đến khi repo có `UNITY_LICENSE` secret
-- [ ] Autosave mỗi 2 phút — `SaveLoadController` có trigger manual, chưa có timer tự động
 - [ ] Art thật thay cho placeholder solid-color sprites
+- [ ] Audio cơ bản (SFX + ambient music) — hiện chưa có `AudioSource` / `AudioClip` nào trong code
 
 ### ✗ KHÔNG LÀM trong MVP (cắt thẳng tay)
 
@@ -58,8 +60,8 @@ Mục tiêu MVP: **Build được 1 APK Android chạy ổn định, demo core l
 1. **User action:** Add `UNITY_LICENSE` (hoặc `UNITY_EMAIL`/`PASSWORD`/`SERIAL`) vào GitHub Secrets
    để CI `build-android.yml` + `test.yml` thực thi thay vì skip (xem README § GameCI).
 2. **Build APK thủ công 1 lần** qua Unity Editor → verify `adb install` chạy trên máy thật.
-3. **Autosave timer** trong `SaveLoadController` (2 phút/lần).
-4. **Replace placeholder sprites** bằng art 2D thật (Bootstrap Wizard luôn idempotent — rerun sẽ không phá art đã thay).
+3. **Replace placeholder sprites** bằng art 2D thật (Bootstrap Wizard luôn idempotent — rerun sẽ không phá art đã thay).
+4. **Audio tối thiểu** (footstep, attack, meditation ambient) — nice-to-have cho demo 30 phút.
 
 ## Estimate thời gian (1 dev, full-time) — để tham khảo ban đầu
 
