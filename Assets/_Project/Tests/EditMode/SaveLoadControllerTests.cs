@@ -235,6 +235,74 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
+        public void RoundTrip_MultiplePerishableStacks_PreservePerSlotFreshness()
+        {
+            // Regression test cho bug RestoreInventory targeting wrong slot khi 2+ stack
+            // cùng perishable item với freshRemaining khác nhau (Devin Review #21).
+            var meat = MakeItem("meat", perishable: true);
+            db.items.Add(meat);
+
+            inv.Add(meat, 2); // 2 slots: slot 0 fresh=100, slot 1 fresh=100
+            inv.GetSlot(0).freshRemaining = 30f;
+            inv.GetSlot(1).freshRemaining = 80f;
+
+            controller.Save();
+
+            // Wipe
+            for (int i = 0; i < inv.Slots.Count; i++)
+                inv.TryConsumeSlot(i, inv.Slots[i].count);
+
+            controller.LoadAndApply();
+
+            // Sau restore: slot 0 phải là fresh=30, slot 1 phải là fresh=80 (per-slot preserved)
+            Assert.AreEqual(2, inv.CountOf(meat));
+            // Tìm 2 slot meat đầu tiên theo thứ tự, không assume index cố định
+            int firstMeatSlot = -1, secondMeatSlot = -1;
+            for (int i = 0; i < inv.Slots.Count; i++)
+            {
+                if (inv.Slots[i].item != meat) continue;
+                if (firstMeatSlot < 0) firstMeatSlot = i;
+                else { secondMeatSlot = i; break; }
+            }
+            Assert.GreaterOrEqual(firstMeatSlot, 0);
+            Assert.GreaterOrEqual(secondMeatSlot, 0);
+            Assert.AreEqual(30f, inv.GetSlot(firstMeatSlot).freshRemaining, 0.01f,
+                "stack-1 freshness=30 phải giữ — KHÔNG bị stack-2 (fresh=80) ghi đè");
+            Assert.AreEqual(80f, inv.GetSlot(secondMeatSlot).freshRemaining, 0.01f,
+                "stack-2 freshness=80 phải giữ");
+        }
+
+        [Test]
+        public void RoundTrip_MultipleDurableItems_PreservePerSlotDurability()
+        {
+            // Regression test tương tự cho durable items (2 rod khác durability).
+            var rod = MakeItem("rod", durable: true);
+            db.items.Add(rod);
+
+            inv.Add(rod, 2); // 2 rod ở 2 slot khác nhau (durable không stack)
+            inv.GetSlot(0).durability = 25f;
+            inv.GetSlot(1).durability = 88f;
+
+            controller.Save();
+
+            for (int i = 0; i < inv.Slots.Count; i++)
+                inv.TryConsumeSlot(i, inv.Slots[i].count);
+
+            controller.LoadAndApply();
+
+            int firstRodSlot = -1, secondRodSlot = -1;
+            for (int i = 0; i < inv.Slots.Count; i++)
+            {
+                if (inv.Slots[i].item != rod) continue;
+                if (firstRodSlot < 0) firstRodSlot = i;
+                else { secondRodSlot = i; break; }
+            }
+            Assert.AreEqual(25f, inv.GetSlot(firstRodSlot).durability, 0.01f,
+                "rod-1 dur=25 phải giữ — KHÔNG bị rod-2 (dur=88) ghi đè");
+            Assert.AreEqual(88f, inv.GetSlot(secondRodSlot).durability, 0.01f);
+        }
+
+        [Test]
         public void LoadAndApply_NoItemDatabase_LogsWarningAndSkipsInventory()
         {
             controller.itemDatabase = null;

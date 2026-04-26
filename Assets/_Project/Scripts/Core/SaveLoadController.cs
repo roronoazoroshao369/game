@@ -166,6 +166,13 @@ namespace WildernessCultivation.Core
             for (int i = 0; i < inventory.Slots.Count; i++)
                 inventory.TryConsumeSlot(i, inventory.Slots[i].count);
 
+            // Snapshot count per slot trước mỗi Add để định vị slot vừa được Add ghi vào
+            // (perishable/durable không stack → mỗi entry tạo 1 slot mới). Tránh restore loop
+            // đời cũ scan-from-zero làm overwrite slot trước (bug: 2 stack meat fresh khác nhau
+            // sẽ bị stack-2 ghi đè freshRemaining của stack-1 vì cả 2 đều "match đầu tiên").
+            int slotCount = inventory.Slots.Count;
+            var preCounts = new int[slotCount];
+
             foreach (var s in data.inventory)
             {
                 if (string.IsNullOrEmpty(s.itemId) || s.count <= 0) continue;
@@ -175,16 +182,20 @@ namespace WildernessCultivation.Core
                     Debug.LogWarning($"[Save] ItemDatabase không có itemId='{s.itemId}', bỏ qua.");
                     continue;
                 }
+
+                for (int i = 0; i < slotCount; i++) preCounts[i] = inventory.Slots[i].count;
                 int leftover = inventory.Add(item, s.count);
                 if (leftover > 0)
                     Debug.LogWarning($"[Save] Inventory đầy khi restore {s.itemId}, {leftover} item bị mất.");
 
-                // Restore freshness/durability vào slot vừa add (slot đầu tiên match item)
+                // Restore freshness/durability vào slot mà Add() vừa tăng count, KHÔNG quét
+                // từ đầu list (tránh đụng slot cùng item đã được restore từ entry trước).
                 if (s.freshRemaining >= 0f || s.durability >= 0f)
                 {
-                    foreach (var slot in inventory.Slots)
+                    for (int i = 0; i < slotCount; i++)
                     {
-                        if (slot.item == item && slot.count > 0)
+                        var slot = inventory.Slots[i];
+                        if (slot.item == item && slot.count > preCounts[i])
                         {
                             if (s.freshRemaining >= 0f && slot.IsPerishable) slot.freshRemaining = s.freshRemaining;
                             if (s.durability >= 0f && slot.IsDurable) slot.durability = s.durability;
