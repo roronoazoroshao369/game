@@ -80,7 +80,12 @@ namespace WildernessCultivation.UI
                 return;
             }
             // Có save cũ đã auto-load → xoá file + reload scene để wipe state runtime.
+            // Trước khi reload phải destroy GameManager singleton (DontDestroyOnLoad) —
+            // không thì sibling components SaveLoadController / PauseMenu / AudioManager
+            // trên GO đó sẽ sống sót với reference tới UI/Player đã bị destroy, dẫn tới
+            // autosave ghi null + pause UI không hiện (Devin Review #33 follow-up finding).
             SaveSystem.Delete();
+            GameManager.ResetInstanceForSceneReload();
             var active = SceneManager.GetActiveScene();
             SceneManager.LoadScene(active.buildIndex >= 0 ? active.buildIndex : 0);
         }
