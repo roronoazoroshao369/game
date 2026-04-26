@@ -54,6 +54,8 @@ namespace WildernessCultivation.Mobs
             }
             HP -= amount;
             FlashHit();
+            // Juice event (camera shake + damage number) tại vị trí mob.
+            if (amount > 0f) CombatEvents.RaiseDamage(transform.position, amount, false);
             if (resolvedSource != null && target == null) target = resolvedSource.transform; // aggro on hit
             if (HP <= 0f) Die(resolvedSource);
         }
