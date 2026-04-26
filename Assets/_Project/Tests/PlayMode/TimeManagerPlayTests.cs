@@ -60,12 +60,17 @@ namespace WildernessCultivation.Tests.PlayMode
         [UnityTest]
         public IEnumerator Update_FiresOnNightStart_WhenCrossingFromDayToNight()
         {
-            // Bắt đầu ở dusk-1 (vẫn day), wait đến khi vượt 0.75 → night
-            tm.currentTime01 = 0.74f;
+            // dayLengthSeconds=2 → frame delta ~0.008 → frame đầu từ 0.70 vẫn nằm trong day
+            // (0.708 < 0.75) → wasNight init = false đúng. Sau wait 0.2s, currentTime01
+            // ~0.81 vượt dusk → OnNightStart fire 1 lần.
+            tm.dayLengthSeconds = 2.0f;
+            tm.currentTime01 = 0.70f;
+            yield return null; // 1 frame để init wasNight=false (isNight=false @ 0.708)
+
             int nightStarts = 0;
             tm.OnNightStart += () => nightStarts++;
 
-            yield return new WaitForSecondsRealtime(0.4f);
+            yield return new WaitForSecondsRealtime(0.2f);
 
             Assert.GreaterOrEqual(nightStarts, 1, "OnNightStart fire ít nhất 1 lần khi vượt dusk");
         }
@@ -73,12 +78,20 @@ namespace WildernessCultivation.Tests.PlayMode
         [UnityTest]
         public IEnumerator Update_FiresOnDayStart_WhenCrossingFromNightToDay()
         {
-            // Bắt đầu ở dawn-1 (vẫn night), wait đến khi vượt 0.25 → day
+            // dayLengthSeconds=2 → frame delta ~0.008 → frame đầu từ 0.20 vẫn nằm trong
+            // night (0.208 < 0.25) → wasNight init = true đúng. Sau wait 0.2s,
+            // currentTime01 ~0.31 vượt dawn → OnDayStart fire 1 lần.
+            // KHÔNG yield trong dạng dayLengthSeconds=0.3 (default Setup) vì frame delta
+            // ~0.053 → frame đầu nhảy từ 0.20 → 0.253 vượt dawn ngay → wasNight init = false
+            // → transition isNight=false sau đó không fire OnDayStart (flaky).
+            tm.dayLengthSeconds = 2.0f;
             tm.currentTime01 = 0.20f;
+            yield return null; // 1 frame để init wasNight=true (isNight=true @ 0.208)
+
             int dayStarts = 0;
             tm.OnDayStart += () => dayStarts++;
 
-            yield return new WaitForSecondsRealtime(0.3f);
+            yield return new WaitForSecondsRealtime(0.2f);
 
             Assert.GreaterOrEqual(dayStarts, 1, "OnDayStart fire ít nhất 1 lần khi vượt dawn");
         }
