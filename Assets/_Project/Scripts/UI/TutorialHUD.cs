@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using WildernessCultivation.Audio;
 using WildernessCultivation.Core;
 
 namespace WildernessCultivation.UI
@@ -36,6 +37,14 @@ namespace WildernessCultivation.UI
         public TMP_Text victoryText;
         public Button victoryDismissButton;
 
+        [Header("Objective toast (pop-up khi tick 1 mục tiêu)")]
+        public GameObject objectiveToastPanel;
+        public TMP_Text objectiveToastText;
+        [Tooltip("Giây hiển thị toast trước khi tự ẩn. Dùng unscaledTime nên không bị ảnh hưởng pause.")]
+        public float objectiveToastDuration = 2.5f;
+
+        float objectiveToastHideAt;
+
         [Header("Content")]
         [TextArea(3, 10)]
         public string welcomeMessage =
@@ -58,6 +67,7 @@ namespace WildernessCultivation.UI
             if (welcomeBodyText != null) welcomeBodyText.text = welcomeMessage;
             if (welcomePanel != null) welcomePanel.SetActive(showWelcomeOnStart);
             if (victoryPanel != null) victoryPanel.SetActive(false);
+            if (objectiveToastPanel != null) objectiveToastPanel.SetActive(false);
             if (welcomeDismissButton != null) welcomeDismissButton.onClick.AddListener(StartNewGame);
             if (continueButton != null)
             {
@@ -128,7 +138,29 @@ namespace WildernessCultivation.UI
             if (victoryPanel != null) victoryPanel.SetActive(false);
         }
 
-        void OnObjectiveCompleted(DemoObjectivesTracker.Objective _) => RefreshObjectives();
+        void Update()
+        {
+            if (objectiveToastPanel != null && objectiveToastPanel.activeSelf
+                && Time.unscaledTime >= objectiveToastHideAt)
+                objectiveToastPanel.SetActive(false);
+        }
+
+        void OnObjectiveCompleted(DemoObjectivesTracker.Objective o)
+        {
+            RefreshObjectives();
+            ShowObjectiveToast(o);
+            // Gợi ý audio feedback — ItemPickup tone ngắn, đã có sẵn từ AudioManager.
+            AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.ItemPickup);
+        }
+
+        void ShowObjectiveToast(DemoObjectivesTracker.Objective o)
+        {
+            if (objectiveToastPanel == null) return;
+            if (objectiveToastText != null)
+                objectiveToastText.text = $"<b>Hoàn thành:</b> {DemoObjectivesTracker.Label(o)}";
+            objectiveToastPanel.SetActive(true);
+            objectiveToastHideAt = Time.unscaledTime + Mathf.Max(0.5f, objectiveToastDuration);
+        }
 
         void OnAllDone()
         {
@@ -136,6 +168,8 @@ namespace WildernessCultivation.UI
             if (victoryText != null)
                 victoryText.text = "MVP Demo hoàn thành!\nBạn đã đột phá Luyện Khí Tầng 2 — cốt lõi loop chạy ổn.";
             victoryPanel.SetActive(true);
+            // Fanfare riêng cho victory — tái dùng tone BreakthroughSuccess.
+            AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.BreakthroughSuccess);
         }
 
         void RefreshObjectives()
