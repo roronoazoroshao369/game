@@ -168,8 +168,10 @@ namespace WildernessCultivation.UI
             if (victoryText != null)
                 victoryText.text = "MVP Demo hoàn thành!\nBạn đã đột phá Luyện Khí Tầng 2 — cốt lõi loop chạy ổn.";
             victoryPanel.SetActive(true);
-            // Fanfare riêng cho victory — tái dùng tone BreakthroughSuccess.
-            AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.BreakthroughSuccess);
+            // KHÔNG phát BreakthroughSuccess ở đây: objective cuối luôn là đột phá Luyện
+            // Khí Tầng 2, nên AudioManager đã play tone này cùng frame qua
+            // RealmSystem.OnBreakthroughAttempted. Phát thêm sẽ overlap gấp đôi âm lượng
+            // (Devin Review #35 finding).
         }
 
         void RefreshObjectives()
