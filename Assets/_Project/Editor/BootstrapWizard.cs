@@ -101,6 +101,7 @@ namespace WildernessCultivation.EditorTools
                 ("wolf",      32, 24, new Color(0.45f, 0.40f, 0.35f)),
                 ("fox_spirit",28, 24, new Color(0.85f, 0.45f, 0.85f)),
                 ("chest",     32, 28, new Color(0.55f, 0.35f, 0.15f)),
+                ("workbench", 36, 28, new Color(0.40f, 0.25f, 0.10f)),
                 ("campfire",  32, 32, new Color(0.95f, 0.55f, 0.10f)),
                 ("water",     40, 40, new Color(0.30f, 0.65f, 0.90f)),
                 ("ground",    32, 32, new Color(0.78f, 0.70f, 0.50f)),
@@ -399,7 +400,7 @@ namespace WildernessCultivation.EditorTools
         class PrefabBundle
         {
             public GameObject Player, Tree, Rock, Rabbit, Wolf, FoxSpirit, Campfire,
-                WaterSpring, StorageChest, Projectile;
+                WaterSpring, StorageChest, Workbench, Projectile;
         }
 
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
@@ -415,6 +416,7 @@ namespace WildernessCultivation.EditorTools
             bundle.Campfire = BuildCampfirePrefab(sprites["campfire"], items["stick"]);
             bundle.WaterSpring = BuildWaterSpringPrefab(sprites["water"], items["water"], items["raw_fish"]);
             bundle.StorageChest = BuildStorageChestPrefab(sprites["chest"]);
+            bundle.Workbench = BuildWorkbenchPrefab(sprites["workbench"], items["stick"]);
             bundle.Projectile = BuildProjectilePrefab(sprites["projectile"], statusEffects["Burn"]);
             return bundle;
         }
@@ -630,6 +632,24 @@ namespace WildernessCultivation.EditorTools
             return SaveAsPrefab(go, $"{PrefabsDir}/StorageChest.prefab");
         }
 
+        static GameObject BuildWorkbenchPrefab(Sprite sprite, ItemSO repairMaterial)
+        {
+            var go = new GameObject("Workbench");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 2;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.55f;
+            col.isTrigger = true;
+            // Workbench [RequireComponent(typeof(CraftStationMarker))] → marker tự add.
+            // Workbench.Awake() sẽ set marker.station = CraftStation.Workbench.
+            var wb = go.AddComponent<Workbench>();
+            wb.repairMaterial = repairMaterial;
+            wb.repairCost = 1;
+            wb.repairAmount = -1f; // sửa full về maxDurability
+            return SaveAsPrefab(go, $"{PrefabsDir}/Workbench.prefab");
+        }
+
         static GameObject BuildProjectilePrefab(Sprite sprite, StatusEffectSO burn)
         {
             var go = new GameObject("Projectile");
@@ -774,6 +794,11 @@ namespace WildernessCultivation.EditorTools
             // Place 1 storage chest cạnh campfire để demo lưu trữ.
             var chestGo = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.StorageChest);
             chestGo.transform.position = new Vector3(wg.size.x * 0.5f + 4.0f, wg.size.y * 0.5f, 0f);
+
+            // Place 1 workbench sửa đồ cạnh chest. CraftingSystem.stationDetectRadius=2 nên
+            // đặt trong khuảng player có thể reach cả campfire lẫn workbench (kề nhau ≈ 1.5u).
+            var workbenchGo = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Workbench);
+            workbenchGo.transform.position = new Vector3(wg.size.x * 0.5f - 1.0f, wg.size.y * 0.5f, 0f);
 
             // EventSystem (required for UI input — Buttons, Joystick, etc.)
             var esGo = new GameObject("EventSystem");

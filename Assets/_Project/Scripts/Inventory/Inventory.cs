@@ -155,7 +155,11 @@ namespace WildernessCultivation.Items
             if (anyChanged) OnInventoryChanged?.Invoke();
         }
 
-        /// <summary>Hao mòn 1 lần dùng tool/weapon ở slot. Khi durability cạn → slot bị xoá (đồ vỡ).</summary>
+        /// <summary>
+        /// Hao mòn 1 lần dùng tool/weapon ở slot. Khi durability cạn → slot vẫn giữ
+        /// item nhưng <see cref="InventorySlot.IsBroken"/> = true (không còn dùng được
+        /// nhưng có thể đem đến Workbench để sửa).
+        /// </summary>
         public bool UseDurability(int slotIndex, float amountOverride = -1f)
         {
             if (slotIndex < 0 || slotIndex >= slots.Count) return false;
@@ -164,12 +168,37 @@ namespace WildernessCultivation.Items
             float amount = amountOverride > 0f ? amountOverride : s.item.durabilityPerUse;
             s.durability = Mathf.Max(0f, s.durability - amount);
             if (s.durability <= 0f)
-            {
-                Debug.Log($"[Inventory] {s.item.displayName} bị hỏng.");
-                ResetSlot(s);
-            }
+                Debug.Log($"[Inventory] {s.item.displayName} bị hỏng — cần sửa ở Workbench.");
             OnInventoryChanged?.Invoke();
             return true;
+        }
+
+        /// <summary>
+        /// Sửa đồ ở slot — cộng <paramref name="amount"/> vào durability, clamp về maxDurability
+        /// (nếu amount &lt;= 0 → sửa full về maxDurability). Trả về true nếu có gì để sửa.
+        /// </summary>
+        public bool Repair(int slotIndex, float amount = -1f)
+        {
+            if (slotIndex < 0 || slotIndex >= slots.Count) return false;
+            var s = slots[slotIndex];
+            if (s.IsEmpty || !s.IsDurable) return false;
+            if (s.durability >= s.item.maxDurability) return false;
+            float add = amount > 0f ? amount : s.item.maxDurability;
+            s.durability = Mathf.Min(s.item.maxDurability, s.durability + add);
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>Tìm slot đầu tiên cần sửa (durable + durability &lt; max). Trả -1 nếu không có.</summary>
+        public int FindFirstDamagedSlot()
+        {
+            for (int i = 0; i < slots.Count; i++)
+            {
+                var s = slots[i];
+                if (s.IsEmpty || !s.IsDurable) continue;
+                if (s.durability < s.item.maxDurability) return i;
+            }
+            return -1;
         }
 
         public InventorySlot GetSlot(int i) => (i >= 0 && i < slots.Count) ? slots[i] : null;

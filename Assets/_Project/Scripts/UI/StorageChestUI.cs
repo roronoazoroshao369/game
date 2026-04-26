@@ -120,8 +120,13 @@ namespace WildernessCultivation.UI
                 ui.onClick = onClick;
                 list.Add(ui);
             }
-            // Update click handler để trỏ đúng inventory hiện tại.
-            for (int i = 0; i < list.Count; i++) list[i].onClick = onClick;
+            // Update click handler + ẩn slot dư (i >= n) để không hiển thị stale data
+            // từ chest cũ khi chest mới có ít slot hơn.
+            for (int i = 0; i < list.Count; i++)
+            {
+                list[i].onClick = onClick;
+                list[i].gameObject.SetActive(i < n);
+            }
         }
 
         void RefreshChest()
