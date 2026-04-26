@@ -24,10 +24,17 @@ namespace WildernessCultivation.Tests.EditMode
             cam.orthographic = true;
             cam.enabled = false; // không cần render thực sự cho test
 
-            viewGo = new GameObject("View", typeof(RectTransform), typeof(RawImage));
+            // Tạo GO inactive trước khi AddComponent → Awake() defer cho tới SetActive(true).
+            // Cho phép gán minimapCamera + textureSize trước khi Awake chạy, đúng intent
+            // của test (verify Awake-time wiring).
+            viewGo = new GameObject("View");
+            viewGo.SetActive(false);
+            viewGo.AddComponent<RectTransform>();
+            viewGo.AddComponent<RawImage>();
             ctrl = viewGo.AddComponent<MinimapController>();
             ctrl.minimapCamera = cam;
             ctrl.textureSize = 64;
+            viewGo.SetActive(true); // trigger Awake với fields đã set
         }
 
         [TearDown]
