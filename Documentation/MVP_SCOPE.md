@@ -25,7 +25,7 @@ Mục tiêu MVP: **Build được 1 APK Android chạy ổn định, demo core l
 - [x] Save/Load (`SaveSystem` + `SaveLoadController`, 1 slot JSON, round-trip test EditMode)
 - [x] Autosave mỗi 2 phút (`SaveLoadController.autosaveInterval = 120f`, tick trong `Update`)
 - [x] UI: thanh trạng thái, inventory, crafting menu, cảnh giới indicator, joystick, skill buttons
-- [x] **Tutorial HUD + checklist mục tiêu** (`TutorialHUD` + `DemoObjectivesTracker`) — demo-facing onboarding
+- [x] **Tutorial HUD + checklist mục tiêu** (`TutorialHUD` + `DemoObjectivesTracker`) — demo-facing onboarding + main-menu 3 nút (Bắt đầu mới / Tiếp tục / Thoát)
 - [x] **Pause menu** (`PauseMenu`, phím Esc/P hoặc nút II góc trái, Resume + Lưu ngay + Thoát)
 - [x] **Audio core** (`AudioManager`, procedural placeholder SFX: melee / skill cast / meditation / breakthrough ± / UI click, volume master/music/sfx lưu PlayerPrefs, artist override slot `sfxOverrides`)
 - [ ] Build APK ARM64, target Android 8.0+ — infra sẵn trong `.github/workflows/build-android.yml`, skip đến khi repo có `UNITY_LICENSE` secret

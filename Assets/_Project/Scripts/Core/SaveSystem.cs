@@ -42,6 +42,9 @@ namespace WildernessCultivation.Core
         {
             if (File.Exists(Path)) File.Delete(Path);
         }
+
+        /// <summary>True nếu file save tồn tại — dùng để quyết định hiển thị nút Continue/New Game.</summary>
+        public static bool HasSave => File.Exists(Path);
     }
 
     [Serializable]

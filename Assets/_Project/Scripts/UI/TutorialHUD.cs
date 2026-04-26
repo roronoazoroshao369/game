@@ -1,7 +1,9 @@
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using WildernessCultivation.Core;
 
 namespace WildernessCultivation.UI
 {
@@ -19,9 +21,11 @@ namespace WildernessCultivation.UI
         [Header("Refs")]
         public DemoObjectivesTracker tracker;
 
-        [Header("Welcome panel")]
+        [Header("Welcome panel (đóng vai trò main menu)")]
         public GameObject welcomePanel;
-        public Button welcomeDismissButton;
+        public Button welcomeDismissButton;   // "Bắt đầu mới" — xoá save cũ + reload scene
+        public Button continueButton;         // "Tiếp tục" — chỉ hiện khi có save; đóng overlay (save đã auto-load trong SaveLoadController.Start)
+        public Button quitButton;             // "Thoát Demo"
         public TMP_Text welcomeBodyText;
 
         [Header("Objectives panel")]
@@ -54,8 +58,40 @@ namespace WildernessCultivation.UI
             if (welcomeBodyText != null) welcomeBodyText.text = welcomeMessage;
             if (welcomePanel != null) welcomePanel.SetActive(showWelcomeOnStart);
             if (victoryPanel != null) victoryPanel.SetActive(false);
-            if (welcomeDismissButton != null) welcomeDismissButton.onClick.AddListener(DismissWelcome);
+            if (welcomeDismissButton != null) welcomeDismissButton.onClick.AddListener(StartNewGame);
+            if (continueButton != null)
+            {
+                continueButton.onClick.AddListener(DismissWelcome);
+                // Chỉ hiện Continue khi đã có save file (không force user load scratch).
+                continueButton.gameObject.SetActive(SaveSystem.HasSave);
+            }
+            if (quitButton != null) quitButton.onClick.AddListener(QuitDemo);
             if (victoryDismissButton != null) victoryDismissButton.onClick.AddListener(DismissVictory);
+        }
+
+        public void StartNewGame()
+        {
+            // Nếu không có save, scene vừa khởi tạo từ default — chỉ cần đóng overlay,
+            // không reload scene (reload vô nghĩa và gây loop vì welcomePanel luôn
+            // show lại trong Awake; Devin Review #33 finding).
+            if (!SaveSystem.HasSave)
+            {
+                DismissWelcome();
+                return;
+            }
+            // Có save cũ đã auto-load → xoá file + reload scene để wipe state runtime.
+            SaveSystem.Delete();
+            var active = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(active.buildIndex >= 0 ? active.buildIndex : 0);
+        }
+
+        public void QuitDemo()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         void OnEnable()
