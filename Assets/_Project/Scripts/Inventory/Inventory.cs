@@ -94,22 +94,29 @@ namespace WildernessCultivation.Items
             return remaining;
         }
 
+        // CountOf / TryConsume bỏ qua slot đã hỏng (IsBroken) — đồ vỡ vẫn nằm trong
+        // inventory để đem đến Workbench sửa, không được tính như tài nguyên khả dụng cho
+        // recipe / consume khác.
         public int CountOf(ItemSO item)
         {
             if (item == null) return 0;
             int total = 0;
-            foreach (var s in slots) if (s.item == item) total += s.count;
+            foreach (var s in slots) if (s.item == item && !s.IsBroken) total += s.count;
             return total;
         }
 
         public int CountOf(string itemId)
         {
             int total = 0;
-            foreach (var s in slots) if (s.item != null && s.item.itemId == itemId) total += s.count;
+            foreach (var s in slots)
+                if (s.item != null && s.item.itemId == itemId && !s.IsBroken) total += s.count;
             return total;
         }
 
-        /// <summary>Tiêu thụ count item; trả về true nếu đủ.</summary>
+        /// <summary>
+        /// Tiêu thụ count item; trả về true nếu đủ. Bỏ qua slot <see cref="InventorySlot.IsBroken"/>
+        /// (đồ vỡ chỉ sửa được qua Workbench, không bị recipe khuất đi).
+        /// </summary>
         public bool TryConsume(ItemSO item, int count)
         {
             if (CountOf(item) < count) return false;
@@ -117,7 +124,7 @@ namespace WildernessCultivation.Items
             foreach (var s in slots)
             {
                 if (remaining <= 0) break;
-                if (s.item == item)
+                if (s.item == item && !s.IsBroken)
                 {
                     int take = Mathf.Min(s.count, remaining);
                     s.count -= take;

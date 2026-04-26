@@ -54,19 +54,34 @@ namespace WildernessCultivation.World
                 return true;
             }
 
-            if (repairMaterial != null && repairCost > 0)
-            {
-                if (!inv.TryConsume(repairMaterial, repairCost))
-                {
-                    Debug.Log($"[Workbench] Thiếu {repairMaterial.displayName} (cần {repairCost}).");
-                    return true;
-                }
-            }
-
             var slot = inv.GetSlot(dmgSlot);
             string itemName = slot != null && slot.item != null ? slot.item.displayName : "?";
-            if (inv.Repair(dmgSlot, repairAmount))
-                Debug.Log($"[Workbench] Đã sửa {itemName}.");
+            bool needsMaterial = repairMaterial != null && repairCost > 0;
+
+            // Tránh case repairMaterial trùng với chính món đang sửa: sau khi Repair món sẽ
+            // hết IsBroken → TryConsume có thể "ăn" chính nó. Refuse upfront.
+            if (needsMaterial && slot != null && slot.item == repairMaterial)
+            {
+                Debug.LogWarning($"[Workbench] Không thể dùng chính {repairMaterial.displayName} làm vật liệu sửa cho nó.");
+                return true;
+            }
+
+            // Verify đủ vật liệu TRƯỚC khi mutate — tránh tốn material rồi Repair fail.
+            if (needsMaterial && inv.CountOf(repairMaterial) < repairCost)
+            {
+                Debug.Log($"[Workbench] Thiếu {repairMaterial.displayName} (cần {repairCost}).");
+                return true;
+            }
+
+            // Repair trước, consume sau: nếu Repair fail, không tốn material.
+            if (!inv.Repair(dmgSlot, repairAmount))
+            {
+                Debug.LogWarning("[Workbench] Repair thất bại bất ngờ.");
+                return true;
+            }
+
+            if (needsMaterial) inv.TryConsume(repairMaterial, repairCost);
+            Debug.Log($"[Workbench] Đã sửa {itemName}.");
             return true;
         }
     }
