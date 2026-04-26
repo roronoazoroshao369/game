@@ -293,22 +293,23 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
-        public void TransferSlot_NullDst_ReturnsZeroAndDoesNothing()
+        public void TransferSlot_NullDst_ReturnsSourceCountAndDoesNotMutate()
         {
             var stick = MakeItem("stick");
             inv.Add(stick, 5);
             int leftover = inv.TransferSlot(0, null);
-            Assert.AreEqual(0, leftover);
+            // Contract: return = items còn lại ở src. Không transfer được → toàn bộ còn lại.
+            Assert.AreEqual(5, leftover);
             Assert.AreEqual(5, inv.CountOf(stick));
         }
 
         [Test]
-        public void TransferSlot_SameInventory_NoOp()
+        public void TransferSlot_SameInventory_ReturnsSourceCountAndDoesNotMutate()
         {
             var stick = MakeItem("stick");
             inv.Add(stick, 5);
             int leftover = inv.TransferSlot(0, inv);
-            Assert.AreEqual(0, leftover);
+            Assert.AreEqual(5, leftover);
             Assert.AreEqual(5, inv.CountOf(stick));
         }
     }
