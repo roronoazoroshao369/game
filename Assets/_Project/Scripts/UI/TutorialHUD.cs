@@ -71,8 +71,15 @@ namespace WildernessCultivation.UI
 
         public void StartNewGame()
         {
-            // Wipe save cũ rồi reload scene hiện tại — đảm bảo PlayerStats / Inventory
-            // reset về default thay vì giữ state đã load từ SaveLoadController.Start.
+            // Nếu không có save, scene vừa khởi tạo từ default — chỉ cần đóng overlay,
+            // không reload scene (reload vô nghĩa và gây loop vì welcomePanel luôn
+            // show lại trong Awake; Devin Review #33 finding).
+            if (!SaveSystem.HasSave)
+            {
+                DismissWelcome();
+                return;
+            }
+            // Có save cũ đã auto-load → xoá file + reload scene để wipe state runtime.
             SaveSystem.Delete();
             var active = SceneManager.GetActiveScene();
             SceneManager.LoadScene(active.buildIndex >= 0 ? active.buildIndex : 0);
