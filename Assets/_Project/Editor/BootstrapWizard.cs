@@ -741,6 +741,10 @@ namespace WildernessCultivation.EditorTools
             sr.candidatePool = spiritRoots.ToArray();
             sr.rollOnStart = true;
 
+            // Demo objectives tracker (gắn trên Player để auto-find Inventory/RealmSystem/MeditationAction).
+            if (player.GetComponent<DemoObjectivesTracker>() == null)
+                player.AddComponent<DemoObjectivesTracker>();
+
             // Wire SaveLoadController
             saveLoad.playerStats = player.GetComponent<PlayerStats>();
             saveLoad.playerCombat = player.GetComponent<PlayerCombat>();
@@ -843,6 +847,7 @@ namespace WildernessCultivation.EditorTools
             BuildCraftingUI(canvas, player, whiteSprite);
             BuildRealmUI(canvas, player, whiteSprite);
             BuildStorageChestUI(canvas, player, whiteSprite);
+            BuildTutorialHUD(canvas, player, whiteSprite);
         }
 
         static void BuildStatBars(GameObject canvas, GameObject player, Sprite whiteSprite)
@@ -1337,6 +1342,154 @@ namespace WildernessCultivation.EditorTools
             ui.playerSlotsParent = playerGridGo.transform;
             ui.slotPrefab = slotPrefab;
             ui.closeButton = closeGo.GetComponent<Button>();
+        }
+
+        // ---------- Tutorial HUD (welcome + checklist + victory banner) ----------
+        static void BuildTutorialHUD(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            var tracker = player.GetComponent<DemoObjectivesTracker>();
+
+            // Root GameObject giữ component TutorialHUD.
+            var rootGo = new GameObject("TutorialHUD", typeof(RectTransform));
+            rootGo.transform.SetParent(canvas.transform, false);
+            var rootRT = (RectTransform)rootGo.transform;
+            rootRT.anchorMin = Vector2.zero;
+            rootRT.anchorMax = Vector2.one;
+            rootRT.offsetMin = Vector2.zero;
+            rootRT.offsetMax = Vector2.zero;
+
+            // --- Objectives checklist (góc phải trên, luôn hiện) ---
+            var objPanel = new GameObject("ObjectivesPanel",
+                typeof(RectTransform), typeof(Image));
+            objPanel.transform.SetParent(rootGo.transform, false);
+            var objRT = (RectTransform)objPanel.transform;
+            objRT.anchorMin = objRT.anchorMax = new Vector2(1, 1);
+            objRT.pivot = new Vector2(1, 1);
+            objRT.anchoredPosition = new Vector2(-10, -10);
+            objRT.sizeDelta = new Vector2(320, 170);
+            var objImg = objPanel.GetComponent<Image>();
+            objImg.sprite = whiteSprite;
+            objImg.color = new Color(0, 0, 0, 0.45f);
+            objImg.raycastTarget = false;
+
+            var objList = AddTMPLabel(objPanel, "", 16, Color.white,
+                anchor: new Vector2(0, 1), pivot: new Vector2(0, 1),
+                anchoredPos: new Vector2(8, -6), size: new Vector2(304, 160),
+                alignment: TextAlignmentOptions.TopLeft);
+
+            // --- Welcome panel (center overlay, dismissable) ---
+            var welcomeOverlay = new GameObject("WelcomeOverlay",
+                typeof(RectTransform), typeof(Image));
+            welcomeOverlay.transform.SetParent(rootGo.transform, false);
+            var welRT = (RectTransform)welcomeOverlay.transform;
+            welRT.anchorMin = Vector2.zero;
+            welRT.anchorMax = Vector2.one;
+            welRT.offsetMin = Vector2.zero;
+            welRT.offsetMax = Vector2.zero;
+            var welDim = welcomeOverlay.GetComponent<Image>();
+            welDim.sprite = whiteSprite;
+            welDim.color = new Color(0, 0, 0, 0.55f);
+            welDim.raycastTarget = true;
+
+            var welPanel = new GameObject("WelcomePanel",
+                typeof(RectTransform), typeof(Image));
+            welPanel.transform.SetParent(welcomeOverlay.transform, false);
+            var wpRT = (RectTransform)welPanel.transform;
+            wpRT.anchorMin = wpRT.anchorMax = new Vector2(0.5f, 0.5f);
+            wpRT.pivot = new Vector2(0.5f, 0.5f);
+            wpRT.anchoredPosition = Vector2.zero;
+            wpRT.sizeDelta = new Vector2(640, 380);
+            var wpImg = welPanel.GetComponent<Image>();
+            wpImg.sprite = whiteSprite;
+            wpImg.color = new Color(0.12f, 0.12f, 0.15f, 0.95f);
+
+            AddTMPLabel(welPanel, "Hoang Vực Tu Tiên Ký — Demo MVP", 26,
+                new Color(1f, 0.92f, 0.6f),
+                anchor: new Vector2(0.5f, 1), pivot: new Vector2(0.5f, 1),
+                anchoredPos: new Vector2(0, -14), size: new Vector2(600, 32));
+
+            var welBody = AddTMPLabel(welPanel, "", 18, Color.white,
+                anchor: new Vector2(0.5f, 1), pivot: new Vector2(0.5f, 1),
+                anchoredPos: new Vector2(0, -56), size: new Vector2(600, 260),
+                alignment: TextAlignmentOptions.TopLeft);
+
+            var welBtnGo = new GameObject("StartDemoBtn",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            welBtnGo.transform.SetParent(welPanel.transform, false);
+            var wbRT = (RectTransform)welBtnGo.transform;
+            wbRT.anchorMin = wbRT.anchorMax = new Vector2(0.5f, 0);
+            wbRT.pivot = new Vector2(0.5f, 0);
+            wbRT.anchoredPosition = new Vector2(0, 20);
+            wbRT.sizeDelta = new Vector2(220, 44);
+            var wbImg = welBtnGo.GetComponent<Image>();
+            wbImg.sprite = whiteSprite;
+            wbImg.color = new Color(0.95f, 0.75f, 0.30f);
+            AddTMPLabel(welBtnGo, "Bắt đầu demo", 20, Color.black,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            // --- Victory banner (center overlay, hidden by default) ---
+            var victoryOverlay = new GameObject("VictoryOverlay",
+                typeof(RectTransform), typeof(Image));
+            victoryOverlay.transform.SetParent(rootGo.transform, false);
+            var vRT = (RectTransform)victoryOverlay.transform;
+            vRT.anchorMin = Vector2.zero;
+            vRT.anchorMax = Vector2.one;
+            vRT.offsetMin = Vector2.zero;
+            vRT.offsetMax = Vector2.zero;
+            var vDim = victoryOverlay.GetComponent<Image>();
+            vDim.sprite = whiteSprite;
+            vDim.color = new Color(0, 0, 0, 0.55f);
+
+            var vPanel = new GameObject("VictoryPanel",
+                typeof(RectTransform), typeof(Image));
+            vPanel.transform.SetParent(victoryOverlay.transform, false);
+            var vpRT = (RectTransform)vPanel.transform;
+            vpRT.anchorMin = vpRT.anchorMax = new Vector2(0.5f, 0.5f);
+            vpRT.pivot = new Vector2(0.5f, 0.5f);
+            vpRT.anchoredPosition = Vector2.zero;
+            vpRT.sizeDelta = new Vector2(560, 280);
+            var vpImg = vPanel.GetComponent<Image>();
+            vpImg.sprite = whiteSprite;
+            vpImg.color = new Color(0.15f, 0.22f, 0.15f, 0.95f);
+
+            AddTMPLabel(vPanel, "MVP Demo hoàn thành", 30,
+                new Color(0.80f, 1f, 0.80f),
+                anchor: new Vector2(0.5f, 1), pivot: new Vector2(0.5f, 1),
+                anchoredPos: new Vector2(0, -18), size: new Vector2(540, 36));
+
+            var vText = AddTMPLabel(vPanel, "", 18, Color.white,
+                anchor: new Vector2(0.5f, 1), pivot: new Vector2(0.5f, 1),
+                anchoredPos: new Vector2(0, -72), size: new Vector2(520, 120),
+                alignment: TextAlignmentOptions.Center);
+
+            var vBtnGo = new GameObject("CloseVictoryBtn",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            vBtnGo.transform.SetParent(vPanel.transform, false);
+            var vbRT = (RectTransform)vBtnGo.transform;
+            vbRT.anchorMin = vbRT.anchorMax = new Vector2(0.5f, 0);
+            vbRT.pivot = new Vector2(0.5f, 0);
+            vbRT.anchoredPosition = new Vector2(0, 20);
+            vbRT.sizeDelta = new Vector2(180, 40);
+            var vbImg = vBtnGo.GetComponent<Image>();
+            vbImg.sprite = whiteSprite;
+            vbImg.color = new Color(0.85f, 0.85f, 0.85f);
+            AddTMPLabel(vBtnGo, "Tiếp tục", 20, Color.black,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            // Wire TutorialHUD component.
+            var hud = rootGo.AddComponent<TutorialHUD>();
+            hud.tracker = tracker;
+            hud.welcomePanel = welcomeOverlay;
+            hud.welcomeDismissButton = welBtnGo.GetComponent<Button>();
+            hud.welcomeBodyText = welBody;
+            hud.objectivesListText = objList;
+            hud.victoryPanel = victoryOverlay;
+            hud.victoryText = vText;
+            hud.victoryDismissButton = vBtnGo.GetComponent<Button>();
         }
 
         // ---------- Helpers ----------
