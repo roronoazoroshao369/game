@@ -1,7 +1,9 @@
 {
     "name": "WildernessCultivation",
     "rootNamespace": "WildernessCultivation",
-    "references": [],
+    "references": [
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
