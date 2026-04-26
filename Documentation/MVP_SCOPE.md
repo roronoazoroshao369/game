@@ -27,9 +27,10 @@ Mục tiêu MVP: **Build được 1 APK Android chạy ổn định, demo core l
 - [x] UI: thanh trạng thái, inventory, crafting menu, cảnh giới indicator, joystick, skill buttons
 - [x] **Tutorial HUD + checklist mục tiêu** (`TutorialHUD` + `DemoObjectivesTracker`) — demo-facing onboarding
 - [x] **Pause menu** (`PauseMenu`, phím Esc/P hoặc nút II góc trái, Resume + Lưu ngay + Thoát)
+- [x] **Audio core** (`AudioManager`, procedural placeholder SFX: melee / skill cast / meditation / breakthrough ± / UI click, volume master/music/sfx lưu PlayerPrefs, artist override slot `sfxOverrides`)
 - [ ] Build APK ARM64, target Android 8.0+ — infra sẵn trong `.github/workflows/build-android.yml`, skip đến khi repo có `UNITY_LICENSE` secret
 - [ ] Art thật thay cho placeholder solid-color sprites
-- [ ] Audio cơ bản (SFX + ambient music) — hiện chưa có `AudioSource` / `AudioClip` nào trong code
+- [ ] Audio thật (swap `sfxOverrides` + `musicOverride` bằng asset WAV/OGG thật)
 
 ### ✗ KHÔNG LÀM trong MVP (cắt thẳng tay)
 
@@ -61,7 +62,7 @@ Mục tiêu MVP: **Build được 1 APK Android chạy ổn định, demo core l
    để CI `build-android.yml` + `test.yml` thực thi thay vì skip (xem README § GameCI).
 2. **Build APK thủ công 1 lần** qua Unity Editor → verify `adb install` chạy trên máy thật.
 3. **Replace placeholder sprites** bằng art 2D thật (Bootstrap Wizard luôn idempotent — rerun sẽ không phá art đã thay).
-4. **Audio tối thiểu** (footstep, attack, meditation ambient) — nice-to-have cho demo 30 phút.
+4. **Replace placeholder SFX** bằng asset WAV/OGG thật (gán vào `AudioManager.sfxOverrides[]` theo thứ tự enum `SfxKind`; music qua `musicOverride`).
 
 ## Estimate thời gian (1 dev, full-time) — để tham khảo ban đầu
 

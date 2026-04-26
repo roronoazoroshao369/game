@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Audio;
 using WildernessCultivation.Core;
 using WildernessCultivation.Player;
 using WildernessCultivation.World;
@@ -77,6 +78,7 @@ namespace WildernessCultivation.Cultivation
         public void StartMeditation()
         {
             IsMeditating = true;
+            AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.MeditationStart);
             Debug.Log("[Meditation] Bắt đầu Tụ Linh Quyết.");
         }
 

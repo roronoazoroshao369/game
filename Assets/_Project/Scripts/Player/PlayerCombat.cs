@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Audio;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.Items;
@@ -76,6 +77,7 @@ namespace WildernessCultivation.Player
             if (spiritRoot != null) damage *= spiritRoot.WeaponDamageMul;
 
             meleeReadyAt = Time.time + meleeCooldown;
+            AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.MeleeSwing);
 
             Vector2 origin = (Vector2)transform.position + controller.Facing * 0.3f;
             Vector2 hitCenter = origin + controller.Facing * (meleeRange * 0.5f);
@@ -103,6 +105,7 @@ namespace WildernessCultivation.Player
             if (!stats.TryConsumeMana(equippedTechnique.manaCost)) return false;
 
             skillReadyAt = Time.time + equippedTechnique.cooldown;
+            AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.SkillCast);
             equippedTechnique.Cast(this);
             return true;
         }

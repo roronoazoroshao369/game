@@ -7,6 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using WildernessCultivation.Audio;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Core;
 using WildernessCultivation.Crafting;
@@ -701,6 +702,7 @@ namespace WildernessCultivation.EditorTools
             var gm = gmGo.AddComponent<GameManager>();
             var time = gmGo.AddComponent<TimeManager>();
             var saveLoad = gmGo.AddComponent<SaveLoadController>();
+            gmGo.AddComponent<AudioManager>(); // placeholder procedural SFX — artists có thể gán sfxOverrides sau
             gm.timeManager = time;
 
             // Player instance (Player prefab carries RealmSystem + CraftingSystem + Inventory + PlayerStats)
