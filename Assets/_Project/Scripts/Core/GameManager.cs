@@ -20,7 +20,10 @@ namespace WildernessCultivation.Core
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad throws InvalidOperationException in EditMode
+            // (and is no-op outside Play mode) — guard so Awake stays runnable
+            // from EditMode tests that invoke lifecycle reflectively.
+            if (Application.isPlaying) DontDestroyOnLoad(gameObject);
         }
 
         public void SetPaused(bool paused)
@@ -41,10 +44,28 @@ namespace WildernessCultivation.Core
         /// </summary>
         public static void ResetInstanceForSceneReload()
         {
-            if (Instance == null) return;
-            Destroy(Instance.gameObject);
-            Instance = null;
-            Time.timeScale = 1f; // đề phòng đang pause lúc reload
+            // Always force Instance reference to a hard null after this call
+            // (Time.timeScale also normalised) — even if the singleton GO is
+            // already destroyed (Unity's "fake-null") or was never set. This
+            // keeps the post-condition deterministic for callers that rely on
+            // ReferenceEquals(Instance, null), e.g. EditMode tests.
+            try
+            {
+                if (Instance != null)
+                {
+                    var go = Instance.gameObject;
+                    // Destroy() logs "may not be called from edit mode" in
+                    // EditMode tests — use DestroyImmediate when not Playing
+                    // so the same code path works in both modes.
+                    if (Application.isPlaying) Destroy(go);
+                    else DestroyImmediate(go);
+                }
+            }
+            finally
+            {
+                Instance = null;
+                Time.timeScale = 1f;
+            }
         }
     }
 }

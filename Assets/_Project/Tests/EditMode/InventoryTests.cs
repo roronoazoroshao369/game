@@ -34,6 +34,9 @@ namespace WildernessCultivation.Tests.EditMode
         {
             go = new GameObject("Inv");
             inv = go.AddComponent<Inventory>();
+            // EditMode does NOT auto-fire MonoBehaviour.Awake — invoke
+            // manually so Inventory.Awake populates the slots list.
+            TestHelpers.Boot(inv);
         }
 
         [TearDown]
@@ -213,7 +216,7 @@ namespace WildernessCultivation.Tests.EditMode
             inv.UseDurability(0, 30f); // dur 100 -> 70
 
             var go2 = new GameObject("Inv2");
-            var inv2 = go2.AddComponent<Inventory>();
+            var inv2 = go2.AddComponent<Inventory>(); TestHelpers.Boot(inv2);
             int leftover = inv.TransferSlot(0, inv2);
             Assert.AreEqual(0, leftover);
             Assert.IsTrue(inv.GetSlot(0).IsEmpty);
@@ -236,7 +239,7 @@ namespace WildernessCultivation.Tests.EditMode
             inv.GetSlot(0).freshRemaining = 30f; // giả lập đã spoil một phần
 
             var go2 = new GameObject("Inv2");
-            var inv2 = go2.AddComponent<Inventory>();
+            var inv2 = go2.AddComponent<Inventory>(); TestHelpers.Boot(inv2);
             inv.TransferSlot(0, inv2);
 
             int dst = -1;
@@ -256,7 +259,7 @@ namespace WildernessCultivation.Tests.EditMode
             inv.Add(stick, 5);
 
             var go2 = new GameObject("Inv2");
-            var inv2 = go2.AddComponent<Inventory>();
+            var inv2 = go2.AddComponent<Inventory>(); TestHelpers.Boot(inv2);
             inv2.Add(stick, 3);
 
             inv.TransferSlot(0, inv2);
@@ -274,7 +277,7 @@ namespace WildernessCultivation.Tests.EditMode
             inv.UseDurability(0, 25f); // dur 75
 
             var go2 = new GameObject("Inv2");
-            var inv2 = go2.AddComponent<Inventory>();
+            var inv2 = go2.AddComponent<Inventory>(); TestHelpers.Boot(inv2);
             inv2.Add(rod, 1); // dst đã có 1 rod full
 
             inv.TransferSlot(0, inv2);
