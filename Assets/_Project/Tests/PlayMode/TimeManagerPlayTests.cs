@@ -47,8 +47,9 @@ namespace WildernessCultivation.Tests.PlayMode
             tm.currentTime01 = 0.97f; // gần kết thúc ngày
             int initialDays = tm.daysSurvived;
 
-            // dayLengthSeconds=0.3 → 0.03 day-progress per 0.01s. Wait 0.5s đủ wrap.
-            yield return new WaitForSecondsRealtime(0.5f);
+            // dayLengthSeconds=0.3 → wrap đầu xảy ra ~0.009s, wrap thứ 2 ~0.309s sau đó.
+            // Wait 0.15s để CHỈ xảy ra 1 wrap và assertion AreEqual(initialDays + 1) ổn định.
+            yield return new WaitForSecondsRealtime(0.15f);
 
             Assert.AreEqual(initialDays + 1, tm.daysSurvived, "daysSurvived tăng đúng 1 sau khi wrap");
             Assert.Less(tm.currentTime01, 0.5f, "currentTime01 đã wrap về phần đầu ngày mới");
@@ -92,7 +93,10 @@ namespace WildernessCultivation.Tests.PlayMode
             Season newSeason = Season.Spring;
             tm.OnSeasonChanged += s => { seasonChanges++; newSeason = s; };
 
-            yield return new WaitForSecondsRealtime(0.5f);
+            // Wait 0.15s — chỉ 1 wrap xảy ra → daysSurvived=1 → seasonIdx=1=Summer.
+            // Wait quá lâu (vd 0.5s) sẽ gây 2 wrap → daysSurvived=2 → seasonIdx=2=Autumn,
+            // làm assertion Season.Summer fail.
+            yield return new WaitForSecondsRealtime(0.15f);
 
             Assert.GreaterOrEqual(seasonChanges, 1, "OnSeasonChanged fire khi daysSurvived hit daysPerSeason boundary");
             Assert.AreEqual(Season.Summer, newSeason, "Spring → Summer (idx 0 → 1) sau 1 ngày");
