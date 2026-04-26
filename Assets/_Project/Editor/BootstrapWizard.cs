@@ -433,6 +433,7 @@ namespace WildernessCultivation.EditorTools
             go.AddComponent<TorchAction>();
             go.AddComponent<MagicTreasureAction>();
             go.AddComponent<MeditationAction>();
+            go.AddComponent<DodgeAction>();
 
             // Wire SpriteRenderer ref vào PlayerController
             var pc = go.GetComponent<PlayerController>();
