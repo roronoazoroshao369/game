@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using WildernessCultivation.Audio;
+using WildernessCultivation.CameraFx;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Core;
 using WildernessCultivation.Crafting;
@@ -694,6 +695,7 @@ namespace WildernessCultivation.EditorTools
             cam.backgroundColor = new Color(0.55f, 0.75f, 0.55f);
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGo.AddComponent<AudioListener>();
+            camGo.AddComponent<CameraShake>(); // juice: shake on damage / breakthrough
             camGo.tag = "MainCamera";
             camGo.transform.position = new Vector3(0, 0, -10);
 
@@ -842,6 +844,7 @@ namespace WildernessCultivation.EditorTools
         // Build full UI: stat bars + joystick + skill buttons + inventory + crafting + realm.
         static void BuildUI(GameObject canvas, GameObject player, Sprite whiteSprite)
         {
+            BuildDayNightTintOverlay(canvas, whiteSprite); // đầu tiên → ở back, mọi HUD render trên
             BuildStatBars(canvas, player, whiteSprite);
             BuildVirtualJoystick(canvas, player, whiteSprite);
             BuildSkillButtons(canvas, whiteSprite);
@@ -853,6 +856,7 @@ namespace WildernessCultivation.EditorTools
             BuildPauseMenu(canvas, whiteSprite);
             BuildInteractPrompt(canvas, player, whiteSprite);
             BuildMinimap(canvas, player, whiteSprite);
+            BuildDamageNumberLayer(canvas, player);
         }
 
         // ---------- Minimap (RawImage + 2nd ortho top-down camera + RenderTexture) ----------
@@ -923,6 +927,41 @@ namespace WildernessCultivation.EditorTools
                 anchor: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
                 anchoredPos: new Vector2(0, -3), size: new Vector2(80, 16),
                 alignment: TMPro.TextAlignmentOptions.Center);
+        }
+
+        // ---------- Damage number layer (float-up TMP text khi damage event) ----------
+        static void BuildDamageNumberLayer(GameObject canvas, GameObject player)
+        {
+            // Layer GameObject là RectTransform full-screen, không Image — chỉ làm parent cho
+            // các DamageNumber spawn runtime. Đặt sau cùng để render trên các UI HUD khác.
+            var layerGo = new GameObject("DamageNumberLayer", typeof(RectTransform));
+            layerGo.transform.SetParent(canvas.transform, false);
+            var rt = (RectTransform)layerGo.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            var spawner = layerGo.AddComponent<DamageNumberSpawner>();
+            spawner.canvasRect = (RectTransform)canvas.transform;
+            // worldCamera tự lấy Camera.main trong Awake; không cần gán ở đây.
+        }
+
+        // ---------- Day/Night tint overlay (full-screen UI Image lerp tint theo TimeManager) ----------
+        static void BuildDayNightTintOverlay(GameObject canvas, Sprite whiteSprite)
+        {
+            var go = new GameObject("DayNightTintOverlay",
+                typeof(RectTransform), typeof(Image), typeof(DayNightTintOverlay));
+            go.transform.SetParent(canvas.transform, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            var img = go.GetComponent<Image>();
+            img.sprite = whiteSprite;
+            img.raycastTarget = false; // không chặn click HUD bên dưới
+            // timeManager reference tự lookup trong DayNightTintOverlay.Awake.
         }
 
         // ---------- Interact prompt (pop-up "[E] <label>" ở bottom-center khi có target) ----------
