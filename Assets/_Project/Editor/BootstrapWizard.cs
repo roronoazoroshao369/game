@@ -1190,7 +1190,10 @@ namespace WildernessCultivation.EditorTools
             var inv = player.GetComponent<Inventory>();
             var ctrl = player.GetComponent<PlayerController>();
 
-            // Root panel — full canvas overlay (semi-transparent dim)
+            // Root container — luôn active để StorageChestUI nhận event OnAnyChestOpened.
+            // Bên trong: 1 OverlayContainer chứa cả Dim + ChestPanel; toggle container này
+            // (không toggle riêng panel) để dim ẩn cùng panel — nếu không, dim sẽ luôn
+            // che màn hình + chặn input ngay từ frame đầu.
             var rootGo = new GameObject("ChestUIRoot", typeof(RectTransform));
             rootGo.transform.SetParent(canvas.transform, false);
             var rootRT = (RectTransform)rootGo.transform;
@@ -1199,9 +1202,17 @@ namespace WildernessCultivation.EditorTools
             rootRT.offsetMin = Vector2.zero;
             rootRT.offsetMax = Vector2.zero;
 
-            // Dim background
+            var overlayGo = new GameObject("OverlayContainer", typeof(RectTransform));
+            overlayGo.transform.SetParent(rootGo.transform, false);
+            var overlayRT = (RectTransform)overlayGo.transform;
+            overlayRT.anchorMin = Vector2.zero;
+            overlayRT.anchorMax = Vector2.one;
+            overlayRT.offsetMin = Vector2.zero;
+            overlayRT.offsetMax = Vector2.zero;
+
+            // Dim background (con của OverlayContainer — ẩn cùng panel khi đóng)
             var dimGo = new GameObject("Dim", typeof(RectTransform), typeof(Image));
-            dimGo.transform.SetParent(rootGo.transform, false);
+            dimGo.transform.SetParent(overlayGo.transform, false);
             var dimRT = (RectTransform)dimGo.transform;
             dimRT.anchorMin = Vector2.zero;
             dimRT.anchorMax = Vector2.one;
@@ -1214,7 +1225,7 @@ namespace WildernessCultivation.EditorTools
 
             // Centered panel — 2 cột (Chest left, Player right)
             var panelGo = new GameObject("ChestPanel", typeof(RectTransform), typeof(Image));
-            panelGo.transform.SetParent(rootGo.transform, false);
+            panelGo.transform.SetParent(overlayGo.transform, false);
             var panelRT = (RectTransform)panelGo.transform;
             panelRT.anchorMin = panelRT.anchorMax = new Vector2(0.5f, 0.5f);
             panelRT.pivot = new Vector2(0.5f, 0.5f);
@@ -1296,7 +1307,7 @@ namespace WildernessCultivation.EditorTools
             var ui = rootGo.AddComponent<StorageChestUI>();
             ui.playerInventory = inv;
             ui.playerController = ctrl;
-            ui.panel = panelGo;
+            ui.panel = overlayGo; // toggle cả dim + ChestPanel cùng nhau
             ui.chestSlotsParent = chestGridGo.transform;
             ui.playerSlotsParent = playerGridGo.transform;
             ui.slotPrefab = slotPrefab;
