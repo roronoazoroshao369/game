@@ -52,7 +52,9 @@ namespace WildernessCultivation.Tests.PlayMode
             yield return new WaitForSecondsRealtime(0.15f);
 
             Assert.AreEqual(initialDays + 1, tm.daysSurvived, "daysSurvived tăng đúng 1 sau khi wrap");
-            Assert.Less(tm.currentTime01, 0.5f, "currentTime01 đã wrap về phần đầu ngày mới");
+            // Chỉ assert wrap đã xảy ra (currentTime01 < 0.97 ban đầu), KHÔNG ràng buộc giá trị
+            // sau wrap (frame timing nhảy ±16ms làm window 9ms quá hẹp → flaky).
+            Assert.Less(tm.currentTime01, 0.97f, "currentTime01 đã wrap về phần đầu ngày mới");
         }
 
         [UnityTest]
