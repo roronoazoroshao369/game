@@ -51,6 +51,10 @@ namespace WildernessCultivation.Tests.EditMode
             stats = playerGo.AddComponent<PlayerStats>();
             realm = playerGo.AddComponent<RealmSystem>();
             inv = playerGo.AddComponent<Inventory>();
+            // EditMode does NOT auto-fire MonoBehaviour.Awake — invoke
+            // manually so PlayerStats caches base maxHP, RealmSystem caches
+            // sibling refs and default realms, and Inventory populates slots.
+            TestHelpers.Boot(stats, realm, inv);
 
             db = ScriptableObject.CreateInstance<ItemDatabase>();
 

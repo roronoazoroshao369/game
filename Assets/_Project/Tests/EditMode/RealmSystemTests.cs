@@ -37,7 +37,11 @@ namespace WildernessCultivation.Tests.EditMode
             go = new GameObject("Player");
             stats = go.AddComponent<PlayerStats>(); // baseMaxHP=100, etc.
             realm = go.AddComponent<RealmSystem>();
-            // Awake đã set realms = default. Override sau Awake để controlled test data.
+            // EditMode does NOT auto-fire MonoBehaviour.Awake — invoke
+            // manually so RealmSystem caches its sibling component refs
+            // (stats, combat, spiritRoot) and PlayerStats caches baseMaxHP.
+            TestHelpers.Boot(stats, realm);
+            // Override default realms with controlled test data.
             realm.realms = new[]
             {
                 Tier("T0",   0f, 1f),

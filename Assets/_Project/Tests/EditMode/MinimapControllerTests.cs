@@ -24,17 +24,17 @@ namespace WildernessCultivation.Tests.EditMode
             cam.orthographic = true;
             cam.enabled = false; // không cần render thực sự cho test
 
-            // Tạo GO inactive trước khi AddComponent → Awake() defer cho tới SetActive(true).
-            // Cho phép gán minimapCamera + textureSize trước khi Awake chạy, đúng intent
-            // của test (verify Awake-time wiring).
+            // EditMode does NOT auto-fire MonoBehaviour.Awake on AddComponent
+            // OR on SetActive(true). Configure fields, then invoke Awake
+            // explicitly via TestHelpers so wiring (RT creation + camera
+            // targetTexture + RawImage.texture) reflects the configured fields.
             viewGo = new GameObject("View");
-            viewGo.SetActive(false);
             viewGo.AddComponent<RectTransform>();
             viewGo.AddComponent<RawImage>();
             ctrl = viewGo.AddComponent<MinimapController>();
             ctrl.minimapCamera = cam;
             ctrl.textureSize = 64;
-            viewGo.SetActive(true); // trigger Awake với fields đã set
+            TestHelpers.Boot(ctrl);
         }
 
         [TearDown]
@@ -70,6 +70,11 @@ namespace WildernessCultivation.Tests.EditMode
             var rt = (RenderTexture)raw.texture;
             Assert.IsNotNull(rt);
 
+            // EditMode does NOT auto-fire OnDestroy on DestroyImmediate for
+            // user MonoBehaviours (matching the manual Awake in SetUp) —
+            // invoke explicitly so the cleanup we want to verify actually
+            // runs, then destroy the GO.
+            TestHelpers.InvokeLifecycle(ctrl, "OnDestroy");
             Object.DestroyImmediate(viewGo);
             viewGo = null;
 

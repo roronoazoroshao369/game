@@ -20,7 +20,10 @@ namespace WildernessCultivation.Tests.EditMode
             CombatEvents.ClearAllSubscribers();
             go = new GameObject("Cam");
             shake = go.AddComponent<CameraShake>();
-            // Awake đã chạy → baseLocalPos snapshot, OnEnable cũng đã subscribe events.
+            // EditMode does NOT auto-fire MonoBehaviour.Awake / OnEnable —
+            // invoke manually so baseLocalPos is snapshot and CombatEvents
+            // subscription is registered.
+            TestHelpers.Boot(shake);
         }
 
         [TearDown]
@@ -64,6 +67,10 @@ namespace WildernessCultivation.Tests.EditMode
         public void OnDisable_Unsubscribes_RaiseDamageNoLongerStartsShake()
         {
             shake.enabled = false;
+            // EditMode does NOT auto-fire OnDisable when enabled flips to
+            // false (matching the manual OnEnable in SetUp) — invoke
+            // explicitly so unsubscription happens.
+            TestHelpers.InvokeLifecycle(shake, "OnDisable");
             CombatEvents.RaiseDamage(Vector3.zero, 50f);
             Assert.IsFalse(shake.IsShaking);
         }

@@ -26,7 +26,8 @@ namespace WildernessCultivation.Tests.EditMode
         public void Awake_RegistersSingleton()
         {
             go = new GameObject("GameManager");
-            go.AddComponent<GameManager>();
+            var gm = go.AddComponent<GameManager>();
+            TestHelpers.Boot(gm);
             Assert.IsNotNull(GameManager.Instance);
             Assert.AreSame(go, GameManager.Instance.gameObject);
         }
@@ -35,7 +36,8 @@ namespace WildernessCultivation.Tests.EditMode
         public void ResetInstance_ClearsInstance_AllowsFreshSingleton()
         {
             go = new GameObject("GameManager");
-            go.AddComponent<GameManager>();
+            var gm = go.AddComponent<GameManager>();
+            TestHelpers.Boot(gm);
             Assert.IsNotNull(GameManager.Instance);
 
             GameManager.ResetInstanceForSceneReload();
@@ -45,7 +47,8 @@ namespace WildernessCultivation.Tests.EditMode
             var go2 = new GameObject("GameManager2");
             try
             {
-                go2.AddComponent<GameManager>();
+                var gm2 = go2.AddComponent<GameManager>();
+                TestHelpers.Boot(gm2);
                 Assert.IsNotNull(GameManager.Instance);
                 Assert.AreSame(go2, GameManager.Instance.gameObject);
             }
@@ -60,6 +63,7 @@ namespace WildernessCultivation.Tests.EditMode
         {
             go = new GameObject("GameManager");
             var gm = go.AddComponent<GameManager>();
+            TestHelpers.Boot(gm);
             gm.SetPaused(true);
             Assert.AreEqual(0f, Time.timeScale);
 

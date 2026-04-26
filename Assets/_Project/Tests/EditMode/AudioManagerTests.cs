@@ -19,7 +19,8 @@ namespace WildernessCultivation.Tests.EditMode
 
             host = new GameObject("AudioHost");
             audio = host.AddComponent<AudioManager>();
-            // Awake đã chạy khi AddComponent — singleton Instance đã set.
+            // EditMode does NOT auto-fire MonoBehaviour.Awake — invoke manually.
+            TestHelpers.Boot(audio);
         }
 
         [TearDown]
@@ -67,10 +68,15 @@ namespace WildernessCultivation.Tests.EditMode
         public void NewInstance_ReadsPreviouslySavedVolumes()
         {
             audio.SetMaster(0.42f);
+            // SetMaster writes via PlayerPrefs.SetFloat but EditMode never
+            // calls Application.Quit, so values aren't flushed automatically.
+            // Force a save before re-reading.
+            PlayerPrefs.Save();
             Object.DestroyImmediate(host);
 
             host = new GameObject("AudioHost2");
             audio = host.AddComponent<AudioManager>();
+            TestHelpers.Boot(audio);
             Assert.AreEqual(0.42f, audio.masterVolume, 0.0001f);
         }
 
