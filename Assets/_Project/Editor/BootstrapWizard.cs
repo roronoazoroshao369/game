@@ -1536,7 +1536,7 @@ namespace WildernessCultivation.EditorTools
             pRT.anchorMin = pRT.anchorMax = new Vector2(0.5f, 0.5f);
             pRT.pivot = new Vector2(0.5f, 0.5f);
             pRT.anchoredPosition = Vector2.zero;
-            pRT.sizeDelta = new Vector2(420, 320);
+            pRT.sizeDelta = new Vector2(420, 400);
             var pImg = panelGo.GetComponent<Image>();
             pImg.sprite = whiteSprite;
             pImg.color = new Color(0.12f, 0.12f, 0.15f, 0.95f);
@@ -1551,6 +1551,12 @@ namespace WildernessCultivation.EditorTools
                 "Lưu ngay", new Color(0.55f, 0.85f, 0.55f), offsetY: -140);
             Button quitBtn = MakePauseMenuBtn(panelGo, whiteSprite,
                 "Thoát Demo", new Color(0.80f, 0.40f, 0.40f), offsetY: -200);
+
+            // Volume label + slider (bind tới AudioManager.SetMaster)
+            var volLabel = AddTMPLabel(panelGo, "Âm lượng: 80%", 16, new Color(0.9f, 0.9f, 0.9f),
+                anchor: new Vector2(0.5f, 1), pivot: new Vector2(0.5f, 1),
+                anchoredPos: new Vector2(0, -260), size: new Vector2(380, 20));
+            var volSlider = MakeVolumeSlider(panelGo, whiteSprite, offsetY: -290);
 
             // Toast label
             var toast = AddTMPLabel(panelGo, "", 18, new Color(0.85f, 1f, 0.85f),
@@ -1570,6 +1576,78 @@ namespace WildernessCultivation.EditorTools
             pm.saveNowButton = saveNowBtn;
             pm.quitButton = quitBtn;
             pm.toastText = toast;
+            pm.masterVolumeSlider = volSlider;
+            pm.masterVolumeLabel = volLabel;
+        }
+
+        /// <summary>Slider âm lượng 0..1 — fill xanh, handle trắng, 320×16px.</summary>
+        static Slider MakeVolumeSlider(GameObject parent, Sprite whiteSprite, float offsetY)
+        {
+            var root = new GameObject("VolumeSlider", typeof(RectTransform));
+            root.transform.SetParent(parent.transform, false);
+            var rootRT = (RectTransform)root.transform;
+            rootRT.anchorMin = rootRT.anchorMax = new Vector2(0.5f, 1);
+            rootRT.pivot = new Vector2(0.5f, 1);
+            rootRT.anchoredPosition = new Vector2(0, offsetY);
+            rootRT.sizeDelta = new Vector2(320, 16);
+
+            // Background
+            var bgGo = new GameObject("Background", typeof(RectTransform), typeof(Image));
+            bgGo.transform.SetParent(root.transform, false);
+            var bgRT = (RectTransform)bgGo.transform;
+            bgRT.anchorMin = Vector2.zero;
+            bgRT.anchorMax = Vector2.one;
+            bgRT.offsetMin = Vector2.zero;
+            bgRT.offsetMax = Vector2.zero;
+            var bgImg = bgGo.GetComponent<Image>();
+            bgImg.sprite = whiteSprite;
+            bgImg.color = new Color(0.25f, 0.25f, 0.28f, 1f);
+
+            // Fill area + fill
+            var fillAreaGo = new GameObject("Fill Area", typeof(RectTransform));
+            fillAreaGo.transform.SetParent(root.transform, false);
+            var faRT = (RectTransform)fillAreaGo.transform;
+            faRT.anchorMin = new Vector2(0, 0.25f);
+            faRT.anchorMax = new Vector2(1, 0.75f);
+            faRT.offsetMin = new Vector2(6, 0);
+            faRT.offsetMax = new Vector2(-10, 0);
+            var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fillGo.transform.SetParent(fillAreaGo.transform, false);
+            var fRT = (RectTransform)fillGo.transform;
+            fRT.anchorMin = Vector2.zero;
+            fRT.anchorMax = Vector2.one;
+            fRT.offsetMin = Vector2.zero;
+            fRT.offsetMax = Vector2.zero;
+            var fImg = fillGo.GetComponent<Image>();
+            fImg.sprite = whiteSprite;
+            fImg.color = new Color(0.55f, 0.85f, 0.55f, 1f);
+
+            // Handle area + handle
+            var handleAreaGo = new GameObject("Handle Slide Area", typeof(RectTransform));
+            handleAreaGo.transform.SetParent(root.transform, false);
+            var haRT = (RectTransform)handleAreaGo.transform;
+            haRT.anchorMin = Vector2.zero;
+            haRT.anchorMax = Vector2.one;
+            haRT.offsetMin = new Vector2(10, 0);
+            haRT.offsetMax = new Vector2(-10, 0);
+            var handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            handleGo.transform.SetParent(handleAreaGo.transform, false);
+            var hRT = (RectTransform)handleGo.transform;
+            hRT.sizeDelta = new Vector2(20, 28);
+            var hImg = handleGo.GetComponent<Image>();
+            hImg.sprite = whiteSprite;
+            hImg.color = Color.white;
+
+            var slider = root.AddComponent<Slider>();
+            slider.fillRect = fRT;
+            slider.handleRect = hRT;
+            slider.targetGraphic = hImg;
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.wholeNumbers = false;
+            slider.value = 0.8f;
+            return slider;
         }
 
         static Button MakePauseMenuBtn(GameObject parent, Sprite whiteSprite,

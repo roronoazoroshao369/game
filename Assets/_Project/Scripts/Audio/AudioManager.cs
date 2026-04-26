@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Cultivation;
 
 namespace WildernessCultivation.Audio
@@ -69,6 +70,12 @@ namespace WildernessCultivation.Audio
         }
 
         RealmSystem subscribedRealm;
+        GameManager subscribedGm;
+        bool wasPaused;
+
+        [Header("Pause behavior")]
+        [Tooltip("Khi game pause, tự Pause music (SFX vẫn chơi để UI click nghe được).")]
+        public bool pauseMusicOnGamePause = true;
 
         void Start()
         {
@@ -76,6 +83,26 @@ namespace WildernessCultivation.Audio
             subscribedRealm = FindObjectOfType<RealmSystem>();
             if (subscribedRealm != null)
                 subscribedRealm.OnBreakthroughAttempted += OnBreakthroughAttempted;
+
+            subscribedGm = GameManager.Instance != null ? GameManager.Instance : FindObjectOfType<GameManager>();
+        }
+
+        void Update()
+        {
+            if (!pauseMusicOnGamePause || musicSource == null || subscribedGm == null) return;
+            if (subscribedGm.isPaused != wasPaused)
+            {
+                wasPaused = subscribedGm.isPaused;
+                if (wasPaused)
+                {
+                    if (musicSource.isPlaying) musicSource.Pause();
+                }
+                else
+                {
+                    // Chỉ UnPause nếu clip đã set (tránh Play clip null).
+                    if (musicSource.clip != null) musicSource.UnPause();
+                }
+            }
         }
 
         void OnDestroy()
