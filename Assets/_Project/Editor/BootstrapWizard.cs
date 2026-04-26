@@ -98,6 +98,9 @@ namespace WildernessCultivation.EditorTools
                 ("tree",      32, 48, new Color(0.18f, 0.55f, 0.20f)),
                 ("rock",      32, 24, new Color(0.55f, 0.55f, 0.55f)),
                 ("rabbit",    24, 20, new Color(0.92f, 0.92f, 0.85f)),
+                ("wolf",      32, 24, new Color(0.45f, 0.40f, 0.35f)),
+                ("fox_spirit",28, 24, new Color(0.85f, 0.45f, 0.85f)),
+                ("chest",     32, 28, new Color(0.55f, 0.35f, 0.15f)),
                 ("campfire",  32, 32, new Color(0.95f, 0.55f, 0.10f)),
                 ("water",     40, 40, new Color(0.30f, 0.65f, 0.90f)),
                 ("ground",    32, 32, new Color(0.78f, 0.70f, 0.50f)),
@@ -108,6 +111,8 @@ namespace WildernessCultivation.EditorTools
                 ("icon_grilled", 24, 24, new Color(0.55f, 0.30f, 0.20f)),
                 ("icon_water",   24, 24, new Color(0.30f, 0.70f, 0.95f)),
                 ("icon_torch",   24, 24, new Color(0.95f, 0.65f, 0.20f)),
+                ("icon_fish",    24, 24, new Color(0.55f, 0.75f, 0.95f)),
+                ("icon_rod",     24, 24, new Color(0.70f, 0.50f, 0.20f)),
                 ("ui_white",      4,  4, Color.white),
             };
 
@@ -163,6 +168,10 @@ namespace WildernessCultivation.EditorTools
                 weight: 0.5f, restoreThirst: 25f);
             dict["torch"]        = MakeItem("torch", "Bó Đuốc", ItemCategory.Tool, sprites["icon_torch"],
                 weight: 0.3f, hasDurability: true, maxDurability: 60f);
+            dict["raw_fish"]     = MakeItem("raw_fish", "Cá Tươi", ItemCategory.Food, sprites["icon_fish"],
+                weight: 0.3f, restoreHunger: 8f, restoreThirst: 4f, isPerishable: true, freshSeconds: 240f);
+            dict["fishing_rod"]  = MakeItem("fishing_rod", "Cần Câu Tre", ItemCategory.Tool, sprites["icon_rod"],
+                weight: 0.5f, hasDurability: true, maxDurability: 30f);
             return dict;
         }
 
@@ -205,6 +214,9 @@ namespace WildernessCultivation.EditorTools
                 CraftStation.Campfire, cookTimeSeconds: 5f));
             list.Add(MakeRecipe("torch_craft", "Chế Đuốc",
                 new[] { (items["stick"], 2) }, items["torch"], 1,
+                CraftStation.None, cookTimeSeconds: 0f));
+            list.Add(MakeRecipe("rod_craft", "Chế Cần Câu",
+                new[] { (items["stick"], 3) }, items["fishing_rod"], 1,
                 CraftStation.None, cookTimeSeconds: 0f));
             return list;
         }
@@ -386,7 +398,8 @@ namespace WildernessCultivation.EditorTools
         // ---------------- PREFABS ----------------
         class PrefabBundle
         {
-            public GameObject Player, Tree, Rock, Rabbit, Campfire, WaterSpring, Projectile;
+            public GameObject Player, Tree, Rock, Rabbit, Wolf, FoxSpirit, Campfire,
+                WaterSpring, StorageChest, Projectile;
         }
 
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
@@ -397,8 +410,11 @@ namespace WildernessCultivation.EditorTools
             bundle.Tree = BuildResourceNodePrefab("Tree", sprites["tree"], items["stick"], min: 2, max: 4, hp: 4f);
             bundle.Rock = BuildResourceNodePrefab("Rock", sprites["rock"], items["stone"], min: 1, max: 3, hp: 6f);
             bundle.Rabbit = BuildRabbitPrefab(sprites["rabbit"], items["raw_meat"]);
+            bundle.Wolf = BuildWolfPrefab(sprites["wolf"], items["raw_meat"]);
+            bundle.FoxSpirit = BuildFoxSpiritPrefab(sprites["fox_spirit"], items["raw_meat"]);
             bundle.Campfire = BuildCampfirePrefab(sprites["campfire"], items["stick"]);
-            bundle.WaterSpring = BuildWaterSpringPrefab(sprites["water"], items["water"]);
+            bundle.WaterSpring = BuildWaterSpringPrefab(sprites["water"], items["water"], items["raw_fish"]);
+            bundle.StorageChest = BuildStorageChestPrefab(sprites["chest"]);
             bundle.Projectile = BuildProjectilePrefab(sprites["projectile"], statusEffects["Burn"]);
             return bundle;
         }
@@ -436,6 +452,7 @@ namespace WildernessCultivation.EditorTools
             go.AddComponent<MagicTreasureAction>();
             go.AddComponent<MeditationAction>();
             go.AddComponent<DodgeAction>();
+            go.AddComponent<FishingAction>();
 
             // Wire SpriteRenderer ref vào PlayerController
             var pc = go.GetComponent<PlayerController>();
@@ -492,6 +509,58 @@ namespace WildernessCultivation.EditorTools
             return SaveAsPrefab(go, $"{PrefabsDir}/Rabbit.prefab");
         }
 
+        static GameObject BuildWolfPrefab(Sprite sprite, ItemSO meatDrop)
+        {
+            var go = new GameObject("Wolf");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 3;
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.4f;
+            var ai = go.AddComponent<WolfAI>();
+            ai.spriteRenderer = sr;
+            ai.maxHP = 28f;
+            ai.HP = 28f;
+            ai.moveSpeed = 2.0f;
+            ai.damage = 7f;
+            ai.attackCooldown = 1.2f;
+            ai.aggroRange = 5f;
+            ai.attackRange = 0.9f;
+            ai.xpReward = 12f;
+            ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 3 } };
+            ai.playerMask = ~0;
+            return SaveAsPrefab(go, $"{PrefabsDir}/Wolf.prefab");
+        }
+
+        static GameObject BuildFoxSpiritPrefab(Sprite sprite, ItemSO meatDrop)
+        {
+            var go = new GameObject("FoxSpirit");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 3;
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.35f;
+            var ai = go.AddComponent<FoxSpiritAI>();
+            ai.spriteRenderer = sr;
+            ai.maxHP = 18f;
+            ai.HP = 18f;
+            ai.moveSpeed = 2.6f;
+            ai.damage = 5f;
+            ai.attackCooldown = 0.9f;
+            ai.aggroRange = 6f;
+            ai.attackRange = 0.8f;
+            ai.xpReward = 18f;
+            ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 2 } };
+            ai.playerMask = ~0;
+            return SaveAsPrefab(go, $"{PrefabsDir}/FoxSpirit.prefab");
+        }
+
         static GameObject BuildCampfirePrefab(Sprite sprite, ItemSO woodItem)
         {
             var go = new GameObject("Campfire");
@@ -513,7 +582,7 @@ namespace WildernessCultivation.EditorTools
             return SaveAsPrefab(go, $"{PrefabsDir}/Campfire.prefab");
         }
 
-        static GameObject BuildWaterSpringPrefab(Sprite sprite, ItemSO waterItem)
+        static GameObject BuildWaterSpringPrefab(Sprite sprite, ItemSO waterItem, ItemSO rawFish)
         {
             var go = new GameObject("WaterSpring");
             var sr = go.AddComponent<SpriteRenderer>();
@@ -524,7 +593,36 @@ namespace WildernessCultivation.EditorTools
             col.isTrigger = true;
             var w = go.AddComponent<WaterSpring>();
             w.cleanWaterItem = waterItem;
+
+            // FishingSpot trên cùng GameObject — player đứng gần là vừa uống vừa câu được.
+            var spot = go.AddComponent<FishingSpot>();
+            spot.castRangeFromSpot = 2.5f;
+            spot.castTimeSeconds = new Vector2(3f, 7f);
+            spot.lootTable = new[]
+            {
+                new FishingSpot.LootEntry { item = rawFish, weight = 1f, min = 1, max = 1 },
+            };
             return SaveAsPrefab(go, $"{PrefabsDir}/WaterSpring.prefab");
+        }
+
+        static GameObject BuildStorageChestPrefab(Sprite sprite)
+        {
+            var go = new GameObject("StorageChest");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 2;
+            // Collider2D bắt buộc để InteractAction.OverlapCircleAll tìm thấy. Trừ các
+            // RequireComponent của StorageChest (chỉ cần Inventory) — và Collider2D phải
+            // có isTrigger=true để player không bị vách khi đi đến.
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.45f;
+            col.isTrigger = true;
+            // StorageChest [RequireComponent(typeof(Inventory))] → Inventory sẽ tự add khi
+            // AddComponent<StorageChest>(); không cần add Inventory thủ công.
+            var chest = go.AddComponent<StorageChest>();
+            chest.slotCount = 12;
+            chest.interactLabel = "Mở rương";
+            return SaveAsPrefab(go, $"{PrefabsDir}/StorageChest.prefab");
         }
 
         static GameObject BuildProjectilePrefab(Sprite sprite, StatusEffectSO burn)
@@ -605,6 +703,13 @@ namespace WildernessCultivation.EditorTools
             if (ctrlRef != null) ctrlRef.inventory = inv;
             var magic = player.GetComponent<MagicTreasureAction>();
             if (magic != null) magic.inventory = inv;
+            var fishing = player.GetComponent<FishingAction>();
+            if (fishing != null)
+            {
+                fishing.rodItem = items["fishing_rod"];
+                fishing.inventory = inv;
+                fishing.controller = ctrlRef;
+            }
 
             // Wire SpiritRoot candidate pool (random roll on start)
             var sr = player.GetComponent<SpiritRoot>();
@@ -642,11 +747,14 @@ namespace WildernessCultivation.EditorTools
             }
             wg.biomes = biomes.ToArray();
 
-            // MobSpawner
+            // MobSpawner: Rabbit (passive day/night), Wolf (aggressive cả ngày lẫn đêm),
+            // FoxSpirit (đêm-only — dayCap=0).
             var spawner = worldGo.AddComponent<MobSpawner>();
             spawner.entries = new[]
             {
-                new MobSpawner.SpawnEntry { prefab = prefabs.Rabbit, dayCap = 6, nightCap = 3 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Rabbit,    dayCap = 6, nightCap = 3 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Wolf,      dayCap = 2, nightCap = 3 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.FoxSpirit, dayCap = 0, nightCap = 4 },
             };
             spawner.parent = worldGo.transform;
             wg.mobSpawner = spawner;
@@ -657,6 +765,10 @@ namespace WildernessCultivation.EditorTools
             // đặt gần đó chứ không phải gần origin.
             var fire = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Campfire);
             fire.transform.position = new Vector3(wg.size.x * 0.5f + 2.5f, wg.size.y * 0.5f, 0f);
+
+            // Place 1 storage chest cạnh campfire để demo lưu trữ.
+            var chestGo = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.StorageChest);
+            chestGo.transform.position = new Vector3(wg.size.x * 0.5f + 4.0f, wg.size.y * 0.5f, 0f);
 
             // EventSystem (required for UI input — Buttons, Joystick, etc.)
             var esGo = new GameObject("EventSystem");

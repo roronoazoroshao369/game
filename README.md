@@ -47,8 +47,8 @@ Repo đã có sẵn `Editor/BootstrapWizard.cs`. Sau khi clone xong và mở pro
 3. Đợi 5-10s. Sẽ sinh ra:
    - Sprites placeholder (PNG ô vuông màu) tại `Assets/_Project/Sprites/`
    - ScriptableObject assets (Items / Recipes / SpiritRoots / StatusEffects / Biomes / ItemDatabase) tại `Assets/_Project/SOs/`
-   - Prefabs (Player / Tree / Rock / Rabbit / Campfire / WaterSpring / Projectile) tại `Assets/_Project/Prefabs/`
-   - `Assets/Scenes/MainScene.unity` đã wire sẵn GameManager + WorldGenerator + Player + Camera follow + UI bars
+   - Prefabs (Player / Tree / Rock / Rabbit / Wolf / FoxSpirit / Campfire / WaterSpring / StorageChest / Projectile) tại `Assets/_Project/Prefabs/`
+   - `Assets/Scenes/MainScene.unity` đã wire sẵn GameManager + WorldGenerator + Player + Camera follow + UI bars (joystick / skill buttons / inventory / crafting / realm) + 1 StorageChest cạnh Campfire
 4. Mở `Assets/Scenes/MainScene.unity` → bấm **Play**.
 
 > ⚠️ Sprites là placeholder solid-color — thay bằng art thật khi có. Wizard có thể chạy lại nhiều lần (idempotent, ghi đè asset cũ).
@@ -56,13 +56,14 @@ Repo đã có sẵn `Editor/BootstrapWizard.cs`. Sau khi clone xong và mở pro
 Hệ thống phím cơ bản trong scene mặc định:
 - **WASD / arrow** → di chuyển
 - **Left Shift** → né (dodge / roll — i-frames trong ~0.25s, tốn 5 Linh Khí)
-- **E** → tương tác (lửa trại, suối nước)
+- **E** → tương tác (lửa trại, suối nước, **mở rương**)
 - **T** → bật/tắt đuốc
+- **F** → câu cá (đứng cạnh `WaterSpring`, cần `Cần Câu Tre` trong inventory — craft từ 3 cành cây)
 - **J** → đánh (mặc định `PlayerCombat.attackKey`)
 - **B** → dùng pháp bảo (cần item đã craft)
 - **M** → ngồi thiền (cần xa boss/mob)
 
-> Câu cá (`FishingAction`, phím F), repair workbench, storage chest đã có code nhưng wizard chưa add vào scene mặc định. Tự gắn component + tạo prefab khi cần.
+> Mob spawn trong scene mặc định: Thỏ (passive, ngày 6 / đêm 3), Sói (aggressive, ngày 2 / đêm 3), Yêu Hồ (đêm only, đêm 4). Repair workbench vẫn chưa có trong scene mặc định — tự gắn `RepairWorkbench` script khi cần.
 
 ---
 
