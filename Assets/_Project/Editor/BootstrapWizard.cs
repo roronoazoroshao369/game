@@ -844,6 +844,7 @@ namespace WildernessCultivation.EditorTools
         // Build full UI: stat bars + joystick + skill buttons + inventory + crafting + realm.
         static void BuildUI(GameObject canvas, GameObject player, Sprite whiteSprite)
         {
+            BuildDayNightTintOverlay(canvas, whiteSprite); // đầu tiên → ở back, mọi HUD render trên
             BuildStatBars(canvas, player, whiteSprite);
             BuildVirtualJoystick(canvas, player, whiteSprite);
             BuildSkillButtons(canvas, whiteSprite);
@@ -873,6 +874,23 @@ namespace WildernessCultivation.EditorTools
             var spawner = layerGo.AddComponent<DamageNumberSpawner>();
             spawner.canvasRect = (RectTransform)canvas.transform;
             // worldCamera tự lấy Camera.main trong Awake; không cần gán ở đây.
+        }
+
+        // ---------- Day/Night tint overlay (full-screen UI Image lerp tint theo TimeManager) ----------
+        static void BuildDayNightTintOverlay(GameObject canvas, Sprite whiteSprite)
+        {
+            var go = new GameObject("DayNightTintOverlay",
+                typeof(RectTransform), typeof(Image), typeof(DayNightTintOverlay));
+            go.transform.SetParent(canvas.transform, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            var img = go.GetComponent<Image>();
+            img.sprite = whiteSprite;
+            img.raycastTarget = false; // không chặn click HUD bên dưới
+            // timeManager reference tự lookup trong DayNightTintOverlay.Awake.
         }
 
         // ---------- Interact prompt (pop-up "[E] <label>" ở bottom-center khi có target) ----------
