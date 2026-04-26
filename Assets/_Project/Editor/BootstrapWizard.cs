@@ -851,6 +851,58 @@ namespace WildernessCultivation.EditorTools
             BuildStorageChestUI(canvas, player, whiteSprite);
             BuildTutorialHUD(canvas, player, whiteSprite);
             BuildPauseMenu(canvas, whiteSprite);
+            BuildInteractPrompt(canvas, player, whiteSprite);
+        }
+
+        // ---------- Interact prompt (pop-up "[E] <label>" ở bottom-center khi có target) ----------
+        static void BuildInteractPrompt(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            // Root panel — ẩn mặc định, toggle bởi InteractPromptUI khi có CurrentTarget.
+            var rootGo = new GameObject("InteractPrompt",
+                typeof(RectTransform), typeof(Image));
+            rootGo.transform.SetParent(canvas.transform, false);
+            var rt = (RectTransform)rootGo.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
+            rt.pivot = new Vector2(0.5f, 0);
+            // Đặt trên joystick + inventory bar (joystick ở y~160, inventory ở y~300).
+            rt.anchoredPosition = new Vector2(0, 340);
+            rt.sizeDelta = new Vector2(420, 44);
+            var bg = rootGo.GetComponent<Image>();
+            bg.sprite = whiteSprite;
+            bg.color = new Color(0.05f, 0.05f, 0.10f, 0.85f);
+            bg.raycastTarget = false;
+
+            // Label căn trái, chừa slot cho nút bấm mobile bên phải.
+            var label = AddTMPLabel(rootGo, "", 18, Color.white,
+                anchor: new Vector2(0, 0.5f), pivot: new Vector2(0, 0.5f),
+                anchoredPos: new Vector2(14, 0), size: new Vector2(320, 36),
+                alignment: TextAlignmentOptions.Left);
+
+            // Nút bấm tròn bên phải (mobile tap).
+            var btnGo = new GameObject("InteractTapBtn",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            btnGo.transform.SetParent(rootGo.transform, false);
+            var brt = (RectTransform)btnGo.transform;
+            brt.anchorMin = brt.anchorMax = new Vector2(1, 0.5f);
+            brt.pivot = new Vector2(1, 0.5f);
+            brt.anchoredPosition = new Vector2(-8, 0);
+            brt.sizeDelta = new Vector2(72, 36);
+            var bImg = btnGo.GetComponent<Image>();
+            bImg.sprite = whiteSprite;
+            bImg.color = new Color(0.25f, 0.55f, 0.30f, 1f);
+            AddTMPLabel(btnGo, "E", 18, Color.white,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            rootGo.SetActive(false);
+
+            // Gắn UI controller lên canvas (cùng pattern với StatBarUI).
+            var ui = canvas.AddComponent<InteractPromptUI>();
+            ui.interactAction = player.GetComponent<InteractAction>();
+            ui.promptRoot = rootGo;
+            ui.label = label;
+            ui.button = btnGo.GetComponent<Button>();
         }
 
         static void BuildStatBars(GameObject canvas, GameObject player, Sprite whiteSprite)

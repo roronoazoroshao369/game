@@ -12,6 +12,7 @@ namespace WildernessCultivation.UI
     public class InteractPromptUI : MonoBehaviour
     {
         public InteractAction interactAction;
+        public GameObject promptRoot;   // Parent panel toggle (ưu tiên nếu gán)
         public TMP_Text label;
         public Button button;
         public string keyHint = "E";
@@ -40,7 +41,18 @@ namespace WildernessCultivation.UI
             if (interactAction != null) interactAction.TryInteract();
         }
 
-        void Show() { if (label != null) label.enabled = true; if (button != null) button.gameObject.SetActive(true); }
-        void Hide() { if (label != null) label.enabled = false; if (button != null) button.gameObject.SetActive(false); }
+        void Show()
+        {
+            if (promptRoot != null) promptRoot.SetActive(true);
+            if (label != null) label.enabled = true;
+            if (button != null) button.gameObject.SetActive(true);
+        }
+
+        void Hide()
+        {
+            if (promptRoot != null) promptRoot.SetActive(false);
+            if (label != null) label.enabled = false;
+            if (button != null) button.gameObject.SetActive(false);
+        }
     }
 }
