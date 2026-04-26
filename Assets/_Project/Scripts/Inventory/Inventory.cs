@@ -217,9 +217,11 @@ namespace WildernessCultivation.Items
         /// </summary>
         public int TransferSlot(int slotIndex, Inventory dst)
         {
-            if (dst == null || dst == this) return 0;
             var src = GetSlot(slotIndex);
             if (src == null || src.IsEmpty) return 0;
+            // No-op: dst không hợp lệ → trả về src.count để caller biết KHÔNG transfer
+            // được gì (contract: return value = items còn lại ở src; 0 = chuyển hết).
+            if (dst == null || dst == this) return src.count;
 
             var item = src.item;
             bool noStack = item.isPerishable || item.hasDurability;
