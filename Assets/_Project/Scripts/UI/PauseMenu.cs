@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using WildernessCultivation.Audio;
 using WildernessCultivation.Core;
 
 namespace WildernessCultivation.UI
@@ -25,6 +26,8 @@ namespace WildernessCultivation.UI
         public Button saveNowButton;
         public Button quitButton;
         public TMP_Text toastText;      // hiện "Đã lưu" 1.5s
+        public Slider masterVolumeSlider;   // 0..1, bind tới AudioManager.SetMaster
+        public TMP_Text masterVolumeLabel;  // "Âm lượng: 80%"
 
         [Header("Input")]
         public KeyCode toggleKey = KeyCode.Escape;
@@ -46,6 +49,29 @@ namespace WildernessCultivation.UI
             if (resumeButton != null) resumeButton.onClick.AddListener(Resume);
             if (saveNowButton != null) saveNowButton.onClick.AddListener(SaveNow);
             if (quitButton != null)   quitButton.onClick.AddListener(QuitDemo);
+
+            if (masterVolumeSlider != null)
+            {
+                // Set giá trị ban đầu từ AudioManager (đã load PlayerPrefs trong Awake).
+                float v = AudioManager.Instance != null ? AudioManager.Instance.masterVolume : 0.8f;
+                masterVolumeSlider.minValue = 0f;
+                masterVolumeSlider.maxValue = 1f;
+                masterVolumeSlider.SetValueWithoutNotify(v);
+                UpdateMasterLabel(v);
+                masterVolumeSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
+            }
+        }
+
+        void OnMasterVolumeChanged(float v)
+        {
+            if (AudioManager.Instance != null) AudioManager.Instance.SetMaster(v);
+            UpdateMasterLabel(v);
+        }
+
+        void UpdateMasterLabel(float v)
+        {
+            if (masterVolumeLabel != null)
+                masterVolumeLabel.text = $"Âm lượng: {Mathf.RoundToInt(v * 100f)}%";
         }
 
         void Update()
