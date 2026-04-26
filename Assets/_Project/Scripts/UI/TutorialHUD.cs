@@ -148,6 +148,10 @@ namespace WildernessCultivation.UI
         void OnObjectiveCompleted(DemoObjectivesTracker.Objective o)
         {
             RefreshObjectives();
+            // Nếu đây là mục tiêu cuối, bỏ qua toast + chime — OnAllObjectivesCompleted
+            // sẽ bắn ngay cùng frame và hiện victory banner full-screen; toast nhỏ trên
+            // top-center sẽ nổi đè modal (Devin Review #35 follow-up).
+            if (tracker != null && tracker.AllDone) return;
             ShowObjectiveToast(o);
             // Gợi ý audio feedback — ItemPickup tone ngắn, đã có sẵn từ AudioManager.
             AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.ItemPickup);
