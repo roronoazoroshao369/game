@@ -617,11 +617,16 @@ namespace WildernessCultivation.EditorTools
             var col = go.AddComponent<CircleCollider2D>();
             col.radius = 0.45f;
             col.isTrigger = true;
-            // StorageChest [RequireComponent(typeof(Inventory))] → Inventory sẽ tự add khi
-            // AddComponent<StorageChest>(); không cần add Inventory thủ công.
+            // StorageChest [RequireComponent(typeof(Inventory))] → Unity auto-add Inventory
+            // với default slotCount=16. Phải set tường minh cả hai — Inventory.Awake() có thể
+            // chạy trước StorageChest.Awake() (sibling Awake order không deterministic),
+            // làm khởi tạo 16 slot trước khi StorageChest có cơ hội đồng bộ về 12.
+            const int chestSlots = 12;
             var chest = go.AddComponent<StorageChest>();
-            chest.slotCount = 12;
+            chest.slotCount = chestSlots;
             chest.interactLabel = "Mở rương";
+            var chestInv = go.GetComponent<Inventory>();
+            if (chestInv != null) chestInv.slotCount = chestSlots;
             return SaveAsPrefab(go, $"{PrefabsDir}/StorageChest.prefab");
         }
 
@@ -812,6 +817,7 @@ namespace WildernessCultivation.EditorTools
             BuildInventoryUI(canvas, player, whiteSprite);
             BuildCraftingUI(canvas, player, whiteSprite);
             BuildRealmUI(canvas, player, whiteSprite);
+            BuildStorageChestUI(canvas, player, whiteSprite);
         }
 
         static void BuildStatBars(GameObject canvas, GameObject player, Sprite whiteSprite)
@@ -1176,6 +1182,125 @@ namespace WildernessCultivation.EditorTools
             realmUI.xpFill = xpFillImg;
             realmUI.breakthroughButton = btnGo.GetComponent<Button>();
             realmUI.breakthroughResultLabel = resultLabel;
+        }
+
+        // ---------- Storage Chest UI (centered overlay, hidden by default) ----------
+        static void BuildStorageChestUI(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            var inv = player.GetComponent<Inventory>();
+            var ctrl = player.GetComponent<PlayerController>();
+
+            // Root panel — full canvas overlay (semi-transparent dim)
+            var rootGo = new GameObject("ChestUIRoot", typeof(RectTransform));
+            rootGo.transform.SetParent(canvas.transform, false);
+            var rootRT = (RectTransform)rootGo.transform;
+            rootRT.anchorMin = Vector2.zero;
+            rootRT.anchorMax = Vector2.one;
+            rootRT.offsetMin = Vector2.zero;
+            rootRT.offsetMax = Vector2.zero;
+
+            // Dim background
+            var dimGo = new GameObject("Dim", typeof(RectTransform), typeof(Image));
+            dimGo.transform.SetParent(rootGo.transform, false);
+            var dimRT = (RectTransform)dimGo.transform;
+            dimRT.anchorMin = Vector2.zero;
+            dimRT.anchorMax = Vector2.one;
+            dimRT.offsetMin = Vector2.zero;
+            dimRT.offsetMax = Vector2.zero;
+            var dimImg = dimGo.GetComponent<Image>();
+            dimImg.sprite = whiteSprite;
+            dimImg.color = new Color(0, 0, 0, 0.55f);
+            dimImg.raycastTarget = true; // chặn click xuyên qua xuống các UI bên dưới
+
+            // Centered panel — 2 cột (Chest left, Player right)
+            var panelGo = new GameObject("ChestPanel", typeof(RectTransform), typeof(Image));
+            panelGo.transform.SetParent(rootGo.transform, false);
+            var panelRT = (RectTransform)panelGo.transform;
+            panelRT.anchorMin = panelRT.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRT.pivot = new Vector2(0.5f, 0.5f);
+            panelRT.sizeDelta = new Vector2(840, 480);
+            var panelImg = panelGo.GetComponent<Image>();
+            panelImg.sprite = whiteSprite;
+            panelImg.color = new Color(0.10f, 0.10f, 0.12f, 0.92f);
+
+            // Headers
+            AddTMPLabel(panelGo, "Rương", 22, Color.white,
+                anchor: new Vector2(0, 1), pivot: new Vector2(0, 1),
+                anchoredPos: new Vector2(20, -10), size: new Vector2(200, 28),
+                alignment: TextAlignmentOptions.MidlineLeft);
+            AddTMPLabel(panelGo, "Túi đồ", 22, Color.white,
+                anchor: new Vector2(1, 1), pivot: new Vector2(1, 1),
+                anchoredPos: new Vector2(-20, -10), size: new Vector2(200, 28),
+                alignment: TextAlignmentOptions.MidlineRight);
+
+            // Close button (top right)
+            var closeGo = new GameObject("CloseBtn",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            closeGo.transform.SetParent(panelGo.transform, false);
+            var closeRT = (RectTransform)closeGo.transform;
+            closeRT.anchorMin = closeRT.anchorMax = new Vector2(1, 1);
+            closeRT.pivot = new Vector2(1, 1);
+            closeRT.anchoredPosition = new Vector2(-8, -8);
+            closeRT.sizeDelta = new Vector2(36, 36);
+            var closeImg = closeGo.GetComponent<Image>();
+            closeImg.sprite = whiteSprite;
+            closeImg.color = new Color(0.55f, 0.20f, 0.20f);
+            AddTMPLabel(closeGo, "X", 22, Color.white,
+                anchor: Vector2.zero, pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            // Chest grid (left column)
+            var chestGridGo = new GameObject("ChestGrid",
+                typeof(RectTransform), typeof(GridLayoutGroup));
+            chestGridGo.transform.SetParent(panelGo.transform, false);
+            var chestGridRT = (RectTransform)chestGridGo.transform;
+            chestGridRT.anchorMin = new Vector2(0, 0);
+            chestGridRT.anchorMax = new Vector2(0.5f, 1);
+            chestGridRT.offsetMin = new Vector2(20, 20);
+            chestGridRT.offsetMax = new Vector2(-10, -48);
+            var chestGrid = chestGridGo.GetComponent<GridLayoutGroup>();
+            chestGrid.cellSize = new Vector2(78, 78);
+            chestGrid.spacing = new Vector2(6, 6);
+            chestGrid.padding = new RectOffset(4, 4, 4, 4);
+            chestGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            chestGrid.constraintCount = 4;
+
+            // Player grid (right column)
+            var playerGridGo = new GameObject("PlayerGrid",
+                typeof(RectTransform), typeof(GridLayoutGroup));
+            playerGridGo.transform.SetParent(panelGo.transform, false);
+            var playerGridRT = (RectTransform)playerGridGo.transform;
+            playerGridRT.anchorMin = new Vector2(0.5f, 0);
+            playerGridRT.anchorMax = new Vector2(1, 1);
+            playerGridRT.offsetMin = new Vector2(10, 20);
+            playerGridRT.offsetMax = new Vector2(-20, -48);
+            var playerGrid = playerGridGo.GetComponent<GridLayoutGroup>();
+            playerGrid.cellSize = new Vector2(78, 78);
+            playerGrid.spacing = new Vector2(6, 6);
+            playerGrid.padding = new RectOffset(4, 4, 4, 4);
+            playerGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            playerGrid.constraintCount = 4;
+
+            // Reuse existing slot prefab nếu có (do BuildInventoryUI đã build trước đó);
+            // fallback build mới nếu chưa có (BuildUI gọi BuildInventoryUI trước
+            // BuildStorageChestUI, nên load AssetDatabase sẽ có).
+            var slotPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                $"{PrefabsDir}/InventorySlot.prefab");
+            if (slotPrefab == null)
+            {
+                slotPrefab = SaveAsPrefab(BuildSlotPrefab(whiteSprite),
+                    $"{PrefabsDir}/InventorySlot.prefab");
+            }
+
+            var ui = rootGo.AddComponent<StorageChestUI>();
+            ui.playerInventory = inv;
+            ui.playerController = ctrl;
+            ui.panel = panelGo;
+            ui.chestSlotsParent = chestGridGo.transform;
+            ui.playerSlotsParent = playerGridGo.transform;
+            ui.slotPrefab = slotPrefab;
+            ui.closeButton = closeGo.GetComponent<Button>();
         }
 
         // ---------- Helpers ----------

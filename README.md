@@ -56,7 +56,7 @@ Repo đã có sẵn `Editor/BootstrapWizard.cs`. Sau khi clone xong và mở pro
 Hệ thống phím cơ bản trong scene mặc định:
 - **WASD / arrow** → di chuyển
 - **Left Shift** → né (dodge / roll — i-frames trong ~0.25s, tốn 5 Linh Khí)
-- **E** → tương tác (lửa trại, suối nước, **mở rương**)
+- **E** → tương tác (lửa trại, suối nước, **mở rương** — bấm slot trong panel để chuyển item player ↔ chest, ESC để đóng)
 - **T** → bật/tắt đuốc
 - **F** → câu cá (đứng cạnh `WaterSpring`, cần `Cần Câu Tre` trong inventory — craft từ 3 cành cây)
 - **J** → đánh (mặc định `PlayerCombat.attackKey`)

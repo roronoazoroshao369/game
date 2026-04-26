@@ -174,6 +174,60 @@ namespace WildernessCultivation.Items
 
         public InventorySlot GetSlot(int i) => (i >= 0 && i < slots.Count) ? slots[i] : null;
 
+        /// <summary>
+        /// Chuyển toàn bộ nội dung 1 slot sang <paramref name="dst"/> giữ nguyên
+        /// freshRemaining / durability (khác <see cref="Add"/> — Add reset 2 trường này).
+        /// Trả về số lượng còn lại trong slot nguồn (=0 nếu chuyển hết, &gt;0 nếu dst đầy).
+        /// </summary>
+        public int TransferSlot(int slotIndex, Inventory dst)
+        {
+            if (dst == null || dst == this) return 0;
+            var src = GetSlot(slotIndex);
+            if (src == null || src.IsEmpty) return 0;
+
+            var item = src.item;
+            bool noStack = item.isPerishable || item.hasDurability;
+            int effectiveStack = noStack ? 1 : item.maxStack;
+
+            // Stack vào slot đã có (chỉ cho item thường, không phải perishable/durable —
+            // vì 2 loại này có tracking per-slot riêng, stack lại sẽ làm mất dữ liệu).
+            if (!noStack)
+            {
+                foreach (var d in dst.slots)
+                {
+                    if (src.count <= 0) break;
+                    if (d.item == item && d.count < effectiveStack)
+                    {
+                        int can = Mathf.Min(effectiveStack - d.count, src.count);
+                        d.count += can;
+                        src.count -= can;
+                    }
+                }
+            }
+
+            // Slot trống trong dst
+            foreach (var d in dst.slots)
+            {
+                if (src.count <= 0) break;
+                if (d.IsEmpty)
+                {
+                    d.item = item;
+                    int can = noStack ? 1 : Mathf.Min(effectiveStack, src.count);
+                    d.count = can;
+                    d.freshRemaining = src.freshRemaining;
+                    d.durability = src.durability;
+                    src.count -= can;
+                }
+            }
+
+            int leftover = src.count;
+            if (leftover <= 0) ResetSlot(src);
+
+            OnInventoryChanged?.Invoke();
+            dst.OnInventoryChanged?.Invoke();
+            return leftover;
+        }
+
         void ResetSlot(InventorySlot s)
         {
             s.item = null;
