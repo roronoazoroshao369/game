@@ -1416,21 +1416,13 @@ namespace WildernessCultivation.EditorTools
                 anchoredPos: new Vector2(0, -56), size: new Vector2(600, 260),
                 alignment: TextAlignmentOptions.TopLeft);
 
-            var welBtnGo = new GameObject("StartDemoBtn",
-                typeof(RectTransform), typeof(Image), typeof(Button));
-            welBtnGo.transform.SetParent(welPanel.transform, false);
-            var wbRT = (RectTransform)welBtnGo.transform;
-            wbRT.anchorMin = wbRT.anchorMax = new Vector2(0.5f, 0);
-            wbRT.pivot = new Vector2(0.5f, 0);
-            wbRT.anchoredPosition = new Vector2(0, 20);
-            wbRT.sizeDelta = new Vector2(220, 44);
-            var wbImg = welBtnGo.GetComponent<Image>();
-            wbImg.sprite = whiteSprite;
-            wbImg.color = new Color(0.95f, 0.75f, 0.30f);
-            AddTMPLabel(welBtnGo, "Bắt đầu demo", 20, Color.black,
-                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
-                anchoredPos: Vector2.zero, size: Vector2.zero,
-                alignment: TextAlignmentOptions.Center, stretch: true);
+            // 3 nút menu chính: Bắt đầu mới / Tiếp tục / Thoát. Layout ngang ở đáy panel.
+            var welBtnGo = MakeWelcomeMenuBtn(welPanel, whiteSprite,
+                "NewGameBtn", "Bắt đầu mới", new Color(0.95f, 0.75f, 0.30f), offsetX: -210);
+            var continueBtnGo = MakeWelcomeMenuBtn(welPanel, whiteSprite,
+                "ContinueBtn", "Tiếp tục", new Color(0.55f, 0.85f, 0.55f), offsetX: 0);
+            var quitBtnGo = MakeWelcomeMenuBtn(welPanel, whiteSprite,
+                "QuitBtn", "Thoát Demo", new Color(0.80f, 0.40f, 0.40f), offsetX: 210);
 
             // --- Victory banner (center overlay, hidden by default) ---
             var victoryOverlay = new GameObject("VictoryOverlay",
@@ -1488,6 +1480,8 @@ namespace WildernessCultivation.EditorTools
             hud.tracker = tracker;
             hud.welcomePanel = welcomeOverlay;
             hud.welcomeDismissButton = welBtnGo.GetComponent<Button>();
+            hud.continueButton = continueBtnGo.GetComponent<Button>();
+            hud.quitButton = quitBtnGo.GetComponent<Button>();
             hud.welcomeBodyText = welBody;
             hud.objectivesListText = objList;
             hud.victoryPanel = victoryOverlay;
@@ -1669,6 +1663,28 @@ namespace WildernessCultivation.EditorTools
                 anchoredPos: Vector2.zero, size: Vector2.zero,
                 alignment: TextAlignmentOptions.Center, stretch: true);
             return btnGo.GetComponent<Button>();
+        }
+
+        /// <summary>3 nút main-menu-style nằm ngang ở đáy welcome panel (200×44, offsetX từ center).</summary>
+        static GameObject MakeWelcomeMenuBtn(GameObject parent, Sprite whiteSprite,
+            string goName, string label, Color color, float offsetX)
+        {
+            var btnGo = new GameObject(goName,
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            btnGo.transform.SetParent(parent.transform, false);
+            var rt = (RectTransform)btnGo.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
+            rt.pivot = new Vector2(0.5f, 0);
+            rt.anchoredPosition = new Vector2(offsetX, 20);
+            rt.sizeDelta = new Vector2(200, 44);
+            var img = btnGo.GetComponent<Image>();
+            img.sprite = whiteSprite;
+            img.color = color;
+            AddTMPLabel(btnGo, label, 20, Color.black,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+            return btnGo;
         }
 
         // ---------- Helpers ----------

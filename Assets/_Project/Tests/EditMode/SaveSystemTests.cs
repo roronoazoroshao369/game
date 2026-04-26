@@ -154,5 +154,21 @@ namespace WildernessCultivation.Tests.EditMode
             // Đã Delete trong SetUp, file không tồn tại
             Assert.DoesNotThrow(() => SaveSystem.Delete());
         }
+
+        [Test]
+        public void HasSave_FalseWhenNoFile()
+        {
+            Assert.IsFalse(SaveSystem.HasSave);
+        }
+
+        [Test]
+        public void HasSave_TrueAfterSave_FalseAfterDelete()
+        {
+            SaveSystem.Save(new SaveData { player = new PlayerSaveData() });
+            Assert.IsTrue(SaveSystem.HasSave);
+
+            SaveSystem.Delete();
+            Assert.IsFalse(SaveSystem.HasSave);
+        }
     }
 }
