@@ -1,9 +1,11 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Core;
@@ -655,11 +657,20 @@ namespace WildernessCultivation.EditorTools
             var fire = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Campfire);
             fire.transform.position = new Vector3(wg.size.x * 0.5f + 2.5f, wg.size.y * 0.5f, 0f);
 
+            // EventSystem (required for UI input — Buttons, Joystick, etc.)
+            var esGo = new GameObject("EventSystem");
+            esGo.AddComponent<EventSystem>();
+            esGo.AddComponent<StandaloneInputModule>();
+
             // UI Canvas
             var canvasGo = new GameObject("UICanvas");
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvas.sortingOrder = 10;
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
             BuildUI(canvasGo, player, sprites["ui_white"]);
 
@@ -679,50 +690,411 @@ namespace WildernessCultivation.EditorTools
             Debug.Log("[Bootstrap] MainScene saved at " + MainScenePath);
         }
 
-        // Build minimal status bar UI
+        // Build full UI: stat bars + joystick + skill buttons + inventory + crafting + realm.
         static void BuildUI(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            BuildStatBars(canvas, player, whiteSprite);
+            BuildVirtualJoystick(canvas, player, whiteSprite);
+            BuildSkillButtons(canvas, whiteSprite);
+            BuildInventoryUI(canvas, player, whiteSprite);
+            BuildCraftingUI(canvas, player, whiteSprite);
+            BuildRealmUI(canvas, player, whiteSprite);
+        }
+
+        static void BuildStatBars(GameObject canvas, GameObject player, Sprite whiteSprite)
         {
             var statBarUI = canvas.AddComponent<StatBarUI>();
             statBarUI.stats = player.GetComponent<PlayerStats>();
             statBarUI.controller = player.GetComponent<PlayerController>();
             statBarUI.inventory = player.GetComponent<Inventory>();
 
-            Image MakeBar(string name, Vector2 anchoredPos, Color color)
+            statBarUI.hpFill          = MakeBar(canvas, whiteSprite, "HP",       new Vector2(10, -10),  new Color(0.85f, 0.20f, 0.25f));
+            statBarUI.hungerFill      = MakeBar(canvas, whiteSprite, "Hunger",   new Vector2(10, -28),  new Color(0.92f, 0.65f, 0.25f));
+            statBarUI.thirstFill      = MakeBar(canvas, whiteSprite, "Thirst",   new Vector2(10, -46),  new Color(0.30f, 0.70f, 0.95f));
+            statBarUI.sanityFill      = MakeBar(canvas, whiteSprite, "Sanity",   new Vector2(10, -64),  new Color(0.65f, 0.45f, 0.85f));
+            statBarUI.manaFill        = MakeBar(canvas, whiteSprite, "Mana",     new Vector2(10, -82),  new Color(0.40f, 0.85f, 0.85f));
+            statBarUI.bodyTempFill    = MakeBar(canvas, whiteSprite, "BodyTemp", new Vector2(10, -100), new Color(0.55f, 0.85f, 0.55f));
+            statBarUI.encumbranceFill = MakeBar(canvas, whiteSprite, "Encumber", new Vector2(10, -118), new Color(0.85f, 0.85f, 0.40f));
+        }
+
+        static Image MakeBar(GameObject canvas, Sprite whiteSprite, string name, Vector2 anchoredPos, Color color)
+        {
+            var bgGo = new GameObject(name + "_BG", typeof(RectTransform), typeof(Image));
+            bgGo.transform.SetParent(canvas.transform, false);
+            var bgRT = (RectTransform)bgGo.transform;
+            bgRT.anchorMin = bgRT.anchorMax = new Vector2(0, 1);
+            bgRT.pivot = new Vector2(0, 1);
+            bgRT.anchoredPosition = anchoredPos;
+            bgRT.sizeDelta = new Vector2(180, 14);
+            var bgImg = bgGo.GetComponent<Image>();
+            bgImg.sprite = whiteSprite;
+            bgImg.color = new Color(0, 0, 0, 0.55f);
+
+            var fillGo = new GameObject(name + "_Fill", typeof(RectTransform), typeof(Image));
+            fillGo.transform.SetParent(bgGo.transform, false);
+            var fRT = (RectTransform)fillGo.transform;
+            fRT.anchorMin = new Vector2(0, 0);
+            fRT.anchorMax = new Vector2(1, 1);
+            fRT.offsetMin = new Vector2(2, 2);
+            fRT.offsetMax = new Vector2(-2, -2);
+            var fImg = fillGo.GetComponent<Image>();
+            fImg.sprite = whiteSprite;
+            fImg.type = Image.Type.Filled;
+            fImg.fillMethod = Image.FillMethod.Horizontal;
+            fImg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            fImg.color = color;
+            return fImg;
+        }
+
+        // ---------- Virtual joystick (bottom-left) ----------
+        static void BuildVirtualJoystick(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            const float radius = 110f;
+
+            var bgGo = new GameObject("Joystick_BG", typeof(RectTransform), typeof(Image));
+            bgGo.transform.SetParent(canvas.transform, false);
+            var bgRT = (RectTransform)bgGo.transform;
+            bgRT.anchorMin = bgRT.anchorMax = new Vector2(0, 0);
+            bgRT.pivot = new Vector2(0.5f, 0.5f);
+            bgRT.anchoredPosition = new Vector2(180, 180);
+            bgRT.sizeDelta = new Vector2(radius * 2f, radius * 2f);
+            var bgImg = bgGo.GetComponent<Image>();
+            bgImg.sprite = whiteSprite;
+            bgImg.color = new Color(1f, 1f, 1f, 0.18f);
+
+            var thumbGo = new GameObject("Joystick_Thumb", typeof(RectTransform), typeof(Image));
+            thumbGo.transform.SetParent(bgGo.transform, false);
+            var thumbRT = (RectTransform)thumbGo.transform;
+            thumbRT.anchorMin = thumbRT.anchorMax = new Vector2(0.5f, 0.5f);
+            thumbRT.pivot = new Vector2(0.5f, 0.5f);
+            thumbRT.anchoredPosition = Vector2.zero;
+            thumbRT.sizeDelta = new Vector2(radius, radius);
+            var thumbImg = thumbGo.GetComponent<Image>();
+            thumbImg.sprite = whiteSprite;
+            thumbImg.color = new Color(1f, 1f, 1f, 0.45f);
+
+            var joystick = bgGo.AddComponent<VirtualJoystick>();
+            // Set private serialized fields via SerializedObject (background, thumb, radiusPixels)
+            var so = new SerializedObject(joystick);
+            so.FindProperty("background").objectReferenceValue = bgRT;
+            so.FindProperty("thumb").objectReferenceValue = thumbRT;
+            so.FindProperty("radiusPixels").floatValue = radius;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            var ctrl = player.GetComponent<PlayerController>();
+            if (ctrl != null) ctrl.joystick = joystick;
+        }
+
+        // ---------- Skill buttons (bottom-right) ----------
+        static void BuildSkillButtons(GameObject canvas, Sprite whiteSprite)
+        {
+            // Container
+            var rowGo = new GameObject("SkillButtonRow", typeof(RectTransform));
+            rowGo.transform.SetParent(canvas.transform, false);
+            var rowRT = (RectTransform)rowGo.transform;
+            rowRT.anchorMin = rowRT.anchorMax = new Vector2(1, 0);
+            rowRT.pivot = new Vector2(1, 0);
+            rowRT.anchoredPosition = new Vector2(-20, 20);
+            rowRT.sizeDelta = new Vector2(680, 280);
+
+            (string label, SkillButton.Action action, Color tint)[] entries =
             {
-                var bgGo = new GameObject(name + "_BG", typeof(RectTransform), typeof(Image));
-                bgGo.transform.SetParent(canvas.transform, false);
-                var bgRT = (RectTransform)bgGo.transform;
-                bgRT.anchorMin = bgRT.anchorMax = new Vector2(0, 1);
-                bgRT.pivot = new Vector2(0, 1);
-                bgRT.anchoredPosition = anchoredPos;
-                bgRT.sizeDelta = new Vector2(180, 14);
-                var bgImg = bgGo.GetComponent<Image>();
-                bgImg.sprite = whiteSprite;
-                bgImg.color = new Color(0, 0, 0, 0.55f);
+                ("Đánh",     SkillButton.Action.MeleeAttack,       new Color(0.85f, 0.30f, 0.25f)),
+                ("Né",       SkillButton.Action.Dodge,             new Color(0.85f, 0.85f, 0.30f)),
+                ("Skill",    SkillButton.Action.CastTechnique,     new Color(0.40f, 0.65f, 0.95f)),
+                ("Pháp Bảo", SkillButton.Action.UseMagicTreasure,  new Color(0.85f, 0.55f, 0.95f)),
+                ("Tương Tác",SkillButton.Action.Interact,          new Color(0.55f, 0.85f, 0.55f)),
+                ("Thiền",    SkillButton.Action.ToggleMeditation,  new Color(0.40f, 0.85f, 0.85f)),
+                ("Đột Phá",  SkillButton.Action.Breakthrough,      new Color(0.95f, 0.75f, 0.30f)),
+                ("Ngủ",      SkillButton.Action.Sleep,             new Color(0.55f, 0.55f, 0.85f)),
+                ("Đuốc",     SkillButton.Action.ToggleTorch,       new Color(0.95f, 0.55f, 0.30f)),
+            };
 
-                var fillGo = new GameObject(name + "_Fill", typeof(RectTransform), typeof(Image));
-                fillGo.transform.SetParent(bgGo.transform, false);
-                var fRT = (RectTransform)fillGo.transform;
-                fRT.anchorMin = new Vector2(0, 0);
-                fRT.anchorMax = new Vector2(1, 1);
-                fRT.offsetMin = new Vector2(2, 2);
-                fRT.offsetMax = new Vector2(-2, -2);
-                var fImg = fillGo.GetComponent<Image>();
-                fImg.sprite = whiteSprite;
-                fImg.type = Image.Type.Filled;
-                fImg.fillMethod = Image.FillMethod.Horizontal;
-                fImg.fillOrigin = (int)Image.OriginHorizontal.Left;
-                fImg.color = color;
-                return fImg;
+            const int cols = 3;
+            const float btnSize = 110f;
+            const float gap = 12f;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                int col = i % cols;
+                int row = i / cols;
+                float x = -(cols - 1 - col) * (btnSize + gap);
+                float y = row * (btnSize + gap);
+
+                var btnGo = new GameObject("SkillBtn_" + entries[i].label,
+                    typeof(RectTransform), typeof(Image), typeof(Button), typeof(SkillButton));
+                btnGo.transform.SetParent(rowGo.transform, false);
+                var rt = (RectTransform)btnGo.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(1, 0);
+                rt.pivot = new Vector2(1, 0);
+                rt.anchoredPosition = new Vector2(x, y);
+                rt.sizeDelta = new Vector2(btnSize, btnSize);
+                var img = btnGo.GetComponent<Image>();
+                img.sprite = whiteSprite;
+                img.color = entries[i].tint;
+                var btn = btnGo.GetComponent<Button>();
+                var sb = btnGo.GetComponent<SkillButton>();
+                sb.action = entries[i].action;
+                sb.button = btn;
+
+                AddTMPLabel(btnGo, entries[i].label, 26, Color.black);
             }
+        }
 
-            statBarUI.hpFill          = MakeBar("HP",       new Vector2(10, -10),  new Color(0.85f, 0.20f, 0.25f));
-            statBarUI.hungerFill      = MakeBar("Hunger",   new Vector2(10, -28),  new Color(0.92f, 0.65f, 0.25f));
-            statBarUI.thirstFill      = MakeBar("Thirst",   new Vector2(10, -46),  new Color(0.30f, 0.70f, 0.95f));
-            statBarUI.sanityFill      = MakeBar("Sanity",   new Vector2(10, -64),  new Color(0.65f, 0.45f, 0.85f));
-            statBarUI.manaFill        = MakeBar("Mana",     new Vector2(10, -82),  new Color(0.40f, 0.85f, 0.85f));
-            statBarUI.bodyTempFill    = MakeBar("BodyTemp", new Vector2(10, -100), new Color(0.55f, 0.85f, 0.55f));
-            statBarUI.encumbranceFill = MakeBar("Encumber", new Vector2(10, -118), new Color(0.85f, 0.85f, 0.40f));
+        // ---------- Inventory grid (right edge, 4x4) ----------
+        static void BuildInventoryUI(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            var inv = player.GetComponent<Inventory>();
+            var stats = player.GetComponent<PlayerStats>();
+
+            var panelGo = new GameObject("InventoryPanel", typeof(RectTransform), typeof(Image));
+            panelGo.transform.SetParent(canvas.transform, false);
+            var panelRT = (RectTransform)panelGo.transform;
+            panelRT.anchorMin = panelRT.anchorMax = new Vector2(1, 1);
+            panelRT.pivot = new Vector2(1, 1);
+            panelRT.anchoredPosition = new Vector2(-20, -20);
+            panelRT.sizeDelta = new Vector2(360, 360);
+            var panelImg = panelGo.GetComponent<Image>();
+            panelImg.sprite = whiteSprite;
+            panelImg.color = new Color(0, 0, 0, 0.45f);
+
+            // Header
+            AddTMPLabel(panelGo, "Túi đồ", 22, Color.white,
+                anchor: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
+                anchoredPos: new Vector2(0, -8), size: new Vector2(200, 24));
+
+            // Grid container
+            var gridGo = new GameObject("Grid", typeof(RectTransform), typeof(GridLayoutGroup));
+            gridGo.transform.SetParent(panelGo.transform, false);
+            var gridRT = (RectTransform)gridGo.transform;
+            gridRT.anchorMin = new Vector2(0, 0);
+            gridRT.anchorMax = new Vector2(1, 1);
+            gridRT.offsetMin = new Vector2(8, 8);
+            gridRT.offsetMax = new Vector2(-8, -36);
+            var grid = gridGo.GetComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(78, 78);
+            grid.spacing = new Vector2(6, 6);
+            grid.padding = new RectOffset(4, 4, 4, 4);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 4;
+
+            // Slot prefab (transient, not saved as asset — InventoryUI Instantiate vẫn hoạt động vì
+            // Unity sẽ clone subtree). Tạo template và cache reference vào InventoryUI.slotPrefab.
+            var slotPrefab = SaveAsPrefab(BuildSlotPrefab(whiteSprite),
+                $"{PrefabsDir}/InventorySlot.prefab");
+
+            var ui = panelGo.AddComponent<InventoryUI>();
+            ui.inventory = inv;
+            ui.playerStats = stats;
+            ui.slotPrefab = slotPrefab;
+            ui.slotsParent = gridGo.transform;
+        }
+
+        static GameObject BuildSlotPrefab(Sprite whiteSprite)
+        {
+            var slot = new GameObject("InventorySlot",
+                typeof(RectTransform), typeof(Image), typeof(Button), typeof(InventorySlotUI));
+            var rt = (RectTransform)slot.transform;
+            rt.sizeDelta = new Vector2(78, 78);
+            var bg = slot.GetComponent<Image>();
+            bg.sprite = whiteSprite;
+            bg.color = new Color(1f, 1f, 1f, 0.20f);
+
+            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconGo.transform.SetParent(slot.transform, false);
+            var iconRT = (RectTransform)iconGo.transform;
+            iconRT.anchorMin = new Vector2(0, 0);
+            iconRT.anchorMax = new Vector2(1, 1);
+            iconRT.offsetMin = new Vector2(6, 6);
+            iconRT.offsetMax = new Vector2(-6, -6);
+            var iconImg = iconGo.GetComponent<Image>();
+            iconImg.preserveAspect = true;
+
+            var countTmp = AddTMPLabel(slot, "", 18, Color.white,
+                anchor: new Vector2(1, 0), pivot: new Vector2(1, 0),
+                anchoredPos: new Vector2(-4, 4), size: new Vector2(40, 20),
+                alignment: TextAlignmentOptions.BottomRight);
+
+            var slotUI = slot.GetComponent<InventorySlotUI>();
+            slotUI.iconImage = iconImg;
+            slotUI.countText = countTmp;
+            slotUI.button = slot.GetComponent<Button>();
+
+            return slot;
+        }
+
+        // ---------- Crafting list (left side, below stat bars) ----------
+        static void BuildCraftingUI(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            var craft = player.GetComponent<CraftingSystem>();
+
+            var panelGo = new GameObject("CraftingPanel", typeof(RectTransform), typeof(Image));
+            panelGo.transform.SetParent(canvas.transform, false);
+            var panelRT = (RectTransform)panelGo.transform;
+            panelRT.anchorMin = panelRT.anchorMax = new Vector2(0, 1);
+            panelRT.pivot = new Vector2(0, 1);
+            panelRT.anchoredPosition = new Vector2(10, -150);
+            panelRT.sizeDelta = new Vector2(220, 320);
+            var panelImg = panelGo.GetComponent<Image>();
+            panelImg.sprite = whiteSprite;
+            panelImg.color = new Color(0, 0, 0, 0.45f);
+
+            AddTMPLabel(panelGo, "Chế Tạo", 22, Color.white,
+                anchor: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
+                anchoredPos: new Vector2(0, -8), size: new Vector2(180, 24));
+
+            var listGo = new GameObject("List", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            listGo.transform.SetParent(panelGo.transform, false);
+            var listRT = (RectTransform)listGo.transform;
+            listRT.anchorMin = new Vector2(0, 0);
+            listRT.anchorMax = new Vector2(1, 1);
+            listRT.offsetMin = new Vector2(6, 6);
+            listRT.offsetMax = new Vector2(-6, -36);
+            var vlg = listGo.GetComponent<VerticalLayoutGroup>();
+            vlg.spacing = 4f;
+            vlg.padding = new RectOffset(2, 2, 2, 2);
+            vlg.childControlHeight = false;
+            vlg.childForceExpandHeight = false;
+            vlg.childControlWidth = true;
+            vlg.childForceExpandWidth = true;
+
+            var recipePrefab = SaveAsPrefab(BuildRecipeButtonPrefab(whiteSprite),
+                $"{PrefabsDir}/RecipeButton.prefab");
+
+            var ui = panelGo.AddComponent<CraftingUI>();
+            ui.craftingSystem = craft;
+            ui.recipeButtonPrefab = recipePrefab;
+            ui.listParent = listGo.transform;
+        }
+
+        static GameObject BuildRecipeButtonPrefab(Sprite whiteSprite)
+        {
+            var btnGo = new GameObject("RecipeButton",
+                typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+            var rt = (RectTransform)btnGo.transform;
+            rt.sizeDelta = new Vector2(0, 36);
+            var le = btnGo.GetComponent<LayoutElement>();
+            le.minHeight = 36f;
+            le.preferredHeight = 36f;
+            var bg = btnGo.GetComponent<Image>();
+            bg.sprite = whiteSprite;
+            bg.color = new Color(0.95f, 0.85f, 0.55f, 0.85f);
+
+            AddTMPLabel(btnGo, "Recipe", 18, Color.black,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            return btnGo;
+        }
+
+        // ---------- Realm UI (top center) ----------
+        static void BuildRealmUI(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            var realm = player.GetComponent<RealmSystem>();
+
+            var panelGo = new GameObject("RealmPanel", typeof(RectTransform), typeof(Image));
+            panelGo.transform.SetParent(canvas.transform, false);
+            var panelRT = (RectTransform)panelGo.transform;
+            panelRT.anchorMin = panelRT.anchorMax = new Vector2(0.5f, 1f);
+            panelRT.pivot = new Vector2(0.5f, 1f);
+            panelRT.anchoredPosition = new Vector2(0, -10);
+            panelRT.sizeDelta = new Vector2(420, 80);
+            var bg = panelGo.GetComponent<Image>();
+            bg.sprite = whiteSprite;
+            bg.color = new Color(0, 0, 0, 0.45f);
+
+            var realmLabel = AddTMPLabel(panelGo, "Phàm Nhân", 22, Color.white,
+                anchor: new Vector2(0, 1), pivot: new Vector2(0, 1),
+                anchoredPos: new Vector2(10, -6), size: new Vector2(260, 28),
+                alignment: TextAlignmentOptions.MidlineLeft);
+
+            // XP bar
+            var xpBgGo = new GameObject("Xp_BG", typeof(RectTransform), typeof(Image));
+            xpBgGo.transform.SetParent(panelGo.transform, false);
+            var xpBgRT = (RectTransform)xpBgGo.transform;
+            xpBgRT.anchorMin = new Vector2(0, 0);
+            xpBgRT.anchorMax = new Vector2(1, 0);
+            xpBgRT.pivot = new Vector2(0.5f, 0);
+            xpBgRT.anchoredPosition = new Vector2(0, 8);
+            xpBgRT.sizeDelta = new Vector2(-20, 16);
+            var xpBgImg = xpBgGo.GetComponent<Image>();
+            xpBgImg.sprite = whiteSprite;
+            xpBgImg.color = new Color(0, 0, 0, 0.6f);
+
+            var xpFillGo = new GameObject("Xp_Fill", typeof(RectTransform), typeof(Image));
+            xpFillGo.transform.SetParent(xpBgGo.transform, false);
+            var xpFillRT = (RectTransform)xpFillGo.transform;
+            xpFillRT.anchorMin = new Vector2(0, 0);
+            xpFillRT.anchorMax = new Vector2(1, 1);
+            xpFillRT.offsetMin = new Vector2(2, 2);
+            xpFillRT.offsetMax = new Vector2(-2, -2);
+            var xpFillImg = xpFillGo.GetComponent<Image>();
+            xpFillImg.sprite = whiteSprite;
+            xpFillImg.type = Image.Type.Filled;
+            xpFillImg.fillMethod = Image.FillMethod.Horizontal;
+            xpFillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            xpFillImg.color = new Color(0.40f, 0.85f, 0.85f);
+
+            // Breakthrough button
+            var btnGo = new GameObject("BreakthroughBtn",
+                typeof(RectTransform), typeof(Image), typeof(Button));
+            btnGo.transform.SetParent(panelGo.transform, false);
+            var btnRT = (RectTransform)btnGo.transform;
+            btnRT.anchorMin = btnRT.anchorMax = new Vector2(1, 1);
+            btnRT.pivot = new Vector2(1, 1);
+            btnRT.anchoredPosition = new Vector2(-10, -6);
+            btnRT.sizeDelta = new Vector2(120, 32);
+            var btnImg = btnGo.GetComponent<Image>();
+            btnImg.sprite = whiteSprite;
+            btnImg.color = new Color(0.95f, 0.75f, 0.30f);
+            AddTMPLabel(btnGo, "Đột Phá", 20, Color.black,
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            var resultLabel = AddTMPLabel(panelGo, "", 16, new Color(0.95f, 0.95f, 0.55f),
+                anchor: new Vector2(0, 1), pivot: new Vector2(0, 1),
+                anchoredPos: new Vector2(10, -34), size: new Vector2(280, 20),
+                alignment: TextAlignmentOptions.MidlineLeft);
+
+            var realmUI = panelGo.AddComponent<RealmUI>();
+            realmUI.realm = realm;
+            realmUI.realmLabel = realmLabel;
+            realmUI.xpFill = xpFillImg;
+            realmUI.breakthroughButton = btnGo.GetComponent<Button>();
+            realmUI.breakthroughResultLabel = resultLabel;
+        }
+
+        // ---------- Helpers ----------
+        static TMP_Text AddTMPLabel(GameObject parent, string text, float fontSize, Color color,
+            Vector2 anchor = default, Vector2 pivot = default, Vector2 anchoredPos = default,
+            Vector2 size = default, TextAlignmentOptions alignment = TextAlignmentOptions.Center,
+            bool stretch = false)
+        {
+            var go = new GameObject("Label", typeof(RectTransform));
+            go.transform.SetParent(parent.transform, false);
+            var rt = (RectTransform)go.transform;
+            if (stretch)
+            {
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+            }
+            else
+            {
+                rt.anchorMin = rt.anchorMax = anchor == default ? new Vector2(0.5f, 0.5f) : anchor;
+                rt.pivot = pivot == default ? new Vector2(0.5f, 0.5f) : pivot;
+                rt.anchoredPosition = anchoredPos;
+                rt.sizeDelta = size == default ? new Vector2(120, 30) : size;
+            }
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.color = color;
+            tmp.alignment = alignment;
+            tmp.raycastTarget = false;
+            return tmp;
         }
     }
 }
