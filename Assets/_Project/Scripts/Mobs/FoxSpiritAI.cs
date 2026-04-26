@@ -1,6 +1,7 @@
 using UnityEngine;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Core;
+using WildernessCultivation.Player;
 
 namespace WildernessCultivation.Mobs
 {
@@ -47,7 +48,16 @@ namespace WildernessCultivation.Mobs
                 {
                     attackReadyAt = Time.time + attackCooldown;
                     var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
-                    dmg?.TakeDamage(damage, gameObject);
+                    if (dmg != null)
+                    {
+                        dmg.TakeDamage(damage, gameObject);
+                    }
+                    else
+                    {
+                        // Player KHÔNG implement IDamageable; fallback giống BossMobAI/WolfAI.
+                        var ps = target.GetComponent<PlayerStats>() ?? target.GetComponentInParent<PlayerStats>();
+                        ps?.TakeDamage(damage);
+                    }
                 }
             }
         }

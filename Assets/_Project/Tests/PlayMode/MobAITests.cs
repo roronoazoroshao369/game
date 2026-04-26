@@ -23,10 +23,17 @@ namespace WildernessCultivation.Tests.PlayMode
         Inventory inv;
         RealmSystem realm;
 
+        // Layer 0 = Default (player), Layer 8 = first user layer (mob). Distinct layers để
+        // Physics2D.OverlapCircle(_, _, playerMask) KHÔNG self-detect mob's own collider.
+        const int PlayerLayer = 0;
+        const int MobLayer = 8;
+        const int PlayerMaskBits = 1 << PlayerLayer;
+
         [SetUp]
         public void Setup()
         {
             playerGo = new GameObject("Player");
+            playerGo.layer = PlayerLayer;
             playerGo.AddComponent<Rigidbody2D>();
             playerGo.AddComponent<CircleCollider2D>().radius = 0.3f;
             playerStats = playerGo.AddComponent<PlayerStats>();
@@ -43,6 +50,7 @@ namespace WildernessCultivation.Tests.PlayMode
         GameObject MakeWolf(Vector3 pos, float aggro = 4f, float attack = 0.8f)
         {
             var go = new GameObject("Wolf");
+            go.layer = MobLayer; // KHÁC player layer → OverlapCircle không self-detect
             go.transform.position = pos;
             go.AddComponent<Rigidbody2D>();
             go.AddComponent<CircleCollider2D>().radius = 0.3f;
@@ -53,7 +61,7 @@ namespace WildernessCultivation.Tests.PlayMode
             wolf.maxHP = 20f;
             wolf.damage = 5f;
             wolf.attackCooldown = 0.05f;
-            wolf.playerMask = ~0; // all layers
+            wolf.playerMask = PlayerMaskBits; // chỉ dò player layer
             wolf.drops = System.Array.Empty<World.ResourceNode.Drop>();
             return go;
         }
@@ -216,6 +224,7 @@ namespace WildernessCultivation.Tests.PlayMode
             time.currentTime01 = 0.5f;
 
             var foxGo = new GameObject("Fox");
+            foxGo.layer = MobLayer;
             foxGo.transform.position = new Vector3(50, 50, 0);
             foxGo.AddComponent<Rigidbody2D>();
             var col = foxGo.AddComponent<CircleCollider2D>();
@@ -223,7 +232,7 @@ namespace WildernessCultivation.Tests.PlayMode
             var fox = foxGo.AddComponent<FoxSpiritAI>();
             fox.spriteRenderer = sr;
             fox.aggroRange = 0.1f;
-            fox.playerMask = ~0;
+            fox.playerMask = PlayerMaskBits;
             fox.drops = System.Array.Empty<World.ResourceNode.Drop>();
 
             yield return null;
@@ -245,6 +254,7 @@ namespace WildernessCultivation.Tests.PlayMode
             time.currentTime01 = 0.0f; // midnight → isNight
 
             var foxGo = new GameObject("Fox");
+            foxGo.layer = MobLayer;
             foxGo.transform.position = new Vector3(50, 50, 0);
             foxGo.AddComponent<Rigidbody2D>();
             var col = foxGo.AddComponent<CircleCollider2D>();
@@ -252,7 +262,7 @@ namespace WildernessCultivation.Tests.PlayMode
             var fox = foxGo.AddComponent<FoxSpiritAI>();
             fox.spriteRenderer = sr;
             fox.aggroRange = 0.1f;
-            fox.playerMask = ~0;
+            fox.playerMask = PlayerMaskBits;
             fox.drops = System.Array.Empty<World.ResourceNode.Drop>();
 
             yield return null;
