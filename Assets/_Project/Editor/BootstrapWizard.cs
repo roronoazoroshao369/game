@@ -1475,6 +1475,26 @@ namespace WildernessCultivation.EditorTools
                 anchoredPos: Vector2.zero, size: Vector2.zero,
                 alignment: TextAlignmentOptions.Center, stretch: true);
 
+            // --- Objective toast (top-center, ẩn mặc định) ---
+            var toastPanel = new GameObject("ObjectiveToastPanel",
+                typeof(RectTransform), typeof(Image));
+            toastPanel.transform.SetParent(rootGo.transform, false);
+            var tpRT = (RectTransform)toastPanel.transform;
+            tpRT.anchorMin = tpRT.anchorMax = new Vector2(0.5f, 1);
+            tpRT.pivot = new Vector2(0.5f, 1);
+            tpRT.anchoredPosition = new Vector2(0, -20);
+            tpRT.sizeDelta = new Vector2(460, 44);
+            var tpImg = toastPanel.GetComponent<Image>();
+            tpImg.sprite = whiteSprite;
+            tpImg.color = new Color(0.10f, 0.25f, 0.10f, 0.92f);
+            tpImg.raycastTarget = false;
+            var toastText = AddTMPLabel(toastPanel, "", 18,
+                new Color(0.85f, 1f, 0.85f),
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+            toastPanel.SetActive(false);
+
             // Wire TutorialHUD component.
             var hud = rootGo.AddComponent<TutorialHUD>();
             hud.tracker = tracker;
@@ -1487,6 +1507,8 @@ namespace WildernessCultivation.EditorTools
             hud.victoryPanel = victoryOverlay;
             hud.victoryText = vText;
             hud.victoryDismissButton = vBtnGo.GetComponent<Button>();
+            hud.objectiveToastPanel = toastPanel;
+            hud.objectiveToastText = toastText;
         }
 
         // ---------- Pause menu (top-left pause button + center overlay) ----------
