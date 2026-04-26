@@ -74,12 +74,12 @@ namespace WildernessCultivation.Tests.PlayMode
         {
             var stick = MakeItem("stick");
             var rod = MakeItem("rod", durable: true);
-            playerInv.Add(stick, 5);
-            playerInv.Add(rod, 1);
-            playerInv.UseDurability(playerInv.Slots.Count - 1, 50f); // dur 100 -> 50 (rod ở slot cuối)
+            playerInv.Add(stick, 5);   // slot 0: stick x5
+            playerInv.Add(rod, 1);     // slot 1: rod (durable không stack)
+            playerInv.UseDurability(1, 50f); // dur 100 -> 50
 
             int rodSlot = playerInv.FindFirstDamagedSlot();
-            Assert.GreaterOrEqual(rodSlot, 0);
+            Assert.AreEqual(1, rodSlot, "rod ở slot 1 (sau stick ở slot 0)");
 
             workbench.repairMaterial = stick;
             workbench.repairCost = 1;
