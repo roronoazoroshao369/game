@@ -74,34 +74,34 @@ namespace WildernessCultivation.World
             bool useBiomes = biomes != null && biomes.Length > 0;
 
             for (int x = 0; x < size.x; x++)
-            for (int y = 0; y < size.y; y++)
-            {
-                float n = Mathf.PerlinNoise((x + seed) * ResourceNoiseScale, (y + seed) * ResourceNoiseScale);
-                BiomeSO biome = useBiomes ? PickBiomeFor(x, y) : null;
+                for (int y = 0; y < size.y; y++)
+                {
+                    float n = Mathf.PerlinNoise((x + seed) * ResourceNoiseScale, (y + seed) * ResourceNoiseScale);
+                    BiomeSO biome = useBiomes ? PickBiomeFor(x, y) : null;
 
-                GameObject ground = biome != null ? biome.groundPrefab : groundPrefab;
-                if (ground != null)
-                    Instantiate(ground, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, contentParent);
+                    GameObject ground = biome != null ? biome.groundPrefab : groundPrefab;
+                    if (ground != null)
+                        Instantiate(ground, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, contentParent);
 
-                GameObject tree = biome != null ? biome.treePrefab : treePrefab;
-                GameObject rock = biome != null ? biome.rockPrefab : rockPrefab;
-                GameObject grass = biome != null ? biome.grassBushPrefab : grassBushPrefab;
-                GameObject water = biome != null ? biome.waterSpringPrefab : waterSpringPrefab;
+                    GameObject tree = biome != null ? biome.treePrefab : treePrefab;
+                    GameObject rock = biome != null ? biome.rockPrefab : rockPrefab;
+                    GameObject grass = biome != null ? biome.grassBushPrefab : grassBushPrefab;
+                    GameObject water = biome != null ? biome.waterSpringPrefab : waterSpringPrefab;
 
-                float dTree = biome != null ? biome.treeDensity : treeDensity;
-                float dRock = biome != null ? biome.rockDensity : rockDensity;
-                float dGrass = biome != null ? biome.grassDensity : grassDensity;
-                float dWater = biome != null ? biome.waterDensity : waterDensity;
+                    float dTree = biome != null ? biome.treeDensity : treeDensity;
+                    float dRock = biome != null ? biome.rockDensity : rockDensity;
+                    float dGrass = biome != null ? biome.grassDensity : grassDensity;
+                    float dWater = biome != null ? biome.waterDensity : waterDensity;
 
-                if (water != null && n < 0.15f && Random.value < dWater)
-                    Spawn(water, x, y);
-                else if (tree != null && n > 0.6f && Random.value < dTree)
-                    Spawn(tree, x, y);
-                else if (rock != null && n < 0.25f && Random.value < dRock)
-                    Spawn(rock, x, y);
-                else if (grass != null && Random.value < dGrass)
-                    Spawn(grass, x, y);
-            }
+                    if (water != null && n < 0.15f && Random.value < dWater)
+                        Spawn(water, x, y);
+                    else if (tree != null && n > 0.6f && Random.value < dTree)
+                        Spawn(tree, x, y);
+                    else if (rock != null && n < 0.25f && Random.value < dRock)
+                        Spawn(rock, x, y);
+                    else if (grass != null && Random.value < dGrass)
+                        Spawn(grass, x, y);
+                }
         }
 
         void Spawn(GameObject prefab, int x, int y)

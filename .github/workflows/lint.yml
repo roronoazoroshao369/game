@@ -15,7 +15,7 @@ jobs:
       - name: No tab-indent in C#
         run: |
           set -e
-          if grep -rPl "^\t" Assets/_Project/Scripts Assets/_Project/Tests 2>/dev/null; then
+          if grep -rPl "^\t" Assets/_Project/Scripts Assets/_Project/Tests --include="*.cs" 2>/dev/null; then
             echo "::error::Phát hiện tab indent trong C# file. Repo dùng 4 space (xem .editorconfig)."
             exit 1
           fi

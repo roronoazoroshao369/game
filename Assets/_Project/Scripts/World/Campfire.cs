@@ -101,9 +101,9 @@ namespace WildernessCultivation.World
             if (tm == null) return 1f;
             return tm.currentWeather switch
             {
-                Weather.Rain  => 2f,
+                Weather.Rain => 2f,
                 Weather.Storm => 3f,
-                _             => 1f,
+                _ => 1f,
             };
         }
 
