@@ -855,7 +855,78 @@ namespace WildernessCultivation.EditorTools
             BuildTutorialHUD(canvas, player, whiteSprite);
             BuildPauseMenu(canvas, whiteSprite);
             BuildInteractPrompt(canvas, player, whiteSprite);
+            BuildMinimap(canvas, player, whiteSprite);
             BuildDamageNumberLayer(canvas, player);
+        }
+
+        // ---------- Minimap (RawImage + 2nd ortho top-down camera + RenderTexture) ----------
+        static void BuildMinimap(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            // Camera GO — child của player để follow tự động. Render xuống RenderTexture.
+            var camGo = new GameObject("MinimapCamera");
+            camGo.transform.SetParent(player.transform, false);
+            camGo.transform.localPosition = new Vector3(0, 0, -20f); // z xa hơn main cam (-10) để không chia view
+            camGo.transform.localRotation = Quaternion.identity;
+            var mcam = camGo.AddComponent<Camera>();
+            mcam.orthographic = true;
+            mcam.orthographicSize = 9f; // zoom-out so với main (6) → minimap nhìn rộng hơn
+            mcam.backgroundColor = new Color(0.10f, 0.18f, 0.10f, 1f); // xanh đậm tối nền
+            mcam.clearFlags = CameraClearFlags.SolidColor;
+            mcam.depth = -2; // âm hơn main cam → render trước, khỏi block AudioListener etc.
+            // Cull UI layer (ScreenSpaceOverlay UI vốn không vào camera ortho world cam, nhưng UI layer mặc định = layer 5).
+            mcam.cullingMask = ~(1 << 5);
+            mcam.useOcclusionCulling = false;
+            mcam.allowMSAA = false;
+            mcam.allowHDR = false;
+
+            // Frame UI top-right (180×180 viewport, 220×220 frame để chừa border).
+            const float framePad = 8f;
+            const float frameSize = 200f;
+            var frameGo = new GameObject("MinimapFrame", typeof(RectTransform), typeof(Image));
+            frameGo.transform.SetParent(canvas.transform, false);
+            var frt = (RectTransform)frameGo.transform;
+            frt.anchorMin = frt.anchorMax = new Vector2(1f, 1f);
+            frt.pivot = new Vector2(1f, 1f);
+            frt.anchoredPosition = new Vector2(-framePad, -framePad);
+            frt.sizeDelta = new Vector2(frameSize, frameSize);
+            var frameBg = frameGo.GetComponent<Image>();
+            frameBg.sprite = whiteSprite;
+            frameBg.color = new Color(0.05f, 0.05f, 0.10f, 0.85f);
+            frameBg.raycastTarget = false;
+
+            // RawImage (viewport thực tế nằm trong frame, padding 6).
+            const float padInner = 6f;
+            var viewGo = new GameObject("MinimapView",
+                typeof(RectTransform), typeof(RawImage), typeof(MinimapController));
+            viewGo.transform.SetParent(frameGo.transform, false);
+            var vrt = (RectTransform)viewGo.transform;
+            vrt.anchorMin = Vector2.zero;
+            vrt.anchorMax = Vector2.one;
+            vrt.offsetMin = new Vector2(padInner, padInner);
+            vrt.offsetMax = new Vector2(-padInner, -padInner);
+            var raw = viewGo.GetComponent<RawImage>();
+            raw.raycastTarget = false;
+            var ctrl = viewGo.GetComponent<MinimapController>();
+            ctrl.minimapCamera = mcam;
+
+            // Player dot (chấm trắng giữa viewport — vì camera parent vào player nên player luôn ở center).
+            var dotGo = new GameObject("PlayerDot", typeof(RectTransform), typeof(Image));
+            dotGo.transform.SetParent(viewGo.transform, false);
+            var drt = (RectTransform)dotGo.transform;
+            drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+            drt.pivot = new Vector2(0.5f, 0.5f);
+            drt.anchoredPosition = Vector2.zero;
+            drt.sizeDelta = new Vector2(10, 10);
+            var dotImg = dotGo.GetComponent<Image>();
+            dotImg.sprite = whiteSprite;
+            dotImg.color = new Color(1f, 0.95f, 0.2f, 1f);
+            dotImg.raycastTarget = false;
+
+            // Label "Bản đồ" trên frame (top edge).
+            AddTMPLabel(frameGo, "Bản đồ", 12, new Color(1f, 1f, 1f, 0.6f),
+                anchor: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
+                anchoredPos: new Vector2(0, -3), size: new Vector2(80, 16),
+                alignment: TMPro.TextAlignmentOptions.Center);
         }
 
         // ---------- Damage number layer (float-up TMP text khi damage event) ----------
