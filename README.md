@@ -2,6 +2,7 @@
 
 [![Build Android APK](https://github.com/roronoazoroshao369/game/actions/workflows/build-android.yml/badge.svg)](https://github.com/roronoazoroshao369/game/actions/workflows/build-android.yml)
 [![Unity Tests](https://github.com/roronoazoroshao369/game/actions/workflows/test.yml/badge.svg)](https://github.com/roronoazoroshao369/game/actions/workflows/test.yml)
+[![Lint](https://github.com/roronoazoroshao369/game/actions/workflows/lint.yml/badge.svg)](https://github.com/roronoazoroshao369/game/actions/workflows/lint.yml)
 
 > Game **mobile open-world survival + tu tiên** lấy cảm hứng từ *Don't Starve Together* và *Quỷ Cốc Bát Hoang*.
 > Engine: **Unity 2022 LTS** · Nền tảng: **Android** (mở rộng iOS/PC sau).

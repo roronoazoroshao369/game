@@ -64,29 +64,29 @@ namespace WildernessCultivation.UI
                 case ItemCategory.Food:
                 case ItemCategory.Drink:
                 case ItemCategory.Consumable:
-                {
-                    bool spoiled = slot.IsSpoiled;
-                    float mult = spoiled ? item.spoiledRestoreMultiplier : 1f;
-                    if (item.restoreHunger > 0) playerStats.Eat(item.restoreHunger * mult);
-                    if (item.restoreThirst > 0) playerStats.Drink(item.restoreThirst * mult);
-                    if (item.restoreHP > 0) playerStats.Heal(item.restoreHP * mult);
-                    if (item.restoreSanity > 0) playerStats.RestoreSanity(item.restoreSanity * mult);
-                    if (item.restoreMana > 0) playerStats.AddMana(item.restoreMana * mult);
-                    if (spoiled && item.spoiledSanityPenalty > 0)
-                        playerStats.Sanity = Mathf.Max(0f, playerStats.Sanity - item.spoiledSanityPenalty);
-
-                    // Status effects khi tiêu thụ
-                    var statusMgr = playerStats.GetComponent<WildernessCultivation.Player.Status.StatusEffectManager>();
-                    if (statusMgr != null)
                     {
-                        if (item.consumeStatusEffect != null && Random.value <= item.consumeStatusChance)
-                            statusMgr.Apply(item.consumeStatusEffect);
-                        if (spoiled && item.spoiledStatusEffect != null)
-                            statusMgr.Apply(item.spoiledStatusEffect);
+                        bool spoiled = slot.IsSpoiled;
+                        float mult = spoiled ? item.spoiledRestoreMultiplier : 1f;
+                        if (item.restoreHunger > 0) playerStats.Eat(item.restoreHunger * mult);
+                        if (item.restoreThirst > 0) playerStats.Drink(item.restoreThirst * mult);
+                        if (item.restoreHP > 0) playerStats.Heal(item.restoreHP * mult);
+                        if (item.restoreSanity > 0) playerStats.RestoreSanity(item.restoreSanity * mult);
+                        if (item.restoreMana > 0) playerStats.AddMana(item.restoreMana * mult);
+                        if (spoiled && item.spoiledSanityPenalty > 0)
+                            playerStats.Sanity = Mathf.Max(0f, playerStats.Sanity - item.spoiledSanityPenalty);
+
+                        // Status effects khi tiêu thụ
+                        var statusMgr = playerStats.GetComponent<WildernessCultivation.Player.Status.StatusEffectManager>();
+                        if (statusMgr != null)
+                        {
+                            if (item.consumeStatusEffect != null && Random.value <= item.consumeStatusChance)
+                                statusMgr.Apply(item.consumeStatusEffect);
+                            if (spoiled && item.spoiledStatusEffect != null)
+                                statusMgr.Apply(item.spoiledStatusEffect);
+                        }
+                        inventory.TryConsumeSlot(index, 1);
+                        break;
                     }
-                    inventory.TryConsumeSlot(index, 1);
-                    break;
-                }
             }
         }
 

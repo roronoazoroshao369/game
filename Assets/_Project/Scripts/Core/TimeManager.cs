@@ -75,7 +75,7 @@ namespace WildernessCultivation.Core
                 Season.Autumn => rainChanceBase * 1.3f,
                 Season.Summer => rainChanceBase * 0.7f,
                 Season.Winter => rainChanceBase * 0.6f,
-                _             => rainChanceBase,
+                _ => rainChanceBase,
             };
             float roll = Random.value;
             Weather next;
@@ -114,7 +114,7 @@ namespace WildernessCultivation.Core
             Season.Summer => 70f,
             Season.Autumn => 50f,
             Season.Winter => 30f,
-            _             => 50f,
+            _ => 50f,
         };
     }
 

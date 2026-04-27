@@ -31,28 +31,28 @@ namespace WildernessCultivation.UI
             var realm = FindObjectOfType<WildernessCultivation.Cultivation.RealmSystem>();
             switch (action)
             {
-                case Action.MeleeAttack:      combat?.TryMeleeAttack(); break;
-                case Action.CastTechnique:    combat?.TryCastSkill(); break;
+                case Action.MeleeAttack: combat?.TryMeleeAttack(); break;
+                case Action.CastTechnique: combat?.TryCastSkill(); break;
                 case Action.ToggleMeditation: med?.Toggle(); break;
-                case Action.Interact:         interact?.TryInteract(); break;
+                case Action.Interact: interact?.TryInteract(); break;
                 case Action.Sleep:
                     if (sleep != null && !sleep.IsSleeping) sleep.TrySleep();
                     else sleep?.Wake();
                     break;
                 case Action.UseMagicTreasure: treasure?.TryUse(); break;
-                case Action.Breakthrough:     realm?.TryBreakthrough(); break;
+                case Action.Breakthrough: realm?.TryBreakthrough(); break;
                 case Action.ToggleTorch:
-                {
-                    var torch = FindObjectOfType<TorchAction>();
-                    torch?.Toggle();
-                    break;
-                }
+                    {
+                        var torch = FindObjectOfType<TorchAction>();
+                        torch?.Toggle();
+                        break;
+                    }
                 case Action.Dodge:
-                {
-                    var dodge = FindObjectOfType<DodgeAction>();
-                    dodge?.TryDodge();
-                    break;
-                }
+                    {
+                        var dodge = FindObjectOfType<DodgeAction>();
+                        dodge?.TryDodge();
+                        break;
+                    }
             }
         }
     }

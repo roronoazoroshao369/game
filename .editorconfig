@@ -1,0 +1,31 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Markdown: trailing spaces có thể là line-break syntax; tắt trim.
+[*.md]
+trim_trailing_whitespace = false
+
+# YAML / JSON: 2-space indent.
+[*.{yml,yaml,json}]
+indent_size = 2
+
+# Unity meta files / asmdef: giữ nguyên (Unity tự sinh).
+[*.{meta,asset,prefab,unity,asmdef}]
+trim_trailing_whitespace = false
+insert_final_newline = false
+
+# C# rules cho dotnet format (whitespace only).
+[*.cs]
+indent_size = 4
+csharp_indent_braces = false
+csharp_indent_block_contents = true
+csharp_new_line_before_open_brace = all
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = true

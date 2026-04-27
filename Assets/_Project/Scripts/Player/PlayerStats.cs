@@ -241,7 +241,7 @@ namespace WildernessCultivation.Player
                 bool sheltered = Shelter.IsSheltered(transform.position);
                 if (!sheltered)
                 {
-                    if (timeManager.currentWeather == Weather.Rain)  t -= 5f;
+                    if (timeManager.currentWeather == Weather.Rain) t -= 5f;
                     if (timeManager.currentWeather == Weather.Storm) t -= 10f;
                 }
             }
