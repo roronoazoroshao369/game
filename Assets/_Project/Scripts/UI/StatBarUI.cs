@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player;
 
@@ -32,6 +33,15 @@ namespace WildernessCultivation.UI
         public Image encumbranceFill;
         public Color encumbranceLightColor = new(0.6f, 1f, 0.6f, 1f);
         public Color encumbranceOverColor = new(1f, 0.6f, 0.3f, 1f);
+
+        [Header("Wetness")]
+        public Image wetnessFill;
+        [Tooltip("Optional label tier (Khô / Ẩm / Ướt / Sũng).")]
+        public TMP_Text wetnessTierLabel;
+        public Color wetnessDryColor = new(0.7f, 0.7f, 0.7f, 0.6f);
+        public Color wetnessDampColor = new(0.55f, 0.7f, 0.95f, 0.85f);
+        public Color wetnessWetColor = new(0.35f, 0.55f, 0.95f, 1f);
+        public Color wetnessDrenchedColor = new(0.2f, 0.35f, 0.85f, 1f);
 
         void Start()
         {
@@ -83,6 +93,30 @@ namespace WildernessCultivation.UI
                 encumbranceFill.fillAmount = Mathf.Clamp01(ratio);
                 encumbranceFill.color = ratio <= 1f ? encumbranceLightColor : encumbranceOverColor;
             }
+
+            if (wetnessFill != null)
+            {
+                wetnessFill.fillAmount = Mathf.Clamp01(stats.Wetness / Mathf.Max(1f, stats.maxWetness));
+                wetnessFill.color = WetnessTierColor(stats.CurrentWetnessTier);
+            }
+            if (wetnessTierLabel != null)
+                wetnessTierLabel.text = WetnessTierLabel(stats.CurrentWetnessTier);
         }
+
+        Color WetnessTierColor(WetnessTier t) => t switch
+        {
+            WetnessTier.Damp => wetnessDampColor,
+            WetnessTier.Wet => wetnessWetColor,
+            WetnessTier.Drenched => wetnessDrenchedColor,
+            _ => wetnessDryColor,
+        };
+
+        static string WetnessTierLabel(WetnessTier t) => t switch
+        {
+            WetnessTier.Damp => "Ẩm",
+            WetnessTier.Wet => "Ướt",
+            WetnessTier.Drenched => "Sũng",
+            _ => "Khô",
+        };
     }
 }

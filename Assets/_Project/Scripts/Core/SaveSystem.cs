@@ -67,6 +67,7 @@ namespace WildernessCultivation.Core
         public string spiritRoot;      // "Hỏa", "Thủy", ...
         public bool isAwakened;        // True = đã khai mở tu tiên. False = Thường Nhân.
         public int phamFailStreak;     // Pity counter — số fail Phàm liên tiếp. Reset 0 khi success.
+        public float wetness;          // Wetness gauge [0..100]; persist để vào shelter rồi save không mất tier.
     }
 
     [Serializable]

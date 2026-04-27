@@ -29,6 +29,8 @@ namespace WildernessCultivation.World
         public float thirstPerDrink = 25f;
         [Tooltip("Giây giữa các lần uống.")]
         public float drinkCooldown = 1f;
+        [Tooltip("Splash wetness mỗi lần uống tại suối (cộng vào PlayerStats.Wetness).")]
+        public float wetnessSplashOnDrink = 8f;
 
         [Header("Bottle (optional)")]
         [Tooltip("Nếu set, mỗi lần uống cũng cho 1 đơn vị item này vào inventory (gọi là 'Bình nước' chẳng hạn).")]
@@ -55,6 +57,7 @@ namespace WildernessCultivation.World
             if (stats == null) return false;
 
             stats.Drink(thirstPerDrink);
+            if (wetnessSplashOnDrink > 0f) stats.AddWetness(wetnessSplashOnDrink);
             nextDrinkAt = Time.time + drinkCooldown;
 
             if (dispenseBottleOnDrink && cleanWaterItem != null)
