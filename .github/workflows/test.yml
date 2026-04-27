@@ -35,6 +35,20 @@ jobs:
       UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
       UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
     steps:
+      # Free up disk space before pulling Unity docker image (~7GB base
+      # + Library cache). ubuntu-latest only has ~14GB free by default.
+      - name: Free up disk space
+        # Pinned to v1.3.1 commit SHA (supply chain hardening). See build-android.yml for context.
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
       - name: Checkout
         uses: actions/checkout@v4
         with:

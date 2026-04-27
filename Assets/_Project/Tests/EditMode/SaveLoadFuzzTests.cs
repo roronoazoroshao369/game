@@ -42,6 +42,11 @@ namespace WildernessCultivation.Tests.EditMode
             realm = playerGo.AddComponent<RealmSystem>();
             inv = playerGo.AddComponent<Inventory>();
 
+            // EditMode does not fire Awake/OnEnable on AddComponent — manually
+            // boot so PlayerStats wires sibling refs, RealmSystem builds default
+            // realms, and Inventory populates its slots list.
+            TestHelpers.Boot(stats, realm, inv);
+
             db = ScriptableObject.CreateInstance<ItemDatabase>();
             itemPlain = MakeItem("plain", maxStack: 99);
             itemDurable = MakeItem("durable", durable: true, maxStack: 1);
@@ -61,12 +66,12 @@ namespace WildernessCultivation.Tests.EditMode
         public void Teardown()
         {
             SaveSystem.Delete();
-            if (playerGo != null) Object.DestroyImmediate(playerGo);
-            if (db != null) Object.DestroyImmediate(db);
-            if (itemPlain != null) Object.DestroyImmediate(itemPlain);
-            if (itemDurable != null) Object.DestroyImmediate(itemDurable);
-            if (itemPerishable != null) Object.DestroyImmediate(itemPerishable);
-            if (itemDurableLow != null) Object.DestroyImmediate(itemDurableLow);
+            if (playerGo != null) UnityEngine.Object.DestroyImmediate(playerGo);
+            if (db != null) UnityEngine.Object.DestroyImmediate(db);
+            if (itemPlain != null) UnityEngine.Object.DestroyImmediate(itemPlain);
+            if (itemDurable != null) UnityEngine.Object.DestroyImmediate(itemDurable);
+            if (itemPerishable != null) UnityEngine.Object.DestroyImmediate(itemPerishable);
+            if (itemDurableLow != null) UnityEngine.Object.DestroyImmediate(itemDurableLow);
         }
 
         static ItemSO MakeItem(string id, bool durable = false, bool perishable = false, int maxStack = 99)

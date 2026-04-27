@@ -62,10 +62,10 @@ namespace WildernessCultivation.UI
         {
             t = Mathf.Repeat(t, 1f);
             Color c;
-            if (t < 0.25f)        c = Color.Lerp(midnightTint, dawnTint, t / 0.25f);
-            else if (t < 0.5f)    c = Color.Lerp(dawnTint,     noonTint, (t - 0.25f) / 0.25f);
-            else if (t < 0.75f)   c = Color.Lerp(noonTint,     duskTint, (t - 0.5f)  / 0.25f);
-            else                  c = Color.Lerp(duskTint,     midnightTint, (t - 0.75f) / 0.25f);
+            if (t < 0.25f) c = Color.Lerp(midnightTint, dawnTint, t / 0.25f);
+            else if (t < 0.5f) c = Color.Lerp(dawnTint, noonTint, (t - 0.25f) / 0.25f);
+            else if (t < 0.75f) c = Color.Lerp(noonTint, duskTint, (t - 0.5f) / 0.25f);
+            else c = Color.Lerp(duskTint, midnightTint, (t - 0.75f) / 0.25f);
             c.a = Mathf.Min(c.a, maxAlpha);
             return c;
         }

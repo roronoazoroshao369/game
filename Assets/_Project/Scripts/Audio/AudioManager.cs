@@ -118,8 +118,8 @@ namespace WildernessCultivation.Audio
         }
 
         public void SetMaster(float v) { masterVolume = Mathf.Clamp01(v); PlayerPrefs.SetFloat(KeyMaster, masterVolume); ApplyVolumes(); }
-        public void SetMusic(float v)  { musicVolume  = Mathf.Clamp01(v); PlayerPrefs.SetFloat(KeyMusic,  musicVolume);  ApplyVolumes(); }
-        public void SetSfx(float v)    { sfxVolume    = Mathf.Clamp01(v); PlayerPrefs.SetFloat(KeySfx,    sfxVolume);    ApplyVolumes(); }
+        public void SetMusic(float v) { musicVolume = Mathf.Clamp01(v); PlayerPrefs.SetFloat(KeyMusic, musicVolume); ApplyVolumes(); }
+        public void SetSfx(float v) { sfxVolume = Mathf.Clamp01(v); PlayerPrefs.SetFloat(KeySfx, sfxVolume); ApplyVolumes(); }
 
         void ApplyVolumes()
         {
@@ -190,7 +190,7 @@ namespace WildernessCultivation.Audio
                 float t = (float)i / sampleRate;
                 float prog = (float)i / samples;
                 float freq = baseHz;
-                if (kind == WaveKind.SinePitchUp)   freq = Mathf.Lerp(baseHz,        baseHz * 2f, prog);
+                if (kind == WaveKind.SinePitchUp) freq = Mathf.Lerp(baseHz, baseHz * 2f, prog);
                 if (kind == WaveKind.SinePitchDown) freq = Mathf.Lerp(baseHz * 1.5f, baseHz * 0.5f, prog);
 
                 float sample;

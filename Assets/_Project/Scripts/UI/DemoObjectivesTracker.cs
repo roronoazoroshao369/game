@@ -96,11 +96,11 @@ namespace WildernessCultivation.UI
 
         public static string Label(Objective o) => o switch
         {
-            Objective.CollectWood      => "Thu thập 3 Gỗ",
-            Objective.CookMeat         => "Nướng được Thịt tại lửa trại",
-            Objective.StartMeditation  => "Bắt đầu Tụ Linh Quyết (M)",
-            Objective.ReachLuyenKhi1   => "Đột phá Luyện Khí Tầng 1",
-            Objective.ReachLuyenKhi2   => "Đột phá Luyện Khí Tầng 2 (MVP done)",
+            Objective.CollectWood => "Thu thập 3 Gỗ",
+            Objective.CookMeat => "Nướng được Thịt tại lửa trại",
+            Objective.StartMeditation => "Bắt đầu Tụ Linh Quyết (M)",
+            Objective.ReachLuyenKhi1 => "Đột phá Luyện Khí Tầng 1",
+            Objective.ReachLuyenKhi2 => "Đột phá Luyện Khí Tầng 2 (MVP done)",
             _ => o.ToString()
         };
     }

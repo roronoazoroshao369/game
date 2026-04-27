@@ -61,7 +61,7 @@ namespace WildernessCultivation.Tests.EditMode
 
             Assert.AreEqual(0.3f, PlayerPrefs.GetFloat("audio.master"), 0.0001f);
             Assert.AreEqual(0.2f, PlayerPrefs.GetFloat("audio.music"), 0.0001f);
-            Assert.AreEqual(0.7f, PlayerPrefs.GetFloat("audio.sfx"),   0.0001f);
+            Assert.AreEqual(0.7f, PlayerPrefs.GetFloat("audio.sfx"), 0.0001f);
         }
 
         [Test]

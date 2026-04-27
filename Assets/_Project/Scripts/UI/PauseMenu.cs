@@ -45,10 +45,10 @@ namespace WildernessCultivation.UI
             if (overlay != null) overlay.SetActive(false);
             if (toastText != null) toastText.gameObject.SetActive(false);
 
-            if (pauseButton != null)  pauseButton.onClick.AddListener(Toggle);
+            if (pauseButton != null) pauseButton.onClick.AddListener(Toggle);
             if (resumeButton != null) resumeButton.onClick.AddListener(Resume);
             if (saveNowButton != null) saveNowButton.onClick.AddListener(SaveNow);
-            if (quitButton != null)   quitButton.onClick.AddListener(QuitDemo);
+            if (quitButton != null) quitButton.onClick.AddListener(QuitDemo);
 
             if (masterVolumeSlider != null)
             {
