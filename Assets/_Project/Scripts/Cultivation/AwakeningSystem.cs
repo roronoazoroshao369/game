@@ -78,14 +78,18 @@ namespace WildernessCultivation.Cultivation
             }
 
             result.eligibility = AwakenEligibility.Eligible;
-            result.outcome = RollOutcome();
+            int streakBefore = stats != null ? stats.phamFailStreak : 0;
+            result.outcome = RollOutcome(streakBefore);
+            result.phamFailStreakBefore = streakBefore;
 
             if (result.outcome == AwakenOutcome.Fail)
             {
-                Debug.Log("[Awaken] Linh khí tản mất, ngươi chưa đủ duyên...");
+                if (stats != null) stats.phamFailStreak = streakBefore + 1;
+                Debug.Log($"[Awaken] Linh khí tản mất, ngươi chưa đủ duyên... (pity streak={streakBefore + 1})");
             }
             else
             {
+                if (stats != null) stats.phamFailStreak = 0;
                 var rolledRoot = PickRootFor(result.outcome);
                 result.spiritRoot = rolledRoot;
                 ApplySuccess(rolledRoot);
@@ -96,18 +100,32 @@ namespace WildernessCultivation.Cultivation
             return true;
         }
 
-        AwakenOutcome RollOutcome()
+        /// <summary>
+        /// Roll outcome có pity. Mỗi fail Phàm liên tiếp giảm <see cref="AwakeningConfigSO.failChance"/>
+        /// đi <see cref="AwakeningConfigSO.pityFailReductionPerStreak"/> (cap 0). Phần giảm được
+        /// redistribute hoàn toàn vào Tạp — Đơn/Thiên giữ nguyên cho rare grades aspirational.
+        /// Streak cap bởi <see cref="AwakeningConfigSO.pityMaxStreak"/>.
+        /// </summary>
+        public AwakenOutcome RollOutcome(int streak)
         {
+            int clamped = Mathf.Clamp(streak, 0, Mathf.Max(0, config.pityMaxStreak));
+            float reduction = config.pityFailReductionPerStreak * clamped;
+            float effectiveFail = Mathf.Max(0f, config.failChance - reduction);
+            float effectiveTap = config.tapChance + (config.failChance - effectiveFail);
+
             float r = NextFloat();
-            float c = config.failChance;
+            float c = effectiveFail;
             if (r < c) return AwakenOutcome.Fail;
-            c += config.tapChance;
+            c += effectiveTap;
             if (r < c) return AwakenOutcome.SuccessTap;
             c += config.donChance;
             if (r < c) return AwakenOutcome.SuccessDon;
             // Mọi giá trị còn lại = Thien (kể cả khi tổng < 1.0 để tránh lost-roll do float drift).
             return AwakenOutcome.SuccessThien;
         }
+
+        /// <summary>Backward-compat overload — không pity (streak=0).</summary>
+        AwakenOutcome RollOutcome() => RollOutcome(0);
 
         SpiritRootSO PickRootFor(AwakenOutcome outcome)
         {
@@ -174,5 +192,7 @@ namespace WildernessCultivation.Cultivation
         public AwakenEligibility eligibility;
         public AwakenOutcome outcome;
         public SpiritRootSO spiritRoot;
+        /// <summary>Streak Phàm trước khi roll (snapshot để debug/UI).</summary>
+        public int phamFailStreakBefore;
     }
 }

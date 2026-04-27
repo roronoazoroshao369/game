@@ -165,6 +165,7 @@ namespace WildernessCultivation.Tests.EditMode
             for (int i = 0; i < n; i++)
             {
                 stats.IsAwakened = false; // reset để eligibility lại Eligible
+                stats.phamFailStreak = 0; // không tính pity vào distribution baseline
                 bool rolled = awaken.TryAwaken(out var r);
                 Assert.IsTrue(rolled);
                 switch (r.outcome)

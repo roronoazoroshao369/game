@@ -66,6 +66,7 @@ namespace WildernessCultivation.Core
         public float cultivationXp;
         public string spiritRoot;      // "Hỏa", "Thủy", ...
         public bool isAwakened;        // True = đã khai mở tu tiên. False = Thường Nhân.
+        public int phamFailStreak;     // Pity counter — số fail Phàm liên tiếp. Reset 0 khi success.
     }
 
     [Serializable]

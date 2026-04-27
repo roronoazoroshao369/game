@@ -72,6 +72,9 @@ namespace WildernessCultivation.Player
         [Tooltip("True = đã khai mở tu tiên. Mặc định Thường Nhân (false). Set qua AwakeningSystem.")]
         public bool IsAwakened = false;
 
+        [Tooltip("Pity counter — số lần roll Phàm liên tiếp. AwakeningSystem cộng dồn mỗi fail, reset 0 khi success bất kỳ grade. Per-run (save với main save → wipe khi permadeath).")]
+        public int phamFailStreak = 0;
+
         [Header("Permadeath")]
         [Tooltip("True = khi HP về 0 sẽ wipe save slot, dump inventory thành tombstone, reload scene. False = chỉ raise OnDeath (cho test / tutorial mode).")]
         public bool permadeathEnabled = true;
