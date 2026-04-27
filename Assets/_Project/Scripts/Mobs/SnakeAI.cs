@@ -33,6 +33,17 @@ namespace WildernessCultivation.Mobs
             base.Awake();
             if (string.IsNullOrEmpty(mobName) || mobName == "Quái") mobName = "Rắn Độc";
             col = GetComponent<Collider2D>();
+            // KHÔNG ép invisible trong Awake vì caller (BootstrapWizard / test) thường
+            // assign spriteRenderer SAU khi AddComponent → SetVisible(false) ở Awake sẽ
+            // miss SR. Init revealed=false; Update tick đầu sẽ ổn định state qua SetVisible.
+            revealed = false;
+        }
+
+        void Start()
+        {
+            // Lazy fetch SR nếu caller chưa assign — đảm bảo SetVisible(false) tick đầu
+            // cũng ẩn được sprite (test pattern AddComponent rồi assign field).
+            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
             SetVisible(false);
         }
 
