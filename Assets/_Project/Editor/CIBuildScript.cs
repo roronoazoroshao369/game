@@ -50,34 +50,39 @@ namespace WildernessCultivation.EditorTools
         /// MainScene.unity (it is regenerated deterministically by
         /// <c>BootstrapWizard.Bootstrap()</c>), so on a fresh CI checkout we
         /// must run the bootstrap before <c>BuildPlayer</c> — otherwise the
-        /// build aborts with "Cannot build untitled scene".</summary>
-        static void EnsureMainSceneBootstrapped()
+        /// build aborts with "Cannot build untitled scene".
+        ///
+        /// Returns <c>false</c> if the scene could not be produced, in which
+        /// case the caller MUST stop before calling BuildPlayer.
+        /// <c>EditorApplication.Exit</c> alone is not enough: it is async in
+        /// batchmode (queued to the next editor update), so caller code keeps
+        /// running and would otherwise emit a confusing secondary build error.
+        /// </summary>
+        static bool EnsureMainSceneBootstrapped()
         {
             const string mainScenePath = "Assets/Scenes/MainScene.unity";
             if (File.Exists(mainScenePath))
             {
                 Debug.Log("[CIBuild] MainScene already present — skipping bootstrap.");
-                return;
+                return true;
             }
             Debug.Log("[CIBuild] MainScene not found — running BootstrapWizard.Bootstrap().");
             BootstrapWizard.Bootstrap();
             // BootstrapWizard.Bootstrap() wraps everything in try/catch and
             // logs exceptions via Debug.LogException, but returns normally.
-            // Verify the scene was actually written so the build aborts with
-            // a clear root-cause error instead of a confusing "missing scene"
-            // failure in BuildPipeline.BuildPlayer downstream.
             if (!File.Exists(mainScenePath))
             {
                 Debug.LogError("[CIBuild] BootstrapWizard.Bootstrap() finished but MainScene was NOT created. See earlier exceptions in log. Aborting.");
                 EditorApplication.Exit(1);
-                return; // EditorApplication.Exit is async in batchmode; return to stop the caller from invoking BuildPlayer with no scene.
+                return false;
             }
+            return true;
         }
 
         public static void BuildAndroid()
         {
             if (!TmpEssentialsImported) ImportTMPEssentials();
-            EnsureMainSceneBootstrapped();
+            if (!EnsureMainSceneBootstrapped()) return;
 
             const string outDir = "build/Android";
             const string outName = "WildernessCultivation";
@@ -114,7 +119,7 @@ namespace WildernessCultivation.EditorTools
             {
                 ImportTMPEssentials();
             }
-            EnsureMainSceneBootstrapped();
+            if (!EnsureMainSceneBootstrapped()) return;
 
             const string outDir = "Builds/Linux64";
             const string outName = "WildernessCultivation";
