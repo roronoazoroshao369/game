@@ -57,11 +57,19 @@ namespace WildernessCultivation.EditorTools
             if (File.Exists(mainScenePath))
             {
                 Debug.Log("[CIBuild] MainScene already present — skipping bootstrap.");
+                return;
             }
-            else
+            Debug.Log("[CIBuild] MainScene not found — running BootstrapWizard.Bootstrap().");
+            BootstrapWizard.Bootstrap();
+            // BootstrapWizard.Bootstrap() wraps everything in try/catch and
+            // logs exceptions via Debug.LogException, but returns normally.
+            // Verify the scene was actually written so the build aborts with
+            // a clear root-cause error instead of a confusing "missing scene"
+            // failure in BuildPipeline.BuildPlayer downstream.
+            if (!File.Exists(mainScenePath))
             {
-                Debug.Log("[CIBuild] MainScene not found — running BootstrapWizard.Bootstrap().");
-                BootstrapWizard.Bootstrap();
+                Debug.LogError("[CIBuild] BootstrapWizard.Bootstrap() finished but MainScene was NOT created. See earlier exceptions in log. Aborting.");
+                EditorApplication.Exit(1);
             }
         }
 
