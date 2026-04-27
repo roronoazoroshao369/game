@@ -42,6 +42,11 @@ namespace WildernessCultivation.Tests.EditMode
             realm = playerGo.AddComponent<RealmSystem>();
             inv = playerGo.AddComponent<Inventory>();
 
+            // EditMode does not fire Awake/OnEnable on AddComponent — manually
+            // boot so PlayerStats wires sibling refs, RealmSystem builds default
+            // realms, and Inventory populates its slots list.
+            TestHelpers.Boot(stats, realm, inv);
+
             db = ScriptableObject.CreateInstance<ItemDatabase>();
             itemPlain = MakeItem("plain", maxStack: 99);
             itemDurable = MakeItem("durable", durable: true, maxStack: 1);
