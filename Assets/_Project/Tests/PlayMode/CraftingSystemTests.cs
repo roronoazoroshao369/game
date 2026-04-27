@@ -151,6 +151,31 @@ namespace WildernessCultivation.Tests.PlayMode
             Assert.IsFalse(craft.CanCraft(null));
         }
 
+        // Regression: CraftingUI.OnEnable on a different GameObject can call
+        // CraftingSystem.CanCraft before our Awake fires (Awake is per-GameObject and
+        // ordering across GameObjects is undefined). Used to NRE on `inv.CountOf` —
+        // now lazy-resolves Inv.
+        [Test]
+        public void CanCraft_BeforeAwake_DoesNotThrow()
+        {
+            var go = new GameObject("Pre-Awake");
+            go.SetActive(false); // Awake won't fire while inactive
+            go.AddComponent<Inventory>();
+            var system = go.AddComponent<CraftingSystem>();
+            // sanity: GameObject still inactive, so neither Awake has fired
+            Assert.IsFalse(go.activeInHierarchy);
+
+            var stick = MakeItem("stick");
+            var torch = MakeItem("torch");
+            var recipe = MakeRecipe(torch, 1, CraftStation.None, 0f, (stick, 2));
+
+            Assert.DoesNotThrow(() => system.CanCraft(recipe),
+                "CanCraft must not NRE if called before Awake (lazy Inv resolution)");
+            Assert.IsFalse(system.CanCraft(recipe), "no items yet → false");
+
+            Object.DestroyImmediate(go);
+        }
+
         // ===== TryCraft =====
 
         [UnityTest]
