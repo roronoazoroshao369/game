@@ -128,6 +128,26 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
+        public void Harvest_HpDamage_BypassesInvulnerability()
+        {
+            // Environment toll (cactus prick) phải apply ngay cả khi player đang i-frame
+            // dodge — không phải combat damage.
+            var item = MakeItem("cactus_water");
+            var go = MakeNode(item);
+            var node = go.GetComponent<ResourceNode>();
+            node.harvestHpDamage = 2f;
+
+            stats.SetInvulnerable(10f);
+            float hpBefore = stats.HP;
+
+            node.TakeDamage(999f, playerGo);
+
+            Assert.AreEqual(hpBefore - 2f, stats.HP, 0.01f,
+                "TakeDamageRaw bypass i-frame, prick vẫn apply -2 HP");
+            Object.DestroyImmediate(item);
+        }
+
+        [Test]
         public void Harvest_SourceWithoutPlayerStats_NoCrash()
         {
             // Source là 1 GO không có PlayerStats (vd mob).

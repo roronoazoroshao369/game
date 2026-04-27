@@ -78,7 +78,10 @@ namespace WildernessCultivation.World
             var ps = source.GetComponent<PlayerStats>() ?? source.GetComponentInParent<PlayerStats>();
             if (ps == null) return;
 
-            if (harvestHpDamage > 0f) ps.TakeDamage(harvestHpDamage);
+            // Raw — bypass i-frames + IncomingDamageMultiplier. Cactus prick là toll
+            // môi trường cố định, không phải combat dame nên không nên bị Burn ×1.2 hay
+            // dodge i-frame negate.
+            if (harvestHpDamage > 0f) ps.TakeDamageRaw(harvestHpDamage);
             if (harvestHpHeal > 0f) ps.Heal(harvestHpHeal);
             if (harvestHungerRestore > 0f) ps.Eat(harvestHungerRestore);
             if (harvestThirstRestore > 0f) ps.Drink(harvestThirstRestore);
