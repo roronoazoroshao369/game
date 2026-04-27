@@ -55,6 +55,12 @@ namespace WildernessCultivation.Core
 
         public void Save()
         {
+            // Skip autosave khi player chết — tránh race với permadeath delay window:
+            // ExecutePermadeath gọi SaveSystem.Delete() rồi defer reload 1.5s; trong
+            // window đó Update() có thể fire autosave → ghi save HP=0 → reload load
+            // dead state → Update() early-return vì IsDead → softlock.
+            if (playerStats != null && playerStats.IsDead) return;
+
             var data = new SaveData
             {
                 player = new PlayerSaveData
@@ -69,6 +75,7 @@ namespace WildernessCultivation.Core
                     realmTier = realm?.currentTier ?? 0,
                     cultivationXp = realm?.currentXp ?? 0,
                     spiritRoot = (spiritRoot != null && spiritRoot.Current != null) ? spiritRoot.Current.name : (realm?.SpiritRoot ?? "Hỏa"),
+                    isAwakened = playerStats?.IsAwakened ?? false,
                 },
                 world = new WorldSaveData
                 {
@@ -115,6 +122,7 @@ namespace WildernessCultivation.Core
                 playerStats.Sanity = data.player.sanity;
                 playerStats.Mana = data.player.mana;
                 playerStats.BodyTemp = data.player.bodyTemp <= 0 ? 50f : data.player.bodyTemp;
+                playerStats.IsAwakened = data.player.isAwakened;
             }
             if (realm != null && data.player != null)
             {

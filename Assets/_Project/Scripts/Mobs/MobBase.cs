@@ -84,11 +84,17 @@ namespace WildernessCultivation.Mobs
                 if (inv != null) inv.Add(d.item, n);
             }
 
-            // Cho XP tu luyện
+            // Cho XP tu luyện — chỉ awakened (đã khai mở tu tiên) mới tích XP từ kill mob.
+            // Thường Nhân không thể tu luyện qua sát phạt (giữ MVP focus survival).
             if (killer != null)
             {
-                var realm = killer.GetComponentInParent<WildernessCultivation.Cultivation.RealmSystem>();
-                if (realm != null) realm.AddCultivationXp(xpReward);
+                var killerStats = killer.GetComponentInParent<WildernessCultivation.Player.PlayerStats>();
+                bool awakened = killerStats != null && killerStats.IsAwakened;
+                if (awakened)
+                {
+                    var realm = killer.GetComponentInParent<WildernessCultivation.Cultivation.RealmSystem>();
+                    if (realm != null) realm.AddCultivationXp(xpReward);
+                }
             }
 
             Destroy(gameObject);

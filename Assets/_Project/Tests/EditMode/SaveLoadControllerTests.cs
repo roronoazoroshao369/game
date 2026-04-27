@@ -363,5 +363,25 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.AreEqual("stick", loaded.inventory[0].itemId);
             Assert.AreEqual(2, loaded.inventory[0].count);
         }
+
+        [Test]
+        public void Save_SkipsWhenPlayerDead()
+        {
+            // Arrange: setup save với HP cao trước.
+            stats.HP = 80f;
+            controller.Save();
+            Assert.IsTrue(SaveSystem.TryLoad(out var pre));
+            Assert.AreEqual(80f, pre.player.hp, 0.01f);
+
+            // Act: player chết → Save phải no-op (không ghi đè save HP=0).
+            stats.HP = 0f;
+            Assert.IsTrue(stats.IsDead);
+            controller.Save();
+
+            // Assert: save vẫn giữ giá trị cũ — defend race với permadeath delay.
+            Assert.IsTrue(SaveSystem.TryLoad(out var post));
+            Assert.AreEqual(80f, post.player.hp, 0.01f,
+                "Save() phải skip khi IsDead, tránh autosave ghi HP=0 trong death window");
+        }
     }
 }

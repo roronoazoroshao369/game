@@ -26,6 +26,10 @@ namespace WildernessCultivation.Cultivation
 
         public bool IsMeditating { get; private set; }
 
+        /// <summary>Gate by <see cref="PlayerStats.IsAwakened"/>. Thường Nhân chưa khai mở
+        /// thì KHÔNG thiền được — Tụ Linh Quyết là công pháp tu sĩ.</summary>
+        public bool CanMeditate => stats != null && stats.IsAwakened;
+
         PlayerStats stats;
         RealmSystem realm;
         TimeManager time;
@@ -49,6 +53,13 @@ namespace WildernessCultivation.Cultivation
 
             if (IsMeditating)
             {
+                // Defense in depth — nếu IsAwakened bị toggle false trong runtime
+                // (vd debug menu reset) thì stop ngay, không tiếp tục accrue XP.
+                if (!CanMeditate)
+                {
+                    StopMeditation();
+                    return;
+                }
                 if (controller != null && controller.InputDir.sqrMagnitude > 0.05f)
                 {
                     StopMeditation();
@@ -77,6 +88,11 @@ namespace WildernessCultivation.Cultivation
 
         public void StartMeditation()
         {
+            if (!CanMeditate)
+            {
+                Debug.Log("[Meditation] Chưa khai mở tu tiên — Thường Nhân không thể thiền.");
+                return;
+            }
             IsMeditating = true;
             AudioManager.Instance?.PlaySfx(AudioManager.SfxKind.MeditationStart);
             Debug.Log("[Meditation] Bắt đầu Tụ Linh Quyết.");

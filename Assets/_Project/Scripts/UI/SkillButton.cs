@@ -40,7 +40,12 @@ namespace WildernessCultivation.UI
                     else sleep?.Wake();
                     break;
                 case Action.UseMagicTreasure: treasure?.TryUse(); break;
-                case Action.Breakthrough: realm?.TryBreakthrough(); break;
+                case Action.Breakthrough:
+                    {
+                        var stats = FindObjectOfType<PlayerStats>();
+                        if (stats == null || stats.IsAwakened) realm?.TryBreakthrough();
+                        break;
+                    }
                 case Action.ToggleTorch:
                     {
                         var torch = FindObjectOfType<TorchAction>();
