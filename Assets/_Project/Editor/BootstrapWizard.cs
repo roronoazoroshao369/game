@@ -107,6 +107,9 @@ namespace WildernessCultivation.EditorTools
                 ("rabbit",    24, 20, new Color(0.92f, 0.92f, 0.85f)),
                 ("wolf",      32, 24, new Color(0.45f, 0.40f, 0.35f)),
                 ("fox_spirit",28, 24, new Color(0.85f, 0.45f, 0.85f)),
+                ("boar",      36, 28, new Color(0.45f, 0.30f, 0.20f)),
+                ("deer_spirit",30, 30, new Color(0.95f, 0.85f, 0.65f)),
+                ("crow",      24, 18, new Color(0.10f, 0.10f, 0.12f)),
                 ("chest",     32, 28, new Color(0.55f, 0.35f, 0.15f)),
                 ("workbench", 36, 28, new Color(0.40f, 0.25f, 0.10f)),
                 ("campfire",  32, 32, new Color(0.95f, 0.55f, 0.10f)),
@@ -121,6 +124,11 @@ namespace WildernessCultivation.EditorTools
                 ("icon_torch",   24, 24, new Color(0.95f, 0.65f, 0.20f)),
                 ("icon_fish",    24, 24, new Color(0.55f, 0.75f, 0.95f)),
                 ("icon_rod",     24, 24, new Color(0.70f, 0.50f, 0.20f)),
+                ("icon_tough_hide",   24, 24, new Color(0.45f, 0.30f, 0.20f)),
+                ("icon_tusk",         24, 24, new Color(0.95f, 0.92f, 0.80f)),
+                ("icon_spirit_antler",24, 24, new Color(0.85f, 0.95f, 0.85f)),
+                ("icon_spirit_meat",  24, 24, new Color(0.95f, 0.45f, 0.55f)),
+                ("icon_feather",      24, 24, new Color(0.20f, 0.20f, 0.25f)),
                 ("ui_white",      4,  4, Color.white),
             };
 
@@ -187,6 +195,16 @@ namespace WildernessCultivation.EditorTools
                 weight: 0.3f, restoreHunger: 8f, restoreThirst: 4f, isPerishable: true, freshSeconds: 240f);
             dict["fishing_rod"]  = MakeItem("fishing_rod", "Cần Câu Tre", ItemCategory.Tool, sprites["icon_rod"],
                 weight: 0.5f, hasDurability: true, maxDurability: 30f);
+            dict["tough_hide"]    = MakeItem("tough_hide", "Da Dày", ItemCategory.Material, sprites["icon_tough_hide"],
+                weight: 0.6f);
+            dict["tusk"]          = MakeItem("tusk", "Nanh Heo", ItemCategory.Material, sprites["icon_tusk"],
+                weight: 0.3f);
+            dict["spirit_antler"] = MakeItem("spirit_antler", "Linh Lộc Giác", ItemCategory.Material, sprites["icon_spirit_antler"],
+                weight: 0.4f);
+            dict["spirit_meat"]   = MakeItem("spirit_meat", "Linh Thú Nhục", ItemCategory.Food, sprites["icon_spirit_meat"],
+                weight: 0.4f, restoreHunger: 22f, restoreSanity: 8f, isPerishable: true, freshSeconds: 360f);
+            dict["feather"]       = MakeItem("feather", "Lông Vũ", ItemCategory.Material, sprites["icon_feather"],
+                weight: 0.05f);
             return dict;
         }
 
@@ -414,7 +432,8 @@ namespace WildernessCultivation.EditorTools
         class PrefabBundle
         {
             public GameObject Player, Tree, Rock, Rabbit, Wolf, FoxSpirit, Campfire,
-                WaterSpring, StorageChest, Workbench, Projectile;
+                WaterSpring, StorageChest, Workbench, Projectile,
+                Boar, DeerSpirit, Crow;
         }
 
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
@@ -427,6 +446,9 @@ namespace WildernessCultivation.EditorTools
             bundle.Rabbit = BuildRabbitPrefab(sprites["rabbit"], items["raw_meat"]);
             bundle.Wolf = BuildWolfPrefab(sprites["wolf"], items["raw_meat"]);
             bundle.FoxSpirit = BuildFoxSpiritPrefab(sprites["fox_spirit"], items["raw_meat"]);
+            bundle.Boar = BuildBoarPrefab(sprites["boar"], items["raw_meat"], items["tough_hide"], items["tusk"]);
+            bundle.DeerSpirit = BuildDeerSpiritPrefab(sprites["deer_spirit"], items["spirit_meat"], items["spirit_antler"]);
+            bundle.Crow = BuildCrowPrefab(sprites["crow"], items["feather"]);
             bundle.Campfire = BuildCampfirePrefab(sprites["campfire"], items["stick"]);
             bundle.WaterSpring = BuildWaterSpringPrefab(sprites["water"], items["water"], items["raw_fish"]);
             bundle.StorageChest = BuildStorageChestPrefab(sprites["chest"]);
@@ -576,6 +598,85 @@ namespace WildernessCultivation.EditorTools
             ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 2 } };
             ai.playerMask = ~0;
             return SaveAsPrefab(go, $"{PrefabsDir}/FoxSpirit.prefab");
+        }
+
+        static GameObject BuildBoarPrefab(Sprite sprite, ItemSO meat, ItemSO hide, ItemSO tusk)
+        {
+            var go = new GameObject("Boar");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 3;
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.45f;
+            var ai = go.AddComponent<BoarAI>();
+            ai.spriteRenderer = sr;
+            ai.maxHP = 45f;
+            ai.HP = 45f;
+            ai.moveSpeed = 1.4f;
+            ai.damage = 8f;
+            ai.attackCooldown = 1.4f;
+            ai.attackRange = 0.9f;
+            ai.xpReward = 18f;
+            ai.drops = new[]
+            {
+                new ResourceNode.Drop { item = meat, min = 2, max = 3 },
+                new ResourceNode.Drop { item = hide, min = 1, max = 2 },
+                new ResourceNode.Drop { item = tusk, min = 0, max = 1 },
+            };
+            ai.playerMask = ~0;
+            return SaveAsPrefab(go, $"{PrefabsDir}/Boar.prefab");
+        }
+
+        static GameObject BuildDeerSpiritPrefab(Sprite sprite, ItemSO spiritMeat, ItemSO antler)
+        {
+            var go = new GameObject("DeerSpirit");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 3;
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.35f;
+            var ai = go.AddComponent<DeerSpiritAI>();
+            ai.spriteRenderer = sr;
+            ai.maxHP = 16f;
+            ai.HP = 16f;
+            ai.moveSpeed = 2.0f;
+            ai.xpReward = 14f;
+            ai.drops = new[]
+            {
+                new ResourceNode.Drop { item = spiritMeat, min = 1, max = 2 },
+                new ResourceNode.Drop { item = antler, min = 0, max = 1 },
+            };
+            ai.playerMask = ~0;
+            return SaveAsPrefab(go, $"{PrefabsDir}/DeerSpirit.prefab");
+        }
+
+        static GameObject BuildCrowPrefab(Sprite sprite, ItemSO feather)
+        {
+            var go = new GameObject("Crow");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 4;
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.25f;
+            col.isTrigger = true;
+            var ai = go.AddComponent<CrowAI>();
+            ai.spriteRenderer = sr;
+            ai.maxHP = 6f;
+            ai.HP = 6f;
+            ai.moveSpeed = 1.8f;
+            ai.xpReward = 4f;
+            ai.drops = new[] { new ResourceNode.Drop { item = feather, min = 1, max = 2 } };
+            ai.playerMask = ~0;
+            return SaveAsPrefab(go, $"{PrefabsDir}/Crow.prefab");
         }
 
         static GameObject BuildCampfirePrefab(Sprite sprite, ItemSO woodItem)
@@ -794,13 +895,16 @@ namespace WildernessCultivation.EditorTools
             wg.biomes = biomes.ToArray();
 
             // MobSpawner: Rabbit (passive day/night), Wolf (aggressive cả ngày lẫn đêm),
-            // FoxSpirit (đêm-only — dayCap=0).
+            // FoxSpirit (đêm-only — dayCap=0). Boar/DeerSpirit/Crow là day-only neutral/passive.
             var spawner = worldGo.AddComponent<MobSpawner>();
             spawner.entries = new[]
             {
-                new MobSpawner.SpawnEntry { prefab = prefabs.Rabbit,    dayCap = 6, nightCap = 3 },
-                new MobSpawner.SpawnEntry { prefab = prefabs.Wolf,      dayCap = 2, nightCap = 3 },
-                new MobSpawner.SpawnEntry { prefab = prefabs.FoxSpirit, dayCap = 0, nightCap = 4 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Rabbit,     dayCap = 6, nightCap = 3 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Wolf,       dayCap = 2, nightCap = 3 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.FoxSpirit,  dayCap = 0, nightCap = 4 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Boar,       dayCap = 2, nightCap = 1 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.DeerSpirit, dayCap = 3, nightCap = 1 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Crow,       dayCap = 4, nightCap = 1 },
             };
             spawner.parent = worldGo.transform;
             wg.mobSpawner = spawner;
