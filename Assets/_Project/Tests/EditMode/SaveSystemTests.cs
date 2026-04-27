@@ -44,6 +44,7 @@ namespace WildernessCultivation.Tests.EditMode
                     spiritRoot = "Hỏa",
                     isAwakened = true,
                     phamFailStreak = 3,
+                    wetness = 67.5f,
                 },
                 world = new WorldSaveData
                 {
@@ -71,6 +72,7 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.AreEqual(orig.player.spiritRoot, loaded.player.spiritRoot);
             Assert.AreEqual(orig.player.isAwakened, loaded.player.isAwakened);
             Assert.AreEqual(orig.player.phamFailStreak, loaded.player.phamFailStreak);
+            Assert.AreEqual(orig.player.wetness, loaded.player.wetness, 0.01f);
         }
 
         [Test]

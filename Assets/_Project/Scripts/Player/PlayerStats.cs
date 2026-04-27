@@ -63,6 +63,46 @@ namespace WildernessCultivation.Player
         [Tooltip("Khi đứng ngoài aura sáng vào đêm sâu (deep dark) → trừ SAN bonus.")]
         public float darknessSanityPenaltyPerSec = 0.8f;
 
+        [Header("Wetness [0..100] — đứng mưa làm ướt, lửa/nắng/shelter làm khô")]
+        [Tooltip("Ướt hiện tại. Tier: <20 Dry, 20..50 Damp, 50..80 Wet, >=80 Drenched.")]
+        [Range(0f, 100f)] public float Wetness = 0f;
+        public float maxWetness = 100f;
+        [Tooltip("Tốc độ ướt thêm khi đứng mưa (đơn vị/giây).")]
+        public float wetnessRainPerSec = 4f;
+        [Tooltip("Storm: ướt nhanh hơn rain (multiplier).")]
+        public float wetnessStormMultiplier = 2f;
+        [Tooltip("Tốc độ khô khi không bị mưa (đơn vị/giây). Lửa/nắng/shelter cộng thêm.")]
+        public float wetnessDryBasePerSec = 0.5f;
+        [Tooltip("Bonus tốc độ khô khi gần lửa trại (cộng vào dry rate).")]
+        public float wetnessDryFireBonus = 4f;
+        [Tooltip("Bonus tốc độ khô khi trong shelter.")]
+        public float wetnessDryShelterBonus = 2f;
+        [Tooltip("Bonus tốc độ khô vào ban ngày (nắng), pro-rate theo light intensity.")]
+        public float wetnessDryDayBonus = 1.5f;
+
+        [Header("Wetness tier coupling")]
+        [Tooltip("Damp (>=20): multiplier thermalDriftRate khi ambient lạnh hơn BodyTemp.")]
+        public float dampColdDriftMultiplier = 1.2f;
+        [Tooltip("Wet (>=50): multiplier thermalDriftRate khi ambient lạnh.")]
+        public float wetColdDriftMultiplier = 1.4f;
+        [Tooltip("Drenched (>=80): multiplier thermalDriftRate khi ambient lạnh.")]
+        public float drenchedColdDriftMultiplier = 1.7f;
+        [Tooltip("Wet (>=50): trừ SAN / giây.")]
+        public float wetSanityPenaltyPerSec = 0.2f;
+        [Tooltip("Drenched (>=80): trừ SAN / giây (chồng lên wet penalty).")]
+        public float drenchedSanityPenaltyPerSec = 0.3f;
+
+        [Header("Wetness sickness chain")]
+        [Tooltip("Khi Drenched (>=80) + BodyTemp dưới ngưỡng này → roll Sickness. -1 = dùng comfortMin.")]
+        public float sicknessColdThreshold = -1f;
+        [Tooltip("Xác suất / giây apply Sickness khi điều kiện đạt. 0 = tắt chain.")]
+        public float sicknessChancePerSec = 0.02f;
+        [Tooltip("Sickness status apply khi điều kiện đạt. Null = không apply.")]
+        public StatusEffectSO sicknessEffect;
+        [Tooltip("Cooldown sau khi apply Sickness — tránh spam reapply mỗi frame. Giây.")]
+        public float sicknessApplyCooldownSec = 30f;
+        float nextSicknessAllowedAt;
+
         public event Action OnDeath;
         public event Action OnStatsChanged;
 
@@ -187,6 +227,7 @@ namespace WildernessCultivation.Player
                     Sanity = Mathf.Max(0f, Sanity - biome.ambientNightSanDamage * dt);
             }
 
+            UpdateWetness(dt);
             UpdateThermal(dt);
             UpdateWeatherEffects(dt);
             UpdateDarkness(dt);
@@ -270,7 +311,16 @@ namespace WildernessCultivation.Player
         void UpdateThermal(float dt)
         {
             float ambient = ComputeAmbientTemperature();
-            BodyTemp = Mathf.Lerp(BodyTemp, ambient, Mathf.Clamp01(thermalDriftRate * dt / 100f));
+
+            // Wetness boost cold drift: nếu ambient < BodyTemp, drift về lạnh nhanh hơn theo tier ướt.
+            float driftRate = thermalDriftRate;
+            if (ambient < BodyTemp)
+            {
+                float coldMul = WetnessColdDriftMultiplier();
+                driftRate *= coldMul;
+            }
+
+            BodyTemp = Mathf.Lerp(BodyTemp, ambient, Mathf.Clamp01(driftRate * dt / 100f));
 
             float effFreezeT = EffectiveFreezeThreshold;
             float effHeatT = EffectiveHeatThreshold;
@@ -286,6 +336,118 @@ namespace WildernessCultivation.Player
                 Thirst = Mathf.Max(0f, Thirst - thirstDecay * (heatThirstMult - 1f) * dt);
                 Sanity = Mathf.Max(0f, Sanity - heatSanityPenaltyPerSec * dt);
             }
+        }
+
+        /// <summary>
+        /// Update Wetness: rain/storm cộng, base/fire/shelter/sun trừ. Apply tier SAN penalty
+        /// và roll Sickness chain khi Drenched + cold.
+        /// </summary>
+        void UpdateWetness(float dt)
+        {
+            if (timeManager == null) return;
+            bool sheltered = Shelter.IsSheltered(transform.position);
+            float dayLight = timeManager.GetLightIntensity();
+            TickWetness(dt, timeManager.currentWeather, sheltered, IsWarm, dayLight, applySanityPenalty: true, applySicknessRoll: true);
+        }
+
+        /// <summary>
+        /// Pure tick — testable (không phụ thuộc timeManager / Shelter static / Campfire static).
+        /// Caller cung cấp weather + sheltered + warm + dayLight (0..1).
+        /// applySanityPenalty: trừ SAN theo tier hiện tại.
+        /// applySicknessRoll: thử apply Sickness status nếu Drenched + cold.
+        /// </summary>
+        public void TickWetness(float dt, Weather weather, bool sheltered, bool warm, float dayLight,
+            bool applySanityPenalty = true, bool applySicknessRoll = true)
+        {
+            // Sources: rain/storm chỉ tăng Wetness nếu KHÔNG sheltered.
+            float gain = 0f;
+            if (!sheltered)
+            {
+                if (weather == Weather.Rain)
+                    gain = wetnessRainPerSec;
+                else if (weather == Weather.Storm)
+                    gain = wetnessRainPerSec * Mathf.Max(1f, wetnessStormMultiplier);
+            }
+
+            // Sinks: base + fire + shelter + nắng (chỉ khi không bị mưa).
+            float dry = wetnessDryBasePerSec;
+            if (warm) dry += wetnessDryFireBonus;
+            if (sheltered) dry += wetnessDryShelterBonus;
+            if (gain <= 0f)
+            {
+                float dayBonus = wetnessDryDayBonus * Mathf.Clamp01(dayLight);
+                dry += Mathf.Max(0f, dayBonus);
+            }
+
+            float net = gain - dry;
+            Wetness = Mathf.Clamp(Wetness + net * dt, 0f, maxWetness);
+
+            var tier = WetnessTierOf(Wetness);
+
+            if (applySanityPenalty)
+            {
+                // Tier SAN penalty stack: Drenched cũng dính Wet penalty.
+                if (tier >= WetnessTier.Wet)
+                    Sanity = Mathf.Max(0f, Sanity - wetSanityPenaltyPerSec * dt);
+                if (tier == WetnessTier.Drenched)
+                    Sanity = Mathf.Max(0f, Sanity - drenchedSanityPenaltyPerSec * dt);
+            }
+
+            if (applySicknessRoll)
+                TryRollSickness(dt, tier);
+        }
+
+        void TryRollSickness(float dt, WetnessTier tier)
+        {
+            if (tier != WetnessTier.Drenched) return;
+            if (sicknessEffect == null || sicknessChancePerSec <= 0f) return;
+            float coldT = sicknessColdThreshold >= 0f ? sicknessColdThreshold : comfortMin;
+            if (BodyTemp >= coldT) return;
+            if (Time.time < nextSicknessAllowedAt) return;
+
+            // > thay >= để: (a) cap saturation 100% khi chance*dt >= 1 (lag spike), (b) tránh
+            // edge case Random.value = 1.0 (Unity docs: inclusive [0..1]) làm test với chance=1
+            // không deterministic (~1/8M flake).
+            float roll = UnityEngine.Random.value;
+            if (roll > sicknessChancePerSec * dt) return;
+
+            if (statusManager == null) statusManager = GetComponent<StatusEffectManager>();
+            if (statusManager == null) return;
+
+            statusManager.Apply(sicknessEffect);
+            nextSicknessAllowedAt = Time.time + Mathf.Max(0f, sicknessApplyCooldownSec);
+            Debug.Log($"[Wetness] Drenched + cold → áp Sickness ({sicknessEffect.displayName}).");
+        }
+
+        /// <summary>Multiplier vào thermalDriftRate khi ambient lạnh hơn BodyTemp, theo tier ướt.</summary>
+        public float WetnessColdDriftMultiplier()
+        {
+            return WetnessTierOf(Wetness) switch
+            {
+                WetnessTier.Damp => dampColdDriftMultiplier,
+                WetnessTier.Wet => wetColdDriftMultiplier,
+                WetnessTier.Drenched => drenchedColdDriftMultiplier,
+                _ => 1f,
+            };
+        }
+
+        /// <summary>Tier hiện tại của Wetness.</summary>
+        public WetnessTier CurrentWetnessTier => WetnessTierOf(Wetness);
+
+        /// <summary>Map giá trị wetness → tier.</summary>
+        public static WetnessTier WetnessTierOf(float wetness)
+        {
+            if (wetness >= 80f) return WetnessTier.Drenched;
+            if (wetness >= 50f) return WetnessTier.Wet;
+            if (wetness >= 20f) return WetnessTier.Damp;
+            return WetnessTier.Dry;
+        }
+
+        /// <summary>Cộng wetness (vd splash khi uống nước, lội vũng). Clamp 0..max.</summary>
+        public void AddWetness(float amount)
+        {
+            Wetness = Mathf.Clamp(Wetness + amount, 0f, maxWetness);
+            OnStatsChanged?.Invoke();
         }
 
         void UpdateWeatherEffects(float dt)
@@ -441,4 +603,7 @@ namespace WildernessCultivation.Player
             SceneManager.LoadScene(active.buildIndex >= 0 ? active.buildIndex : 0);
         }
     }
+
+    /// <summary>Tier ướt — quyết định cold-drift multiplier + SAN penalty + sickness chain.</summary>
+    public enum WetnessTier { Dry, Damp, Wet, Drenched }
 }

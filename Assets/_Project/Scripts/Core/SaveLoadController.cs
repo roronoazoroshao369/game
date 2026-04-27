@@ -77,6 +77,7 @@ namespace WildernessCultivation.Core
                     spiritRoot = (spiritRoot != null && spiritRoot.Current != null) ? spiritRoot.Current.name : (realm?.SpiritRoot ?? "Hỏa"),
                     isAwakened = playerStats?.IsAwakened ?? false,
                     phamFailStreak = playerStats?.phamFailStreak ?? 0,
+                    wetness = playerStats?.Wetness ?? 0f,
                 },
                 world = new WorldSaveData
                 {
@@ -125,6 +126,7 @@ namespace WildernessCultivation.Core
                 playerStats.BodyTemp = data.player.bodyTemp <= 0 ? 50f : data.player.bodyTemp;
                 playerStats.IsAwakened = data.player.isAwakened;
                 playerStats.phamFailStreak = data.player.phamFailStreak;
+                playerStats.Wetness = Mathf.Clamp(data.player.wetness, 0f, playerStats.maxWetness);
             }
             if (realm != null && data.player != null)
             {
