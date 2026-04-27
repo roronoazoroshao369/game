@@ -15,6 +15,9 @@ namespace WildernessCultivation.EditorTools
     /// auto-importer GUI dialog (<c>TMP_PackageResourceImporterWindow</c>)
     /// during the missing-asset probe, which throws <c>NullReferenceException</c>
     /// in batchmode and aborts the build.
+    ///
+    /// Used by GameCI Action <c>game-ci/unity-builder</c> when CI is gated
+    /// behind a valid <c>UNITY_LICENSE</c> repo secret.
     /// </summary>
     public static class CIBuildScript
     {
