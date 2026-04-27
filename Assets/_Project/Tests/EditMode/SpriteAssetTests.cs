@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using UnityEditor;
@@ -86,11 +87,17 @@ namespace WildernessCultivation.Tests.EditMode
         [Test]
         public void NoSpriteIsADegenerateOnePixelOrSingleColorPlaceholder()
         {
-            // Solid-color squares were the OLD placeholder behaviour. If a
-            // committed sprite collapses to that pattern it means the
-            // hand-authored PNG was lost / overwritten by the WritePng()
-            // fallback path in BootstrapWizard. ui_white is intentionally
-            // a 4x4 solid white fill for UI Image components — exempt it.
+            // The OLD placeholder behaviour was BootstrapWizard.WritePng — a
+            // solid fill rectangle wrapped in a 1px darker border. That output
+            // contains EXACTLY two distinct colors (fill + border). Real
+            // pixel art from tools/gen_sprites.py uses 3+ colors per sprite
+            // (smallest is water.png at 3 — base / wave-band / highlight).
+            // So a threshold of >= 3 catches the WritePng fallback (which is
+            // strictly 2) while passing for every committed sprite. Going
+            // higher would false-flag the minimalist water/ground/stick art.
+            // ui_white is intentionally a 4x4 solid white UI fill — exempt.
+            const int kMinUniqueColors = 3;
+
             foreach (var id in s_RequiredIds)
             {
                 if (id == "ui_white") continue;
@@ -105,21 +112,17 @@ namespace WildernessCultivation.Tests.EditMode
                 Assert.That(tex.width, Is.GreaterThan(8), $"{id}: PNG width unexpectedly small ({tex.width}).");
                 Assert.That(tex.height, Is.GreaterThan(8), $"{id}: PNG height unexpectedly small ({tex.height}).");
 
-                // Probe a handful of pixels — if every pixel is identical,
-                // the sprite is the old solid-color fallback.
                 var pixels = tex.GetPixels32();
-                Color32 first = pixels[0];
-                bool allSame = true;
-                for (int i = 1; i < pixels.Length; i++)
+                var unique = new HashSet<uint>();
+                for (int i = 0; i < pixels.Length; i++)
                 {
-                    if (!pixels[i].Equals(first))
-                    {
-                        allSame = false;
-                        break;
-                    }
+                    var p = pixels[i];
+                    uint key = ((uint)p.r << 24) | ((uint)p.g << 16) | ((uint)p.b << 8) | p.a;
+                    unique.Add(key);
+                    if (unique.Count >= kMinUniqueColors) break;
                 }
-                Assert.That(allSame, Is.False,
-                    $"{id}: every pixel is the same color — this is the solid-color fallback, not the committed pixel art. Re-run tools/gen_sprites.py.");
+                Assert.That(unique.Count, Is.GreaterThanOrEqualTo(kMinUniqueColors),
+                    $"{id}: only {unique.Count} unique color(s) — looks like the WritePng solid+border fallback, not committed pixel art. Re-run tools/gen_sprites.py.");
 
                 Object.DestroyImmediate(tex);
             }
