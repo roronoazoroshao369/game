@@ -36,14 +36,12 @@ namespace WildernessCultivation.World
 
         void Awake()
         {
-            // Beacon gray cho minimap — ẩn dụ "đời trước". GetComponent guard để
-            // tránh double-add khi Initialize gọi sau Awake (Tombstone runtime spawn).
-            if (GetComponent<MinimapBeacon>() == null)
-            {
-                var beacon = gameObject.AddComponent<MinimapBeacon>();
-                beacon.beaconColor = new Color(0.55f, 0.55f, 0.6f, 0.9f);
-                beacon.childName = "TombstoneBeacon";
-            }
+            // Beacon gray cho minimap. Phải gọi Initialize sau AddComponent vì
+            // PlayMode AddComponent fire MinimapBeacon.Awake đồng bộ → child sprite
+            // tạo với default yellow nếu chỉ assign field sau đó.
+            var beacon = GetComponent<MinimapBeacon>();
+            if (beacon == null) beacon = gameObject.AddComponent<MinimapBeacon>();
+            beacon.Initialize(new Color(0.55f, 0.55f, 0.6f, 0.9f), 2f, "TombstoneBeacon");
         }
 
         /// <summary>Khởi tạo tombstone runtime từ <see cref="TombstoneData"/>.</summary>

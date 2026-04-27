@@ -47,5 +47,55 @@ namespace WildernessCultivation.Tests.EditMode
             foreach (Transform t in hostGo.transform) childCount++;
             Assert.AreEqual(1, childCount);
         }
+
+        /// <summary>
+        /// Simulate PlayMode order: AddComponent → Awake fires đồng bộ với default
+        /// (yellow / scale 2) → caller Initialize sau đó. Bug cũ: child stuck ở
+        /// default. Fix: Initialize update child hiện có.
+        /// </summary>
+        [Test]
+        public void Initialize_AfterAwake_UpdatesExistingChild()
+        {
+            hostGo = new GameObject("Host");
+            var beacon = hostGo.AddComponent<MinimapBeacon>();
+            // Step 1: Boot mô phỏng PlayMode AddComponent fire Awake đồng bộ với default.
+            TestHelpers.Boot(beacon);
+            var firstChild = beacon.Child;
+            Assert.AreEqual(Color.yellow, firstChild.color, "Awake với default → yellow");
+            Assert.AreEqual(2f, firstChild.transform.localScale.x, "Awake với default → scale 2");
+
+            // Step 2: caller gọi Initialize (như Tombstone/SpiritSpring làm).
+            beacon.Initialize(new Color(0.3f, 0.85f, 1f, 0.95f), 2.5f, "SpiritSpringBeacon");
+
+            Assert.AreSame(firstChild, beacon.Child, "Không tạo child mới — update child cũ");
+            Assert.AreEqual(new Color(0.3f, 0.85f, 1f, 0.95f), beacon.Child.color,
+                "Color phải reflect Initialize, không phải default yellow");
+            Assert.AreEqual(2.5f, beacon.Child.transform.localScale.x,
+                "Scale phải reflect Initialize, không phải default 2");
+            Assert.AreEqual("SpiritSpringBeacon", beacon.Child.gameObject.name);
+            int childCount = 0;
+            foreach (Transform t in hostGo.transform) childCount++;
+            Assert.AreEqual(1, childCount, "Initialize idempotent — vẫn 1 child");
+        }
+
+        [Test]
+        public void Initialize_BeforeAwake_CreatesChildWithCorrectProps()
+        {
+            // Mô phỏng EditMode: Initialize chạy trước Awake (Boot không fire vì
+            // Initialize đã EnsureChild). Verify Awake không ghi đè.
+            hostGo = new GameObject("Host");
+            var beacon = hostGo.AddComponent<MinimapBeacon>();
+            beacon.Initialize(new Color(0.55f, 0.55f, 0.6f, 0.9f), 1.5f, "TombstoneBeacon");
+            var child = beacon.Child;
+            Assert.IsNotNull(child);
+            Assert.AreEqual(new Color(0.55f, 0.55f, 0.6f, 0.9f), child.color);
+            Assert.AreEqual(1.5f, child.transform.localScale.x);
+
+            // Awake gọi sau cũng không nên reset (EnsureChild guard `if Child != null return`).
+            TestHelpers.Boot(beacon);
+            Assert.AreSame(child, beacon.Child);
+            Assert.AreEqual(new Color(0.55f, 0.55f, 0.6f, 0.9f), beacon.Child.color,
+                "Awake sau Initialize không được ghi đè color");
+        }
     }
 }
