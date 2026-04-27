@@ -37,6 +37,9 @@ namespace WildernessCultivation.Tests.PlayMode
             playerGo.AddComponent<Rigidbody2D>();
             playerGo.AddComponent<CircleCollider2D>().radius = 0.3f;
             playerStats = playerGo.AddComponent<PlayerStats>();
+            // MobBase.Die gate XP grant by killer.IsAwakened — set true để
+            // Die_AwardsXpToKillerRealm vẫn pass (intent test này KHÔNG phải gating).
+            playerStats.IsAwakened = true;
             inv = playerGo.AddComponent<Inventory>();
             realm = playerGo.AddComponent<RealmSystem>();
         }

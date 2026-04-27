@@ -69,6 +69,7 @@ namespace WildernessCultivation.Core
                     realmTier = realm?.currentTier ?? 0,
                     cultivationXp = realm?.currentXp ?? 0,
                     spiritRoot = (spiritRoot != null && spiritRoot.Current != null) ? spiritRoot.Current.name : (realm?.SpiritRoot ?? "Hỏa"),
+                    isAwakened = playerStats?.IsAwakened ?? false,
                 },
                 world = new WorldSaveData
                 {
@@ -115,6 +116,7 @@ namespace WildernessCultivation.Core
                 playerStats.Sanity = data.player.sanity;
                 playerStats.Mana = data.player.mana;
                 playerStats.BodyTemp = data.player.bodyTemp <= 0 ? 50f : data.player.bodyTemp;
+                playerStats.IsAwakened = data.player.isAwakened;
             }
             if (realm != null && data.player != null)
             {

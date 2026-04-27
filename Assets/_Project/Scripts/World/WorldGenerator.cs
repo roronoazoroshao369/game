@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Mobs;
 
 namespace WildernessCultivation.World
@@ -44,6 +45,14 @@ namespace WildernessCultivation.World
         [Header("Player spawn (giữa map)")]
         public Transform player;
 
+        [Header("Permadeath / Awakening props")]
+        [Tooltip("Tombstone prefab (Mộ Phần). Cần có Tombstone component + sprite tone tối để hiện trên minimap. Null → skip spawn.")]
+        public GameObject tombstonePrefab;
+        [Tooltip("Item database để Tombstone giải mã itemId khi player drain.")]
+        public ItemDatabase itemDatabase;
+        [Tooltip("Spirit Spring prefab — spawn 1 instance per world (kì ngộ Linh Tuyền). Null → skip.")]
+        public GameObject spiritSpringPrefab;
+
         const float ResourceNoiseScale = 0.12f;
 
         public static WorldGenerator Instance { get; private set; }
@@ -67,6 +76,78 @@ namespace WildernessCultivation.World
                 player.position = new Vector3(size.x * 0.5f, size.y * 0.5f, 0f);
 
             if (mobSpawner != null) mobSpawner.SetupBounds(Vector2.zero, size);
+
+            SpawnTombstones();
+            SpawnSpiritSpring();
+        }
+
+        /// <summary>
+        /// Spawn tombstones từ Graveyard data tại vị trí random (deterministic theo
+        /// seed + tombstone id). Mỗi tombstone là 1 prop interactable; player drain →
+        /// remove khỏi graveyard.json. Cap 10 từ Graveyard layer.
+        /// </summary>
+        void SpawnTombstones()
+        {
+            if (tombstonePrefab == null) return;
+            var data = Graveyard.Load();
+            if (data == null || data.tombstones == null || data.tombstones.Count == 0) return;
+
+            foreach (var entry in data.tombstones)
+            {
+                if (entry == null || entry.items == null || entry.items.Count == 0) continue;
+                var pos = DeterministicPositionFor(entry.id ?? "tomb_unknown");
+                var go = Instantiate(tombstonePrefab, pos, Quaternion.identity, contentParent);
+                var ts = go.GetComponent<Tombstone>();
+                if (ts == null) ts = go.AddComponent<Tombstone>();
+                ts.Initialize(entry, itemDatabase);
+            }
+        }
+
+        void SpawnSpiritSpring()
+        {
+            if (spiritSpringPrefab == null) return;
+            var pos = DeterministicPositionFor($"spring_{seed}");
+            Instantiate(spiritSpringPrefab, pos, Quaternion.identity, contentParent);
+        }
+
+        /// <summary>
+        /// Vị trí random nhưng deterministic theo (seed, key). Dùng hash đơn giản
+        /// của key để stable across reloads — nếu player chưa drain và scene re-Generate,
+        /// tombstone xuất hiện đúng vị trí cũ.
+        /// </summary>
+        Vector3 DeterministicPositionFor(string key)
+        {
+            int h = StableHash(key);
+            // Tránh biên: padding 4 ô khỏi mép map. Tránh trung tâm (player spawn) padding 6.
+            int padding = 4;
+            int rx = ModPositive(h, Mathf.Max(1, size.x - 2 * padding)) + padding;
+            int ry = ModPositive(h / 31, Mathf.Max(1, size.y - 2 * padding)) + padding;
+            Vector2 pos = new(rx + 0.5f, ry + 0.5f);
+            Vector2 mid = new(size.x * 0.5f, size.y * 0.5f);
+            // Push ra khỏi center 6 ô để player spawn xong không thấy ngay.
+            if (Vector2.Distance(pos, mid) < 6f)
+            {
+                Vector2 dir = (pos - mid).sqrMagnitude > 0.001f ? (pos - mid).normalized : Vector2.right;
+                pos = mid + dir * 6f;
+            }
+            return new Vector3(pos.x, pos.y, 0f);
+        }
+
+        static int StableHash(string s)
+        {
+            unchecked
+            {
+                int h = 23;
+                if (s != null)
+                    foreach (char c in s) h = h * 31 + c;
+                return h;
+            }
+        }
+
+        static int ModPositive(int v, int m)
+        {
+            int r = v % m;
+            return r < 0 ? r + m : r;
         }
 
         void Generate()

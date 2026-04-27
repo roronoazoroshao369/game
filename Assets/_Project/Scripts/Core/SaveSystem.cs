@@ -65,6 +65,7 @@ namespace WildernessCultivation.Core
         public int realmTier;          // 0=Phàm Nhân, 1..9 = Luyện Khí 1..9
         public float cultivationXp;
         public string spiritRoot;      // "Hỏa", "Thủy", ...
+        public bool isAwakened;        // True = đã khai mở tu tiên. False = Thường Nhân.
     }
 
     [Serializable]

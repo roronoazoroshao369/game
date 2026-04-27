@@ -42,6 +42,7 @@ namespace WildernessCultivation.Tests.EditMode
                     realmTier = 5,
                     cultivationXp = 1234.5f,
                     spiritRoot = "Hỏa",
+                    isAwakened = true,
                 },
                 world = new WorldSaveData
                 {
@@ -67,6 +68,7 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.AreEqual(orig.player.realmTier, loaded.player.realmTier);
             Assert.AreEqual(orig.player.cultivationXp, loaded.player.cultivationXp, 0.01f);
             Assert.AreEqual(orig.player.spiritRoot, loaded.player.spiritRoot);
+            Assert.AreEqual(orig.player.isAwakened, loaded.player.isAwakened);
         }
 
         [Test]

@@ -48,15 +48,20 @@ namespace WildernessCultivation.UI
         [Header("Content")]
         [TextArea(3, 10)]
         public string welcomeMessage =
-            "Hoang Vực Tu Tiên Ký — Demo MVP\n" +
+            "Hoang Vực Tu Tiên Ký — Sinh Tồn & Khai Mở\n" +
+            "\n" +
+            "Bạn là 1 Thường Nhân — KHÔNG biết tu tiên. Sống sót đã,\n" +
+            "tu tiên tính sau. Chết = mất tất, world mới, làm lại từ đầu.\n" +
             "\n" +
             "Điều khiển:\n" +
             "  • WASD / Joystick: di chuyển\n" +
-            "  • J: đánh thường    K: Kiếm Khí Trảm\n" +
-            "  • Shift: né          M: Tụ Linh Quyết (thiền)\n" +
+            "  • J: đánh thường    K: Kiếm Khí Trảm (sau khi khai mở)\n" +
+            "  • Shift: né          M: Tụ Linh Quyết (sau khi khai mở)\n" +
             "  • E: tương tác       T: đuốc        Z: ngủ\n" +
             "\n" +
-            "Mục tiêu: chặt gỗ, đốt lửa trại, săn thỏ, nướng thịt, ngủ qua đêm, thiền, đột phá Luyện Khí Tầng 2.";
+            "Mục tiêu sinh tồn: chặt gỗ, đốt lửa, săn thỏ, ngủ qua đêm.\n" +
+            "Mục tiêu tu tiên: sống sót 7 ngày, tìm Linh Tuyền hoặc Linh Quả,\n" +
+            "đủ duyên thì khai mở — Phàm/Tạp/Đơn/Thiên linh căn.";
 
         [Header("Tuỳ chọn")]
         public bool showWelcomeOnStart = true;
