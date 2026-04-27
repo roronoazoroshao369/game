@@ -32,9 +32,9 @@ namespace WildernessCultivation.Tests.EditMode
         {
             // Tại t=0 (midnight) — clamp alpha với maxAlpha (mặc định 0.55), midnightTint.a = 0.55 → giữ nguyên.
             AssertColorClose(overlay.midnightTint, overlay.SampleTint(0f));
-            AssertColorClose(overlay.dawnTint,     overlay.SampleTint(0.25f));
-            AssertColorClose(overlay.noonTint,     overlay.SampleTint(0.5f));
-            AssertColorClose(overlay.duskTint,     overlay.SampleTint(0.75f));
+            AssertColorClose(overlay.dawnTint, overlay.SampleTint(0.25f));
+            AssertColorClose(overlay.noonTint, overlay.SampleTint(0.5f));
+            AssertColorClose(overlay.duskTint, overlay.SampleTint(0.75f));
             // Wrap: t=1 = midnight.
             AssertColorClose(overlay.midnightTint, overlay.SampleTint(1f));
         }
@@ -61,9 +61,9 @@ namespace WildernessCultivation.Tests.EditMode
         [Test]
         public void SampleTint_NegativeOrOverflowTime_WrapsCorrectly()
         {
-            AssertColorClose(overlay.SampleTint(0f),    overlay.SampleTint(2f));
+            AssertColorClose(overlay.SampleTint(0f), overlay.SampleTint(2f));
             AssertColorClose(overlay.SampleTint(0.25f), overlay.SampleTint(1.25f));
-            AssertColorClose(overlay.SampleTint(0.5f),  overlay.SampleTint(-0.5f));
+            AssertColorClose(overlay.SampleTint(0.5f), overlay.SampleTint(-0.5f));
         }
 
         static void AssertColorClose(Color expected, Color actual, float eps = 0.0005f)

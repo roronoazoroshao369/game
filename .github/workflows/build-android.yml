@@ -45,7 +45,9 @@ jobs:
       # we don't need (haskell, dotnet, large/X11, hosted Android SDK) per
       # GameCI's recommended setup.
       - name: Free up disk space
-        uses: jlumbroso/free-disk-space@main
+        # Pinned to v1.3.1 commit SHA per Devin Review supply chain hardening:
+        # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
         with:
           tool-cache: false
           android: true
