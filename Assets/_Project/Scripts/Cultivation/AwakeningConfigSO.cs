@@ -27,6 +27,12 @@ namespace WildernessCultivation.Cultivation
         [Range(0f, 1f)] public float donChance = 0.13f;
         [Range(0f, 1f)] public float thienChance = 0.02f;
 
+        [Header("Pity (đẩy duyên dần dần sau mỗi fail Phàm)")]
+        [Tooltip("Mỗi fail Phàm liên tiếp giảm failChance đi delta này (cap 0). Giá trị giảm được redistribute vào tapChance — Đơn/Thiên giữ nguyên.")]
+        [Range(0f, 1f)] public float pityFailReductionPerStreak = 0.10f;
+        [Tooltip("Streak tối đa để cộng dồn pity (cap để tránh underflow nếu config sai). Default 5 → guaranteed pass.")]
+        public int pityMaxStreak = 5;
+
         [Header("Pool linh căn để roll khi success")]
         [Tooltip("Pool Tạp linh căn (no-element / multi-element). Roll ngẫu nhiên 1 entry.")]
         public SpiritRootSO[] tapRoots;
@@ -47,6 +53,8 @@ namespace WildernessCultivation.Cultivation
             so.tapChance = 0.35f;
             so.donChance = 0.13f;
             so.thienChance = 0.02f;
+            so.pityFailReductionPerStreak = 0.10f;
+            so.pityMaxStreak = 5;
             return so;
         }
     }
