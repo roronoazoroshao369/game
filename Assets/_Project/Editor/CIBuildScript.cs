@@ -100,6 +100,11 @@ namespace WildernessCultivation.EditorTools
 
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            // Match the workflow's `androidTargetSdkVersion: AndroidApiLevel34`
+            // input. Custom buildMethod bypasses GameCI's default script, so we
+            // must apply it manually; otherwise it falls back to AndroidApiLevelAuto
+            // (whatever ships in the docker image), which Google Play rejects.
+            PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
             PlayerSettings.productName = "Wilderness Cultivation Demo";
             PlayerSettings.companyName = "Devin Demo";
             PlayerSettings.applicationIdentifier = "com.devindemo.wildernesscultivation";
