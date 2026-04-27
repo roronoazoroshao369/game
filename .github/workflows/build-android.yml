@@ -44,32 +44,38 @@ jobs:
           lfs: true
           fetch-depth: 0
 
-      # Workflow này gate sau khi project đã được sinh đầy đủ trong Unity Editor
-      # (tạo ProjectSettings/ProjectVersion.txt, Packages/manifest.json, …) và secret license đã add.
-      # Nếu chưa có → các step Unity bị skip, job vẫn pass để PR check không đỏ.
-      - name: Detect Unity project
-        id: detect
+      # Fail loudly if the project is not properly committed (a previous
+      # silent-skip used to mask a missing ProjectVersion.txt and let CI
+      # falsely pass on green).
+      - name: Verify Unity project committed
         run: |
-          if [ -f "ProjectSettings/ProjectVersion.txt" ]; then
-            echo "ready=true"  >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::ProjectSettings/ProjectVersion.txt not found — skipping Unity build. Open project in Unity Editor first to generate ProjectSettings."
+          if [ ! -f "ProjectSettings/ProjectVersion.txt" ]; then
+            echo "::error::ProjectSettings/ProjectVersion.txt is missing."
+            echo "::error::Open the project in Unity Editor 2022.3.45f1 once to generate ProjectSettings/, then commit it."
+            exit 1
+          fi
+          if [ ! -f "Packages/manifest.json" ]; then
+            echo "::error::Packages/manifest.json is missing — Unity packages will not resolve."
+            exit 1
           fi
 
-      - name: Detect Unity license secret
-        id: license
-        if: steps.detect.outputs.ready == 'true'
+      # Fail loudly if no Unity license secret is configured. Previous
+      # behavior was to silently skip the build step so PR checks looked
+      # green, which let multiple compile errors and 44 test failures land
+      # on main without anyone noticing. CI must require a real build.
+      - name: Verify Unity license secret
         run: |
           if [ -n "$UNITY_LICENSE" ] || { [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ] && [ -n "$UNITY_SERIAL" ]; }; then
-            echo "ready=true"  >> "$GITHUB_OUTPUT"
+            echo "::notice::Unity license secret detected — proceeding with real build."
           else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::No Unity license secret (UNITY_LICENSE or UNITY_EMAIL/PASSWORD/SERIAL) configured — skipping build. See README section 'GameCI'."
+            echo "::error::No Unity license secret configured."
+            echo "::error::Add either secrets.UNITY_LICENSE (Personal, paste contents of .ulf file) or"
+            echo "::error::secrets.UNITY_EMAIL + secrets.UNITY_PASSWORD + secrets.UNITY_SERIAL (Plus/Pro)."
+            echo "::error::See repository README section 'CI / GameCI' for setup steps."
+            exit 1
           fi
 
       - name: Cache Library
-        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: actions/cache@v4
         with:
           path: Library
@@ -79,7 +85,6 @@ jobs:
             Library-
 
       - name: Build Unity (Android, IL2CPP)
-        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: game-ci/unity-builder@v4
         with:
           targetPlatform: Android
@@ -90,7 +95,6 @@ jobs:
           unityVersion: auto
 
       - name: Upload APK artifact
-        if: steps.detect.outputs.ready == 'true' && steps.license.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: WildernessCultivation-${{ github.sha }}-apk
