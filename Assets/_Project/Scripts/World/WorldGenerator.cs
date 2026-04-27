@@ -174,14 +174,30 @@ namespace WildernessCultivation.World
                     float dGrass = biome != null ? biome.grassDensity : grassDensity;
                     float dWater = biome != null ? biome.waterDensity : waterDensity;
 
+                    bool spawned = false;
                     if (water != null && n < 0.15f && Random.value < dWater)
-                        Spawn(water, x, y);
+                    { Spawn(water, x, y); spawned = true; }
                     else if (tree != null && n > 0.6f && Random.value < dTree)
-                        Spawn(tree, x, y);
+                    { Spawn(tree, x, y); spawned = true; }
                     else if (rock != null && n < 0.25f && Random.value < dRock)
-                        Spawn(rock, x, y);
+                    { Spawn(rock, x, y); spawned = true; }
                     else if (grass != null && Random.value < dGrass)
-                        Spawn(grass, x, y);
+                    { Spawn(grass, x, y); spawned = true; }
+
+                    // Extra nodes (linh thảo / mineral) — pass riêng, có thể overlap nếu
+                    // tile chưa lấp. Tối đa 1 extra/tile để tránh dày đặc.
+                    if (!spawned && biome != null && biome.extraNodes != null)
+                    {
+                        foreach (var en in biome.extraNodes)
+                        {
+                            if (en.prefab == null || en.density <= 0f) continue;
+                            if (Random.value < en.density)
+                            {
+                                Spawn(en.prefab, x, y);
+                                break;
+                            }
+                        }
+                    }
                 }
         }
 

@@ -1,11 +1,16 @@
 using UnityEngine;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Items;
+using WildernessCultivation.Player;
 
 namespace WildernessCultivation.World
 {
     /// <summary>
-    /// Cây / đá / bụi cỏ. Đập = đập tay = nhận drop. Có HP và drop list.
+    /// Cây / đá / bụi cỏ / linh thảo. Đập = đập tay = nhận drop. Có HP và drop list.
+    /// Optional harvest side-effects áp lên harvester (vd Cactus prick -2 HP,
+    /// Death Lily -5 SAN khi pick). Restore (nước/đói) thường đi qua ItemSO drop
+    /// thay vì side-effect — chỉ dùng restoreXxx field khi pick action implicit
+    /// đem lại lợi (vd herb tự cộng máu khi nhổ).
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class ResourceNode : MonoBehaviour, IDamageable
@@ -22,6 +27,18 @@ namespace WildernessCultivation.World
         public float currentHP;
         public Drop[] drops;
         public GameObject onDestroyVfx;
+
+        [Header("Optional harvest side-effects on harvester (PlayerStats)")]
+        [Tooltip("Sát thương HP áp lên harvester sau khi node chết (vd Cactus -2).")]
+        public float harvestHpDamage = 0f;
+        [Tooltip("Phục hồi HP harvester (vd thảo dược cộng máu nhỏ).")]
+        public float harvestHpHeal = 0f;
+        [Tooltip("Tăng Hunger harvester (linh nấm +18, berry +10).")]
+        public float harvestHungerRestore = 0f;
+        [Tooltip("Tăng Thirst harvester (cactus +12).")]
+        public float harvestThirstRestore = 0f;
+        [Tooltip("Trừ Sanity harvester (Death Lily -5).")]
+        public float harvestSanityDamage = 0f;
 
         void Awake() { currentHP = maxHP; }
 
@@ -47,8 +64,30 @@ namespace WildernessCultivation.World
                 if (inv != null) inv.Add(d.item, n);
                 else Debug.Log($"[Node] Drop {n}x {d.item.displayName} (no inventory)");
             }
+
+            ApplyHarvestSideEffects(source);
+
             if (onDestroyVfx != null) Destroy(Instantiate(onDestroyVfx, transform.position, Quaternion.identity), 1f);
             Destroy(gameObject);
+        }
+
+        void ApplyHarvestSideEffects(GameObject source)
+        {
+            if (source == null) return;
+            if (harvestHpDamage <= 0f && harvestHpHeal <= 0f && harvestHungerRestore <= 0f
+                && harvestThirstRestore <= 0f && harvestSanityDamage <= 0f) return;
+
+            var ps = source.GetComponent<PlayerStats>() ?? source.GetComponentInParent<PlayerStats>();
+            if (ps == null) return;
+
+            // Raw — bypass i-frames + IncomingDamageMultiplier. Cactus prick là toll
+            // môi trường cố định, không phải combat dame nên không nên bị Burn ×1.2 hay
+            // dodge i-frame negate.
+            if (harvestHpDamage > 0f) ps.TakeDamageRaw(harvestHpDamage);
+            if (harvestHpHeal > 0f) ps.Heal(harvestHpHeal);
+            if (harvestHungerRestore > 0f) ps.Eat(harvestHungerRestore);
+            if (harvestThirstRestore > 0f) ps.Drink(harvestThirstRestore);
+            if (harvestSanityDamage > 0f) ps.DamageSanity(harvestSanityDamage);
         }
     }
 }
