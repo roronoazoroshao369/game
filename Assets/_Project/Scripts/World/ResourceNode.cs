@@ -7,8 +7,10 @@ namespace WildernessCultivation.World
 {
     /// <summary>
     /// Cây / đá / bụi cỏ / linh thảo. Đập = đập tay = nhận drop. Có HP và drop list.
-    /// Optional harvest side-effects áp lên harvester (vd Cactus prick -2 HP +5 Thirst,
-    /// Death Lily -5 SAN khi pick).
+    /// Optional harvest side-effects áp lên harvester (vd Cactus prick -2 HP,
+    /// Death Lily -5 SAN khi pick). Restore (nước/đói) thường đi qua ItemSO drop
+    /// thay vì side-effect — chỉ dùng restoreXxx field khi pick action implicit
+    /// đem lại lợi (vd herb tự cộng máu khi nhổ).
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class ResourceNode : MonoBehaviour, IDamageable
