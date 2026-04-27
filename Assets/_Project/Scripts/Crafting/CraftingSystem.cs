@@ -100,29 +100,4 @@ namespace WildernessCultivation.Crafting
             return false;
         }
     }
-
-    /// <summary>
-    /// Gắn vào prefab lửa trại / lò luyện đan để CraftingSystem detect được.
-    /// Marker mặc định luôn available; các trạm có yêu cầu nhiên liệu (Campfire, AlchemyFurnace)
-    /// sẽ tự gắn 1 component sibling implement <see cref="IStationGate"/> để báo không khả dụng khi tắt.
-    /// </summary>
-    public class CraftStationMarker : MonoBehaviour
-    {
-        public CraftStation station = CraftStation.Campfire;
-
-        public bool IsAvailable
-        {
-            get
-            {
-                var gate = GetComponent<IStationGate>();
-                return gate == null || gate.StationActive;
-            }
-        }
-    }
-
-    /// <summary>Implement trên cùng GameObject với <see cref="CraftStationMarker"/> nếu trạm có thể tắt/bật.</summary>
-    public interface IStationGate
-    {
-        bool StationActive { get; }
-    }
 }

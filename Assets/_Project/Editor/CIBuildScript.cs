@@ -6,10 +6,36 @@ using UnityEngine;
 
 namespace WildernessCultivation.EditorTools
 {
+    /// <summary>
+    /// Headless / CI build entrypoints.
+    ///
+    /// Designed to be safe to invoke from <c>-batchmode</c> Unity, including
+    /// the very first run on a fresh checkout where TMP Essentials have not
+    /// yet been imported. The previous implementation triggered TMP's
+    /// auto-importer GUI dialog (<c>TMP_PackageResourceImporterWindow</c>)
+    /// during the missing-asset probe, which throws <c>NullReferenceException</c>
+    /// in batchmode and aborts the build.
+    /// </summary>
     public static class CIBuildScript
     {
+        const string TmpEssentialsAssetPath = "Assets/TextMesh Pro/Resources/TMP Settings.asset";
+
+        /// <summary>True if TMP Essentials have been imported into this
+        /// project. Probed by file presence so we never touch
+        /// <c>TMP_Settings.instance</c> (which fires the auto-importer GUI).
+        /// </summary>
+        public static bool TmpEssentialsImported =>
+            File.Exists(TmpEssentialsAssetPath);
+
         public static void ImportTMPEssentials()
         {
+            if (TmpEssentialsImported)
+            {
+                Debug.Log("[CIBuild] TMP Essentials already imported — skipping.");
+                return;
+            }
+            // ImportResources(essentials, examples, extras). We only need
+            // essentials for HUD / TMP labels at runtime.
             TMPro.TMP_PackageResourceImporter.ImportResources(true, false, false);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -18,11 +44,12 @@ namespace WildernessCultivation.EditorTools
 
         public static void BuildLinuxMono()
         {
-            // Idempotent: ensure TMP Essentials are imported before build
-            if (TMPro.TMP_Settings.defaultFontAsset == null)
+            // Idempotent: probe for TMP Essentials by file presence (not via
+            // TMP_Settings.defaultFontAsset, which calls TMP_Settings.instance
+            // and triggers an Editor GUI window that NullRefs in batchmode).
+            if (!TmpEssentialsImported)
             {
                 ImportTMPEssentials();
-                AssetDatabase.Refresh();
             }
 
             const string outDir = "Builds/Linux64";
