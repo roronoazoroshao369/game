@@ -110,6 +110,8 @@ namespace WildernessCultivation.EditorTools
                 ("boar",      36, 28, new Color(0.45f, 0.30f, 0.20f)),
                 ("deer_spirit",30, 30, new Color(0.95f, 0.85f, 0.65f)),
                 ("crow",      24, 18, new Color(0.10f, 0.10f, 0.12f)),
+                ("snake",     28, 16, new Color(0.30f, 0.55f, 0.20f)),
+                ("bat",       24, 18, new Color(0.20f, 0.10f, 0.30f)),
                 ("chest",     32, 28, new Color(0.55f, 0.35f, 0.15f)),
                 ("workbench", 36, 28, new Color(0.40f, 0.25f, 0.10f)),
                 ("campfire",  32, 32, new Color(0.95f, 0.55f, 0.10f)),
@@ -129,6 +131,9 @@ namespace WildernessCultivation.EditorTools
                 ("icon_spirit_antler",24, 24, new Color(0.85f, 0.95f, 0.85f)),
                 ("icon_spirit_meat",  24, 24, new Color(0.95f, 0.45f, 0.55f)),
                 ("icon_feather",      24, 24, new Color(0.20f, 0.20f, 0.25f)),
+                ("icon_snake_skin",   24, 24, new Color(0.30f, 0.55f, 0.25f)),
+                ("icon_venom_gland",  24, 24, new Color(0.55f, 0.85f, 0.30f)),
+                ("icon_bat_wing",     24, 24, new Color(0.30f, 0.15f, 0.35f)),
                 ("ui_white",      4,  4, Color.white),
             };
 
@@ -205,6 +210,12 @@ namespace WildernessCultivation.EditorTools
                 weight: 0.4f, restoreHunger: 22f, restoreSanity: 8f, isPerishable: true, freshSeconds: 360f);
             dict["feather"]       = MakeItem("feather", "Lông Vũ", ItemCategory.Material, sprites["icon_feather"],
                 weight: 0.05f);
+            dict["snake_skin"]    = MakeItem("snake_skin", "Da Rắn", ItemCategory.Material, sprites["icon_snake_skin"],
+                weight: 0.2f);
+            dict["venom_gland"]   = MakeItem("venom_gland", "Túi Độc", ItemCategory.Material, sprites["icon_venom_gland"],
+                weight: 0.15f);
+            dict["bat_wing"]      = MakeItem("bat_wing", "Cánh Bức", ItemCategory.Material, sprites["icon_bat_wing"],
+                weight: 0.1f);
             return dict;
         }
 
@@ -433,7 +444,8 @@ namespace WildernessCultivation.EditorTools
         {
             public GameObject Player, Tree, Rock, Rabbit, Wolf, FoxSpirit, Campfire,
                 WaterSpring, StorageChest, Workbench, Projectile,
-                Boar, DeerSpirit, Crow;
+                Boar, DeerSpirit, Crow,
+                Snake, Bat;
         }
 
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
@@ -449,6 +461,8 @@ namespace WildernessCultivation.EditorTools
             bundle.Boar = BuildBoarPrefab(sprites["boar"], items["raw_meat"], items["tough_hide"], items["tusk"]);
             bundle.DeerSpirit = BuildDeerSpiritPrefab(sprites["deer_spirit"], items["spirit_meat"], items["spirit_antler"]);
             bundle.Crow = BuildCrowPrefab(sprites["crow"], items["feather"]);
+            bundle.Snake = BuildSnakePrefab(sprites["snake"], items["snake_skin"], items["venom_gland"], statusEffects["Poison"]);
+            bundle.Bat = BuildBatPrefab(sprites["bat"], items["bat_wing"], statusEffects["Bleed"]);
             bundle.Campfire = BuildCampfirePrefab(sprites["campfire"], items["stick"]);
             bundle.WaterSpring = BuildWaterSpringPrefab(sprites["water"], items["water"], items["raw_fish"]);
             bundle.StorageChest = BuildStorageChestPrefab(sprites["chest"]);
@@ -679,6 +693,70 @@ namespace WildernessCultivation.EditorTools
             return SaveAsPrefab(go, $"{PrefabsDir}/Crow.prefab");
         }
 
+        static GameObject BuildSnakePrefab(Sprite sprite, ItemSO skin, ItemSO venom, StatusEffectSO poison)
+        {
+            var go = new GameObject("Snake");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 4;
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.25f;
+            col.isTrigger = true;
+            var ai = go.AddComponent<SnakeAI>();
+            ai.spriteRenderer = sr;
+            ai.maxHP = 14f;
+            ai.HP = 14f;
+            ai.moveSpeed = 1.4f;
+            ai.damage = 6f;
+            ai.attackRange = 0.7f;
+            ai.attackCooldown = 1.0f;
+            ai.aggroRange = 2.5f;
+            ai.revealRange = 2.5f;
+            ai.giveUpRange = 5f;
+            ai.poisonEffect = poison;
+            ai.poisonDuration = 6f;
+            ai.xpReward = 8f;
+            ai.drops = new[]
+            {
+                new ResourceNode.Drop { item = skin,  min = 1, max = 1 },
+                new ResourceNode.Drop { item = venom, min = 0, max = 1 },
+            };
+            ai.playerMask = ~0;
+            return SaveAsPrefab(go, $"{PrefabsDir}/Snake.prefab");
+        }
+
+        static GameObject BuildBatPrefab(Sprite sprite, ItemSO wing, StatusEffectSO bleed)
+        {
+            var go = new GameObject("Bat");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 4;
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.25f;
+            col.isTrigger = true;
+            var ai = go.AddComponent<BatAI>();
+            ai.spriteRenderer = sr;
+            ai.maxHP = 10f;
+            ai.HP = 10f;
+            ai.moveSpeed = 2.0f;
+            ai.damage = 4f;
+            ai.attackRange = 0.7f;
+            ai.attackCooldown = 0.9f;
+            ai.aggroRange = 4.5f;
+            ai.bleedEffect = bleed;
+            ai.bleedDuration = 4f;
+            ai.xpReward = 6f;
+            ai.drops = new[] { new ResourceNode.Drop { item = wing, min = 1, max = 1 } };
+            ai.playerMask = ~0;
+            return SaveAsPrefab(go, $"{PrefabsDir}/Bat.prefab");
+        }
+
         static GameObject BuildCampfirePrefab(Sprite sprite, ItemSO woodItem)
         {
             var go = new GameObject("Campfire");
@@ -905,6 +983,8 @@ namespace WildernessCultivation.EditorTools
                 new MobSpawner.SpawnEntry { prefab = prefabs.Boar,       dayCap = 2, nightCap = 1 },
                 new MobSpawner.SpawnEntry { prefab = prefabs.DeerSpirit, dayCap = 3, nightCap = 1 },
                 new MobSpawner.SpawnEntry { prefab = prefabs.Crow,       dayCap = 4, nightCap = 1 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Snake,      dayCap = 2, nightCap = 2 },
+                new MobSpawner.SpawnEntry { prefab = prefabs.Bat,        dayCap = 0, nightCap = 5 },
             };
             spawner.parent = worldGo.transform;
             wg.mobSpawner = spawner;
