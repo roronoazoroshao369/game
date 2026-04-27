@@ -70,6 +70,7 @@ namespace WildernessCultivation.EditorTools
             {
                 Debug.LogError("[CIBuild] BootstrapWizard.Bootstrap() finished but MainScene was NOT created. See earlier exceptions in log. Aborting.");
                 EditorApplication.Exit(1);
+                return; // EditorApplication.Exit is async in batchmode; return to stop the caller from invoking BuildPlayer with no scene.
             }
         }
 
