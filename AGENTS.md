@@ -6,9 +6,9 @@
 ## Project overview
 
 **Wilderness Cultivation Chronicle** — game mobile open-world survival + tu tiên (cultivation),
-Unity **2022.3 LTS**, target **Android (IL2CPP, ARM64)**.
+Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
 
-- Engine: Unity 2022 LTS · Render: Universal RP · Physics: 2D
+- Engine: Unity 6 LTS · Render: Universal RP · Physics: 2D
 - Code chính: `Assets/_Project/Scripts/` (asmdef: `WildernessCultivation`)
 - Tests: `Assets/_Project/Tests/EditMode/` + `Assets/_Project/Tests/PlayMode/`
 - Bootstrap demo scene: `Tools → Wilderness Cultivation → Bootstrap Default Scene` (Editor wizard)
@@ -68,7 +68,7 @@ Xem `Assets/_Project/Tests/PlayMode/TimeManagerPlayTests.cs` cho ví dụ.
 
 ## CI gates — PR phải PASS hết
 
-1. **Build Android (IL2CPP, ARM64)** — compile clean Unity 2022.3.45f1 + Android module.
+1. **Build Android (IL2CPP, ARM64)** — compile clean Unity 6000.4.4f1 + Android module.
 2. **Run EditMode + PlayMode tests** — pass tất cả case.
 3. **Lint / format** — `.editorconfig` whitespace + `dotnet format whitespace --verify`.
 4. **Devin Review** — auto bot review, address findings trước khi merge.
