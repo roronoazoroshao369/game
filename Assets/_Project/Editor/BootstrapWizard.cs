@@ -134,6 +134,19 @@ namespace WildernessCultivation.EditorTools
                 ("icon_snake_skin",   24, 24, new Color(0.30f, 0.55f, 0.25f)),
                 ("icon_venom_gland",  24, 24, new Color(0.55f, 0.85f, 0.30f)),
                 ("icon_bat_wing",     24, 24, new Color(0.30f, 0.15f, 0.35f)),
+                // Flora plants (world prefab sprites)
+                ("linh_mushroom", 24, 24, new Color(0.85f, 0.45f, 0.85f)),
+                ("berry_bush",    28, 22, new Color(0.50f, 0.20f, 0.30f)),
+                ("cactus",        24, 32, new Color(0.30f, 0.65f, 0.30f)),
+                ("death_lily",    24, 28, new Color(0.55f, 0.30f, 0.55f)),
+                ("linh_bamboo",   20, 40, new Color(0.55f, 0.85f, 0.45f)),
+                // Item icons cho flora drops
+                ("icon_linh_mushroom", 24, 24, new Color(0.85f, 0.55f, 0.85f)),
+                ("icon_berry",         24, 24, new Color(0.65f, 0.20f, 0.30f)),
+                ("icon_cactus_water",  24, 24, new Color(0.40f, 0.75f, 0.50f)),
+                ("icon_death_pollen",  24, 24, new Color(0.55f, 0.25f, 0.65f)),
+                ("icon_bamboo",        24, 24, new Color(0.65f, 0.85f, 0.55f)),
+                ("icon_mineral_ore",   24, 24, new Color(0.40f, 0.40f, 0.55f)),
                 ("ui_white",      4,  4, Color.white),
             };
 
@@ -216,6 +229,19 @@ namespace WildernessCultivation.EditorTools
                 weight: 0.15f);
             dict["bat_wing"]      = MakeItem("bat_wing", "Cánh Bức", ItemCategory.Material, sprites["icon_bat_wing"],
                 weight: 0.1f);
+            // Flora drops (PR C)
+            dict["linh_mushroom"] = MakeItem("linh_mushroom", "Linh Nấm", ItemCategory.Food, sprites["icon_linh_mushroom"],
+                weight: 0.15f, restoreHunger: 18f, restoreSanity: 4f, isPerishable: true, freshSeconds: 480f);
+            dict["berry"]         = MakeItem("berry", "Linh Quả Mọng", ItemCategory.Food, sprites["icon_berry"],
+                weight: 0.1f, restoreHunger: 10f, restoreThirst: 5f, isPerishable: true, freshSeconds: 240f);
+            dict["cactus_water"]  = MakeItem("cactus_water", "Nước Tiên Nhân Chưởng", ItemCategory.Food, sprites["icon_cactus_water"],
+                weight: 0.3f, restoreThirst: 18f);
+            dict["death_pollen"]  = MakeItem("death_pollen", "Tử Khí Phấn", ItemCategory.Material, sprites["icon_death_pollen"],
+                weight: 0.05f);
+            dict["bamboo"]        = MakeItem("bamboo", "Trúc Nhẹ", ItemCategory.Material, sprites["icon_bamboo"],
+                weight: 0.4f);
+            dict["mineral_ore"]   = MakeItem("mineral_ore", "Khoáng Thạch", ItemCategory.Material, sprites["icon_mineral_ore"],
+                weight: 1.0f);
             return dict;
         }
 
@@ -388,12 +414,17 @@ namespace WildernessCultivation.EditorTools
                 treeDensity: 0.18f, rockDensity: 0.05f, waterDensity: 0.008f,
                 tempDay: 0f, tempNight: 0f,
                 spiritEnergy: 1.2f, ambientNightSan: 0f,
-                selRange: new Vector2(0f, 0.5f)));
+                selRange: new Vector2(0f, 0.40f)));
+            list.Add(MakeBiome("stone_highlands", "Đá Sơn Cao Nguyên",
+                treeDensity: 0.04f, rockDensity: 0.20f, waterDensity: 0.003f,
+                tempDay: -3f, tempNight: -8f,
+                spiritEnergy: 1.0f, ambientNightSan: 0.3f,
+                selRange: new Vector2(0.40f, 0.65f)));
             list.Add(MakeBiome("desert", "Hoang Mạc Tử Khí",
                 treeDensity: 0.02f, rockDensity: 0.10f, waterDensity: 0.001f,
                 tempDay: 25f, tempNight: -15f,
                 spiritEnergy: 0.8f, ambientNightSan: 1f,
-                selRange: new Vector2(0.5f, 1f)));
+                selRange: new Vector2(0.65f, 1f)));
             return list;
         }
 
@@ -424,6 +455,39 @@ namespace WildernessCultivation.EditorTools
             return so;
         }
 
+        /// <summary>
+        /// Bộ extraNodes (linh thảo / mineral) per biome. Density giữ thấp (0.5%-2%)
+        /// để không spam. Forest = mushroom + berry + bamboo; Stone Highlands =
+        /// mineral_ore + bamboo; Desert = cactus + death_lily.
+        /// </summary>
+        static BiomeSO.ExtraNode[] BuildExtraNodesFor(string biomeId, PrefabBundle prefabs)
+        {
+            switch (biomeId)
+            {
+                case "forest":
+                    return new[]
+                    {
+                        new BiomeSO.ExtraNode { prefab = prefabs.LinhMushroom, density = 0.020f },
+                        new BiomeSO.ExtraNode { prefab = prefabs.BerryBush,    density = 0.025f },
+                        new BiomeSO.ExtraNode { prefab = prefabs.LinhBamboo,   density = 0.015f },
+                    };
+                case "stone_highlands":
+                    return new[]
+                    {
+                        new BiomeSO.ExtraNode { prefab = prefabs.MineralRock,  density = 0.030f },
+                        new BiomeSO.ExtraNode { prefab = prefabs.LinhBamboo,   density = 0.010f },
+                    };
+                case "desert":
+                    return new[]
+                    {
+                        new BiomeSO.ExtraNode { prefab = prefabs.Cactus,    density = 0.020f },
+                        new BiomeSO.ExtraNode { prefab = prefabs.DeathLily, density = 0.005f },
+                    };
+                default:
+                    return System.Array.Empty<BiomeSO.ExtraNode>();
+            }
+        }
+
         // ---------------- ITEM DATABASE ----------------
         static ItemDatabase CreateItemDatabase(Dictionary<string, ItemSO> items)
         {
@@ -445,7 +509,8 @@ namespace WildernessCultivation.EditorTools
             public GameObject Player, Tree, Rock, Rabbit, Wolf, FoxSpirit, Campfire,
                 WaterSpring, StorageChest, Workbench, Projectile,
                 Boar, DeerSpirit, Crow,
-                Snake, Bat;
+                Snake, Bat,
+                LinhMushroom, BerryBush, Cactus, DeathLily, LinhBamboo, MineralRock;
         }
 
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
@@ -463,6 +528,13 @@ namespace WildernessCultivation.EditorTools
             bundle.Crow = BuildCrowPrefab(sprites["crow"], items["feather"]);
             bundle.Snake = BuildSnakePrefab(sprites["snake"], items["snake_skin"], items["venom_gland"], statusEffects["Poison"]);
             bundle.Bat = BuildBatPrefab(sprites["bat"], items["bat_wing"], statusEffects["Bleed"]);
+            // Flora — wild plants (PR C)
+            bundle.LinhMushroom = BuildLinhMushroomPrefab(sprites["linh_mushroom"], items["linh_mushroom"]);
+            bundle.BerryBush    = BuildBerryBushPrefab(sprites["berry_bush"], items["berry"]);
+            bundle.Cactus       = BuildCactusPrefab(sprites["cactus"], items["cactus_water"]);
+            bundle.DeathLily    = BuildDeathLilyPrefab(sprites["death_lily"], items["death_pollen"]);
+            bundle.LinhBamboo   = BuildLinhBambooPrefab(sprites["linh_bamboo"], items["bamboo"], items["stick"]);
+            bundle.MineralRock  = BuildMineralRockPrefab(sprites["rock"], items["mineral_ore"], items["stone"]);
             bundle.Campfire = BuildCampfirePrefab(sprites["campfire"], items["stick"]);
             bundle.WaterSpring = BuildWaterSpringPrefab(sprites["water"], items["water"], items["raw_fish"]);
             bundle.StorageChest = BuildStorageChestPrefab(sprites["chest"]);
@@ -757,6 +829,109 @@ namespace WildernessCultivation.EditorTools
             return SaveAsPrefab(go, $"{PrefabsDir}/Bat.prefab");
         }
 
+        // ========== Flora (wild plants) — PR C ==========
+
+        /// <summary>
+        /// Helper: build basic plant ResourceNode prefab. caller customize side-effects sau.
+        /// </summary>
+        static GameObject MakePlantNode(string name, Sprite sprite, ItemSO drop, float maxHP,
+            int dropMin, int dropMax, float radius)
+        {
+            var go = new GameObject(name);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 1;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = radius;
+            col.isTrigger = false;
+            var node = go.AddComponent<ResourceNode>();
+            node.nodeName = name;
+            node.maxHP = maxHP;
+            node.drops = new[]
+            {
+                new ResourceNode.Drop { item = drop, min = dropMin, max = dropMax },
+            };
+            return go;
+        }
+
+        static GameObject BuildLinhMushroomPrefab(Sprite sprite, ItemSO mushroom)
+        {
+            // Hand-pick (HP rất thấp); food + low heal đã có trong ItemSO.restoreHunger.
+            var go = MakePlantNode("LinhMushroom", sprite, mushroom, maxHP: 1f,
+                dropMin: 1, dropMax: 2, radius: 0.25f);
+            return SaveAsPrefab(go, $"{PrefabsDir}/LinhMushroom.prefab");
+        }
+
+        static GameObject BuildBerryBushPrefab(Sprite sprite, ItemSO berry)
+        {
+            // Bụi berry — hand-pick, drop 2-4 berry.
+            var go = MakePlantNode("BerryBush", sprite, berry, maxHP: 1f,
+                dropMin: 2, dropMax: 4, radius: 0.30f);
+            return SaveAsPrefab(go, $"{PrefabsDir}/BerryBush.prefab");
+        }
+
+        static GameObject BuildCactusPrefab(Sprite sprite, ItemSO cactusWater)
+        {
+            // Cactus — pick lấy nước nhưng prick -2 HP. HP cao hơn để đập có nỗ lực.
+            var go = MakePlantNode("Cactus", sprite, cactusWater, maxHP: 6f,
+                dropMin: 1, dropMax: 2, radius: 0.30f);
+            var node = go.GetComponent<ResourceNode>();
+            node.harvestHpDamage = 2f;
+            node.harvestThirstRestore = 0f; // restore qua cactus_water item, không qua side-effect
+            return SaveAsPrefab(go, $"{PrefabsDir}/Cactus.prefab");
+        }
+
+        static GameObject BuildDeathLilyPrefab(Sprite sprite, ItemSO deathPollen)
+        {
+            // Death Lily — pick = -5 SAN, drop death_pollen alchemy.
+            var go = MakePlantNode("DeathLily", sprite, deathPollen, maxHP: 1f,
+                dropMin: 1, dropMax: 1, radius: 0.25f);
+            var node = go.GetComponent<ResourceNode>();
+            node.harvestSanityDamage = 5f;
+            return SaveAsPrefab(go, $"{PrefabsDir}/DeathLily.prefab");
+        }
+
+        static GameObject BuildLinhBambooPrefab(Sprite sprite, ItemSO bamboo, ItemSO stick)
+        {
+            // Linh Bamboo — đập như cây thường. drop bamboo + stick.
+            var go = new GameObject("LinhBamboo");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 2;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.30f;
+            var node = go.AddComponent<ResourceNode>();
+            node.nodeName = "LinhBamboo";
+            node.maxHP = 4f;
+            node.drops = new[]
+            {
+                new ResourceNode.Drop { item = bamboo, min = 1, max = 2 },
+                new ResourceNode.Drop { item = stick,  min = 0, max = 1 },
+            };
+            return SaveAsPrefab(go, $"{PrefabsDir}/LinhBamboo.prefab");
+        }
+
+        static GameObject BuildMineralRockPrefab(Sprite sprite, ItemSO ore, ItemSO stone)
+        {
+            // Mineral Rock — đá mỏ chỉ ở Đá Sơn. drop mineral_ore + stone.
+            var go = new GameObject("MineralRock");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 1;
+            sr.color = new Color(0.55f, 0.55f, 0.70f); // tinge tím nhạt phân biệt rock thường
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.35f;
+            var node = go.AddComponent<ResourceNode>();
+            node.nodeName = "MineralRock";
+            node.maxHP = 10f;
+            node.drops = new[]
+            {
+                new ResourceNode.Drop { item = ore,   min = 1, max = 2 },
+                new ResourceNode.Drop { item = stone, min = 1, max = 2 },
+            };
+            return SaveAsPrefab(go, $"{PrefabsDir}/MineralRock.prefab");
+        }
+
         static GameObject BuildCampfirePrefab(Sprite sprite, ItemSO woodItem)
         {
             var go = new GameObject("Campfire");
@@ -968,6 +1143,7 @@ namespace WildernessCultivation.EditorTools
                 b.treePrefab = prefabs.Tree;
                 b.rockPrefab = prefabs.Rock;
                 b.waterSpringPrefab = prefabs.WaterSpring;
+                b.extraNodes = BuildExtraNodesFor(b.biomeId, prefabs);
                 EditorUtility.SetDirty(b);
             }
             wg.biomes = biomes.ToArray();

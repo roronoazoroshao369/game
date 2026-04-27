@@ -50,5 +50,20 @@ namespace WildernessCultivation.World
         [Header("Selection (Perlin)")]
         [Tooltip("Khoảng [min,max] giá trị Perlin để biome này chiếm. Phải nằm trong [0,1] và 2 biome không nên overlap nhiều.")]
         public Vector2 selectionRange = new(0f, 1f);
+
+        /// <summary>
+        /// Plant / linh thảo / mineral phụ — spawn theo từng tile với density riêng.
+        /// Mỗi tile lăn 1 lần qua list, gặp prefab match density thì spawn (tối đa 1 / tile).
+        /// Dùng cho linh mushroom, berry bush, cactus, death lily, mineral ore …
+        /// </summary>
+        [Header("Extra resource nodes (plants, minerals)")]
+        public ExtraNode[] extraNodes;
+
+        [System.Serializable]
+        public struct ExtraNode
+        {
+            public GameObject prefab;
+            [Range(0f, 1f)] public float density;
+        }
     }
 }
