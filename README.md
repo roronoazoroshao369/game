@@ -5,7 +5,7 @@
 [![Lint](https://github.com/roronoazoroshao369/game/actions/workflows/lint.yml/badge.svg)](https://github.com/roronoazoroshao369/game/actions/workflows/lint.yml)
 
 > Game **mobile open-world survival + tu tiên** lấy cảm hứng từ *Don't Starve Together* và *Quỷ Cốc Bát Hoang*.
-> Engine: **Unity 2022 LTS** · Nền tảng: **Android** (mở rộng iOS/PC sau).
+> Engine: **Unity 6 LTS (6000.4.4f1)** · Nền tảng: **Android** (mở rộng iOS/PC sau).
 
 > Workflow `Build Android` và `Unity Tests` yêu cầu repo có `UNITY_LICENSE` secret (hoặc `UNITY_EMAIL`/`UNITY_PASSWORD`/`UNITY_SERIAL` cho Plus/Pro). Trước đây skip-noop để PR check xanh, nhưng cách đó che mất compile errors + 44 EditMode test failures. Xem [GameCI section](#-gameci-auto-build-apk-trên-mỗi-pr) để add secret.
 
@@ -13,7 +13,7 @@
 
 ## 🏃 Demo trong 60 giây
 
-1. Clone repo → mở bằng Unity Hub (**Unity 2022.3 LTS**, module Android Build Support).
+1. Clone repo → mở bằng Unity Hub (**Unity 6 LTS — 6000.4.4f1**, module Android Build Support).
 2. Chờ Unity import xong → menu **Tools → Wilderness Cultivation → Bootstrap Default Scene**.
 3. Mở `Assets/Scenes/MainScene.unity` → bấm **Play**.
 4. `TutorialHUD` sẽ hiện panel welcome (cheat sheet điều khiển) + checklist 5 mục tiêu ở góc phải trên.
@@ -64,7 +64,7 @@ game/
 
 ## ⚡ Quickstart: Bootstrap Default Scene (1 click)
 
-Repo đã có sẵn `Editor/BootstrapWizard.cs`. Sau khi clone xong và mở project trong Unity 2022 LTS:
+Repo đã có sẵn `Editor/BootstrapWizard.cs`. Sau khi clone xong và mở project trong Unity 6 LTS (6000.4.4f1):
 
 1. Đợi Unity import xong (lần đầu sẽ generate `Library/`).
 2. Menu **Tools → Wilderness Cultivation → Bootstrap Default Scene**.
@@ -93,9 +93,9 @@ Hệ thống phím cơ bản trong scene mặc định:
 
 ## 🚀 Hướng dẫn setup lần đầu (manual / advanced)
 
-### 1. Cài Unity Hub & Unity 2022 LTS
+### 1. Cài Unity Hub & Unity 6 LTS
 - Tải **Unity Hub**: https://unity.com/download
-- Trong Hub → Installs → Install Editor → chọn **Unity 2022.3.x LTS**
+- Trong Hub → Installs → Install Editor → chọn **Unity 6 LTS — 6000.4.4f1**
 - Kèm modules: **Android Build Support** (gồm OpenJDK + Android SDK & NDK Tools)
 
 ### 2. Clone repo & mở project
@@ -311,7 +311,7 @@ Workflow CHƯA tự chạy được cho đến khi bạn add Unity license secre
 ### Personal license (.ulf, miễn phí)
 1. Sinh `.alf` request file 1 lần qua [game-ci/unity-request-activation-file](https://github.com/marketplace/actions/unity-request-activation-file) hoặc:
    ```bash
-   docker run --rm -v $(pwd):/root/project unityci/editor:2022.3.20f1-android-1.1.0 \
+   docker run --rm -v $(pwd):/root/project unityci/editor:ubuntu-6000.4.4f1-android-3.2.2 \
      unity-editor -batchmode -nographics -createManualActivationFile -logFile -
    ```
    File `Unity_v*.alf` xuất ra trong project.

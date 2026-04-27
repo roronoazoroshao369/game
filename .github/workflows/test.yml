@@ -59,7 +59,7 @@ jobs:
         run: |
           if [ ! -f "ProjectSettings/ProjectVersion.txt" ]; then
             echo "::error::ProjectSettings/ProjectVersion.txt is missing."
-            echo "::error::Open the project in Unity Editor 2022.3.45f1 once to generate ProjectSettings/, then commit it."
+            echo "::error::Open the project in Unity Editor 6000.4.4f1 once to generate ProjectSettings/, then commit it."
             exit 1
           fi
           if [ ! -f "Packages/manifest.json" ]; then
