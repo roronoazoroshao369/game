@@ -91,7 +91,12 @@ namespace WildernessCultivation.EditorTools
             }
         }
 
-        // ---------------- SPRITES (placeholder solid color squares) ----------------
+        // ---------------- SPRITES ----------------
+        // Real pixel-art PNGs live in Assets/_Project/Sprites/ and are committed.
+        // tools/gen_sprites.py is the source-of-truth generator (re-run it offline
+        // when art needs to change, then commit the resulting PNGs). The (w,h,color)
+        // entries in `defs` below are kept only as solid-color FALLBACKS that fire
+        // on a fresh checkout where the PNG happens to be missing.
         static Dictionary<string, Sprite> CreateSprites()
         {
             var defs = new (string id, int w, int h, Color color)[]
@@ -123,7 +128,14 @@ namespace WildernessCultivation.EditorTools
             foreach (var d in defs)
             {
                 string path = $"{SpritesDir}/{d.id}.png";
-                WritePng(path, d.w, d.h, d.color);
+                // If a hand-authored PNG is already committed (see tools/gen_sprites.py),
+                // keep it and only re-import. Only fall back to the solid-color
+                // placeholder when the file is genuinely missing — this keeps
+                // Bootstrap idempotent on a fresh checkout while preserving real art.
+                if (!File.Exists(path))
+                {
+                    WritePng(path, d.w, d.h, d.color);
+                }
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
                 var importer = (TextureImporter)AssetImporter.GetAtPath(path);
                 if (importer != null)
