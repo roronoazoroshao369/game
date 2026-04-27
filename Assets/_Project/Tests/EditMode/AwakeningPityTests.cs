@@ -62,11 +62,13 @@ namespace WildernessCultivation.Tests.EditMode
         [Test]
         public void Fail_IncrementsStreak()
         {
-            // Force fail.
+            // Force fail. Disable pity reduction để fail thứ 2 cũng giữ Phàm=100%
+            // (nếu không, effectiveFail giảm dần → có % roll Tap → reset streak → flaky).
             config.failChance = 1f;
             config.tapChance = 0f;
             config.donChance = 0f;
             config.thienChance = 0f;
+            config.pityFailReductionPerStreak = 0f;
             awaken.TryAwaken(out var r1);
             Assert.AreEqual(AwakenOutcome.Fail, r1.outcome);
             Assert.AreEqual(0, r1.phamFailStreakBefore);
@@ -185,10 +187,13 @@ namespace WildernessCultivation.Tests.EditMode
         {
             // 5 fail liên tiếp với seed cố định + force config Phàm 100%/Tạp 0%.
             // Sau 5 fail, set lại config về default + streak ở pityMaxStreak → fail PHẢI = 0.
+            // Disable pity trong phase forced-fail — nếu không, effective fail giảm
+            // dần (0.9, 0.8, 0.7, 0.6) → có % roll Tap → reset streak → P(pass)≈30%.
             config.failChance = 1f;
             config.tapChance = 0f;
             config.donChance = 0f;
             config.thienChance = 0f;
+            config.pityFailReductionPerStreak = 0f;
             for (int i = 0; i < 5; i++)
             {
                 stats.IsAwakened = false;
@@ -201,6 +206,7 @@ namespace WildernessCultivation.Tests.EditMode
             config.tapChance = 0.35f;
             config.donChance = 0.13f;
             config.thienChance = 0.02f;
+            config.pityFailReductionPerStreak = 0.10f;
             stats.IsAwakened = false;
             awaken.TryAwaken(out var r);
             Assert.AreNotEqual(AwakenOutcome.Fail, r.outcome,
