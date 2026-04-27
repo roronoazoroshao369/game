@@ -41,7 +41,25 @@ namespace WildernessCultivation.World
             }
 
             // Đủ điều kiện → roll xong (kể cả fail), spring tự destroy.
-            if (auraVfx != null) auraVfx.Play();
+            // Detach VFX trước khi destroy parent để particle có thời gian render —
+            // nếu để chung parent, Destroy(gameObject) sẽ kill ParticleSystem ngay
+            // end-of-frame, particle chưa kịp hiện.
+            if (auraVfx != null)
+            {
+                auraVfx.transform.SetParent(null, worldPositionStays: true);
+                auraVfx.Play();
+                if (Application.isPlaying)
+                {
+                    var main = auraVfx.main;
+                    Destroy(auraVfx.gameObject, main.duration + main.startLifetime.constantMax);
+                }
+                else
+                {
+                    // EditMode: Destroy delayed không có scheduler chạy → cleanup ngay
+                    // để VFX không lơ lửng orphan sau khi spring biến mất.
+                    DestroyImmediate(auraVfx.gameObject);
+                }
+            }
             if (Application.isPlaying) Destroy(gameObject);
             else DestroyImmediate(gameObject);
             return true;
