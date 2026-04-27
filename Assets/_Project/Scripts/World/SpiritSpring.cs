@@ -53,6 +53,12 @@ namespace WildernessCultivation.World
                     var main = auraVfx.main;
                     Destroy(auraVfx.gameObject, main.duration + main.startLifetime.constantMax);
                 }
+                else
+                {
+                    // EditMode: Destroy delayed không có scheduler chạy → cleanup ngay
+                    // để VFX không lơ lửng orphan sau khi spring biến mất.
+                    DestroyImmediate(auraVfx.gameObject);
+                }
             }
             if (Application.isPlaying) Destroy(gameObject);
             else DestroyImmediate(gameObject);
