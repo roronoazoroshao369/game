@@ -847,6 +847,7 @@ namespace WildernessCultivation.EditorTools
             var node = go.AddComponent<ResourceNode>();
             node.nodeName = name;
             node.maxHP = maxHP;
+            node.currentHP = maxHP;
             node.drops = new[]
             {
                 new ResourceNode.Drop { item = drop, min = dropMin, max = dropMax },
@@ -903,6 +904,7 @@ namespace WildernessCultivation.EditorTools
             var node = go.AddComponent<ResourceNode>();
             node.nodeName = "LinhBamboo";
             node.maxHP = 4f;
+            node.currentHP = 4f;
             node.drops = new[]
             {
                 new ResourceNode.Drop { item = bamboo, min = 1, max = 2 },
@@ -924,6 +926,7 @@ namespace WildernessCultivation.EditorTools
             var node = go.AddComponent<ResourceNode>();
             node.nodeName = "MineralRock";
             node.maxHP = 10f;
+            node.currentHP = 10f;
             node.drops = new[]
             {
                 new ResourceNode.Drop { item = ore,   min = 1, max = 2 },
