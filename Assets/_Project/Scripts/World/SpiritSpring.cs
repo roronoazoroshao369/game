@@ -1,6 +1,7 @@
 using UnityEngine;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.Player;
+using WildernessCultivation.UI;
 
 namespace WildernessCultivation.World
 {
@@ -19,6 +20,18 @@ namespace WildernessCultivation.World
         public ParticleSystem auraVfx;
 
         public string InteractLabel => "Linh Tuyền — Uống Khai Mở";
+
+        void Awake()
+        {
+            // Beacon cyan cho minimap — kì ngộ rực rỡ.
+            if (GetComponent<MinimapBeacon>() == null)
+            {
+                var beacon = gameObject.AddComponent<MinimapBeacon>();
+                beacon.beaconColor = new Color(0.3f, 0.85f, 1f, 0.95f);
+                beacon.childName = "SpiritSpringBeacon";
+                beacon.scale = 2.5f;
+            }
+        }
 
         public bool CanInteract(GameObject actor)
         {

@@ -463,6 +463,7 @@ namespace WildernessCultivation.EditorTools
             go.AddComponent<InteractAction>();
             go.AddComponent<CraftingSystem>();
             go.AddComponent<RealmSystem>();
+            go.AddComponent<AwakeningSystem>();
             go.AddComponent<SleepAction>();
             go.AddComponent<TorchAction>();
             go.AddComponent<MagicTreasureAction>();
@@ -1389,6 +1390,39 @@ namespace WildernessCultivation.EditorTools
             realmUI.xpFill = xpFillImg;
             realmUI.breakthroughButton = btnGo.GetComponent<Button>();
             realmUI.breakthroughResultLabel = resultLabel;
+
+            BuildAwakeningStatusHUD(canvas, player, whiteSprite);
+        }
+
+        // ---------- Awakening Status HUD (top center, dưới RealmPanel) ----------
+        static void BuildAwakeningStatusHUD(GameObject canvas, GameObject player, Sprite whiteSprite)
+        {
+            var stats = player.GetComponent<PlayerStats>();
+            var awaken = player.GetComponent<AwakeningSystem>();
+
+            var panelGo = new GameObject("AwakeningStatusPanel",
+                typeof(RectTransform), typeof(Image));
+            panelGo.transform.SetParent(canvas.transform, false);
+            var panelRT = (RectTransform)panelGo.transform;
+            panelRT.anchorMin = panelRT.anchorMax = new Vector2(0.5f, 1f);
+            panelRT.pivot = new Vector2(0.5f, 1f);
+            // Dưới RealmPanel (anchoredY = -10, height = 80) → -100 = ngay dưới.
+            panelRT.anchoredPosition = new Vector2(0, -100);
+            panelRT.sizeDelta = new Vector2(420, 50);
+            var bg = panelGo.GetComponent<Image>();
+            bg.sprite = whiteSprite;
+            bg.color = new Color(0, 0, 0, 0.4f);
+
+            var label = AddTMPLabel(panelGo, "", 16, new Color(0.95f, 0.95f, 0.95f),
+                anchor: new Vector2(0, 0), pivot: new Vector2(0.5f, 0.5f),
+                anchoredPos: Vector2.zero, size: Vector2.zero,
+                alignment: TextAlignmentOptions.Center, stretch: true);
+
+            var hud = panelGo.AddComponent<AwakeningStatusHUD>();
+            hud.playerStats = stats;
+            hud.awakening = awaken;
+            hud.statusText = label;
+            hud.panelRoot = panelGo;
         }
 
         // ---------- Storage Chest UI (centered overlay, hidden by default) ----------

@@ -3,6 +3,7 @@ using UnityEngine;
 using WildernessCultivation.Core;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player;
+using WildernessCultivation.UI;
 
 namespace WildernessCultivation.World
 {
@@ -32,6 +33,18 @@ namespace WildernessCultivation.World
 
         public string InteractLabel => "Mộ Phần";
         public bool CanInteract(GameObject actor) => actor != null && items != null && items.Count > 0;
+
+        void Awake()
+        {
+            // Beacon gray cho minimap — ẩn dụ "đời trước". GetComponent guard để
+            // tránh double-add khi Initialize gọi sau Awake (Tombstone runtime spawn).
+            if (GetComponent<MinimapBeacon>() == null)
+            {
+                var beacon = gameObject.AddComponent<MinimapBeacon>();
+                beacon.beaconColor = new Color(0.55f, 0.55f, 0.6f, 0.9f);
+                beacon.childName = "TombstoneBeacon";
+            }
+        }
 
         /// <summary>Khởi tạo tombstone runtime từ <see cref="TombstoneData"/>.</summary>
         public void Initialize(TombstoneData data, ItemDatabase database)
