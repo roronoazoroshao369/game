@@ -100,6 +100,24 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
+        public void Harvest_SanityDamage_FiresOnStatsChanged()
+        {
+            // SAN drain phải fire OnStatsChanged để UI update ngay (không stale 1 frame).
+            var item = MakeItem("death_pollen");
+            var go = MakeNode(item);
+            var node = go.GetComponent<ResourceNode>();
+            node.harvestSanityDamage = 5f;
+
+            int eventCount = 0;
+            stats.OnStatsChanged += () => eventCount++;
+
+            node.TakeDamage(999f, playerGo);
+
+            Assert.GreaterOrEqual(eventCount, 1, "DamageSanity phải fire OnStatsChanged");
+            Object.DestroyImmediate(item);
+        }
+
+        [Test]
         public void Harvest_SanityDamage_ClampsAtZero()
         {
             // SAN không âm.

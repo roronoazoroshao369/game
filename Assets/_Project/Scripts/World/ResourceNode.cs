@@ -85,7 +85,7 @@ namespace WildernessCultivation.World
             if (harvestHpHeal > 0f) ps.Heal(harvestHpHeal);
             if (harvestHungerRestore > 0f) ps.Eat(harvestHungerRestore);
             if (harvestThirstRestore > 0f) ps.Drink(harvestThirstRestore);
-            if (harvestSanityDamage > 0f) ps.Sanity = Mathf.Max(0f, ps.Sanity - harvestSanityDamage);
+            if (harvestSanityDamage > 0f) ps.DamageSanity(harvestSanityDamage);
         }
     }
 }

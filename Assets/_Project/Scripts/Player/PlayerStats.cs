@@ -509,6 +509,15 @@ namespace WildernessCultivation.Player
             OnStatsChanged?.Invoke();
         }
 
+        /// <summary>Trừ Sanity (clamp >= 0), fire OnStatsChanged. Dùng cho environmental
+        /// SAN drain (Death Lily harvest, ambient night fear) — không phải combat.</summary>
+        public void DamageSanity(float amount)
+        {
+            if (amount <= 0f) return;
+            Sanity = Mathf.Max(0f, Sanity - amount);
+            OnStatsChanged?.Invoke();
+        }
+
         public bool TryConsumeMana(float cost)
         {
             if (Mana < cost) return false;
