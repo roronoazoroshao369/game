@@ -125,6 +125,29 @@ namespace WildernessCultivation.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Snake_PlayerLeavesGiveUpRange_HidesAgain()
+        {
+            var snakeGo = MakeSnake(Vector3.zero, reveal: 2.5f, giveUp: 4f);
+            playerGo.transform.position = new Vector3(1.5f, 0, 0); // < reveal
+            yield return new WaitForFixedUpdate();
+            yield return null;
+            var snake = snakeGo.GetComponent<SnakeAI>();
+            Assert.IsTrue(snake.IsRevealed, "precondition: snake revealed");
+
+            playerGo.transform.position = new Vector3(20f, 0, 0); // > giveUp
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            Assert.IsFalse(snake.IsRevealed, "Player vượt giveUpRange → snake re-hide");
+            Assert.IsNull(snake.target, "Re-hide phải null target");
+            var sr = snakeGo.GetComponent<SpriteRenderer>();
+            var col = snakeGo.GetComponent<CircleCollider2D>();
+            Assert.IsFalse(sr.enabled, "Re-hide → sprite disabled");
+            Assert.IsFalse(col.enabled, "Re-hide → collider disabled");
+            Object.Destroy(snakeGo);
+        }
+
+        [UnityTest]
         public IEnumerator Snake_BiteAppliesPoisonStatus()
         {
             var poison = MakeEffect("Poison", hpTick: 1f);
