@@ -23,14 +23,12 @@ namespace WildernessCultivation.World
 
         void Awake()
         {
-            // Beacon cyan cho minimap — kì ngộ rực rỡ.
-            if (GetComponent<MinimapBeacon>() == null)
-            {
-                var beacon = gameObject.AddComponent<MinimapBeacon>();
-                beacon.beaconColor = new Color(0.3f, 0.85f, 1f, 0.95f);
-                beacon.childName = "SpiritSpringBeacon";
-                beacon.scale = 2.5f;
-            }
+            // Beacon cyan cho minimap. Phải gọi Initialize sau AddComponent vì
+            // PlayMode AddComponent fire MinimapBeacon.Awake đồng bộ → child sprite
+            // tạo với default yellow scale 2 nếu chỉ assign field sau đó.
+            var beacon = GetComponent<MinimapBeacon>();
+            if (beacon == null) beacon = gameObject.AddComponent<MinimapBeacon>();
+            beacon.Initialize(new Color(0.3f, 0.85f, 1f, 0.95f), 2.5f, "SpiritSpringBeacon");
         }
 
         public bool CanInteract(GameObject actor)
