@@ -112,6 +112,11 @@ jobs:
           buildName: WildernessCultivation
           allowDirtyBuild: true
           unityVersion: auto
+          # Custom build method: bootstraps MainScene from BootstrapWizard
+          # before invoking BuildPlayer. The repo intentionally does not
+          # commit MainScene.unity; without this method, the default
+          # GameCI build aborts with "Cannot build untitled scene".
+          buildMethod: WildernessCultivation.EditorTools.CIBuildScript.BuildAndroid
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

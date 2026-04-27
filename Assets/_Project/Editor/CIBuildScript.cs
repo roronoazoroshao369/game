@@ -45,6 +45,57 @@ namespace WildernessCultivation.EditorTools
             Debug.Log("[CIBuild] TMP Essentials imported.");
         }
 
+        /// <summary>Ensure the MainScene exists on disk and is registered in
+        /// EditorBuildSettings.scenes. The repo intentionally does not commit
+        /// MainScene.unity (it is regenerated deterministically by
+        /// <c>BootstrapWizard.Bootstrap()</c>), so on a fresh CI checkout we
+        /// must run the bootstrap before <c>BuildPlayer</c> — otherwise the
+        /// build aborts with "Cannot build untitled scene".</summary>
+        static void EnsureMainSceneBootstrapped()
+        {
+            const string mainScenePath = "Assets/Scenes/MainScene.unity";
+            if (File.Exists(mainScenePath))
+            {
+                Debug.Log("[CIBuild] MainScene already present — skipping bootstrap.");
+            }
+            else
+            {
+                Debug.Log("[CIBuild] MainScene not found — running BootstrapWizard.Bootstrap().");
+                BootstrapWizard.Bootstrap();
+            }
+        }
+
+        public static void BuildAndroid()
+        {
+            if (!TmpEssentialsImported) ImportTMPEssentials();
+            EnsureMainSceneBootstrapped();
+
+            const string outDir = "build/Android";
+            const string outName = "WildernessCultivation";
+            Directory.CreateDirectory(outDir);
+
+            var scenes = new[] { "Assets/Scenes/MainScene.unity" };
+            var opts = new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = Path.Combine(outDir, outName + ".apk"),
+                target = BuildTarget.Android,
+                targetGroup = BuildTargetGroup.Android,
+                options = BuildOptions.None
+            };
+
+            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            PlayerSettings.productName = "Wilderness Cultivation Demo";
+            PlayerSettings.companyName = "Devin Demo";
+            PlayerSettings.applicationIdentifier = "com.devindemo.wildernesscultivation";
+
+            var report = BuildPipeline.BuildPlayer(opts);
+            var summary = report.summary;
+            Debug.Log($"[CIBuild] Android Result={summary.result} Size={summary.totalSize} Errors={summary.totalErrors} Warnings={summary.totalWarnings}");
+            EditorApplication.Exit(summary.result == BuildResult.Succeeded ? 0 : 1);
+        }
+
         public static void BuildLinuxMono()
         {
             // Idempotent: probe for TMP Essentials by file presence (not via
@@ -54,6 +105,7 @@ namespace WildernessCultivation.EditorTools
             {
                 ImportTMPEssentials();
             }
+            EnsureMainSceneBootstrapped();
 
             const string outDir = "Builds/Linux64";
             const string outName = "WildernessCultivation";
