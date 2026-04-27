@@ -63,7 +63,10 @@ namespace WildernessCultivation.Tests.EditMode
             foreach (var e in entries)
                 data.items.Add(new InventorySlotData
                 {
-                    itemId = e.itemId, count = e.count, freshRemaining = -1f, durability = -1f,
+                    itemId = e.itemId,
+                    count = e.count,
+                    freshRemaining = -1f,
+                    durability = -1f,
                 });
             return data;
         }

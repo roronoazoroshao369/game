@@ -107,7 +107,11 @@ namespace WildernessCultivation.World
             {
                 if (!string.IsNullOrEmpty(tombstoneId))
                     Graveyard.Remove(tombstoneId);
-                Destroy(gameObject);
+                // EditMode test gọi Interact trực tiếp — Application.isPlaying == false.
+                // Destroy() throw trong EditMode; phải dùng DestroyImmediate. Production
+                // (PlayMode) vẫn dùng Destroy để khỏi block frame.
+                if (Application.isPlaying) Destroy(gameObject);
+                else DestroyImmediate(gameObject);
             }
             return true;
         }

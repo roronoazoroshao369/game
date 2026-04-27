@@ -42,7 +42,8 @@ namespace WildernessCultivation.World
 
             // Đủ điều kiện → roll xong (kể cả fail), spring tự destroy.
             if (auraVfx != null) auraVfx.Play();
-            Destroy(gameObject);
+            if (Application.isPlaying) Destroy(gameObject);
+            else DestroyImmediate(gameObject);
             return true;
         }
     }
