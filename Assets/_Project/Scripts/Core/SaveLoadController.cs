@@ -55,6 +55,12 @@ namespace WildernessCultivation.Core
 
         public void Save()
         {
+            // Skip autosave khi player chết — tránh race với permadeath delay window:
+            // ExecutePermadeath gọi SaveSystem.Delete() rồi defer reload 1.5s; trong
+            // window đó Update() có thể fire autosave → ghi save HP=0 → reload load
+            // dead state → Update() early-return vì IsDead → softlock.
+            if (playerStats != null && playerStats.IsDead) return;
+
             var data = new SaveData
             {
                 player = new PlayerSaveData
