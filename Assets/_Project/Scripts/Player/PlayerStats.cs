@@ -405,8 +405,11 @@ namespace WildernessCultivation.Player
             if (BodyTemp >= coldT) return;
             if (Time.time < nextSicknessAllowedAt) return;
 
+            // > thay >= để: (a) cap saturation 100% khi chance*dt >= 1 (lag spike), (b) tránh
+            // edge case Random.value = 1.0 (Unity docs: inclusive [0..1]) làm test với chance=1
+            // không deterministic (~1/8M flake).
             float roll = UnityEngine.Random.value;
-            if (roll >= sicknessChancePerSec * dt) return;
+            if (roll > sicknessChancePerSec * dt) return;
 
             if (statusManager == null) statusManager = GetComponent<StatusEffectManager>();
             if (statusManager == null) return;
