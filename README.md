@@ -7,7 +7,7 @@
 > Game **mobile open-world survival + tu tiên** lấy cảm hứng từ *Don't Starve Together* và *Quỷ Cốc Bát Hoang*.
 > Engine: **Unity 2022 LTS** · Nền tảng: **Android** (mở rộng iOS/PC sau).
 
-> ⚠️ Workflow `Build Android` và `Unity Tests` **sẽ FAIL** nếu repo chưa có `UNITY_LICENSE` secret (hoặc `UNITY_EMAIL`/`UNITY_PASSWORD`/`UNITY_SERIAL` cho Plus/Pro). Trước đây skip-noop để PR check xanh, nhưng cách đó che mất compile errors + 44 EditMode test failures (khám phá khi run thật trên Devin VM). Xem [GameCI section](#-gameci-auto-build-apk-trên-mỗi-pr) để add secret.
+> Workflow `Build Android` và `Unity Tests` yêu cầu repo có `UNITY_LICENSE` secret (hoặc `UNITY_EMAIL`/`UNITY_PASSWORD`/`UNITY_SERIAL` cho Plus/Pro). Trước đây skip-noop để PR check xanh, nhưng cách đó che mất compile errors + 44 EditMode test failures. Xem [GameCI section](#-gameci-auto-build-apk-trên-mỗi-pr) để add secret.
 
 ---
 
