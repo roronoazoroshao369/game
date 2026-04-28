@@ -57,6 +57,8 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
+
             bool active = time == null || time.isNight;
             if (spriteRenderer != null) spriteRenderer.enabled = active;
             if (col != null) col.enabled = active;
