@@ -20,6 +20,7 @@ using WildernessCultivation.Mobs;
 using WildernessCultivation.Player;
 using WildernessCultivation.Player.Status;
 using WildernessCultivation.UI;
+using WildernessCultivation.Vfx;
 using WildernessCultivation.World;
 
 namespace WildernessCultivation.EditorTools
@@ -151,6 +152,10 @@ namespace WildernessCultivation.EditorTools
                 ("icon_bamboo",        24, 24, new Color(0.65f, 0.85f, 0.55f)),
                 ("icon_mineral_ore",   24, 24, new Color(0.40f, 0.40f, 0.55f)),
                 ("ui_white",      4,  4, Color.white),
+                // Drop shadow ellipse (Vfx). Dùng làm child sprite cho mọi entity có DropShadow
+                // → cảm giác "grounded" giống Don't Starve. WritePng fallback chỉ là tile vuông;
+                // file shadow.png hand-authored sẽ được tools/gen_sprites.py tạo dạng ellipse.
+                ("shadow",       32, 16, new Color(0f, 0f, 0f, 0.45f)),
             };
 
             var dict = new Dictionary<string, Sprite>();
@@ -163,7 +168,8 @@ namespace WildernessCultivation.EditorTools
                 // Bootstrap idempotent on a fresh checkout while preserving real art.
                 if (!File.Exists(path))
                 {
-                    WritePng(path, d.w, d.h, d.color);
+                    if (d.id == "shadow") WriteEllipsePng(path, d.w, d.h, d.color);
+                    else WritePng(path, d.w, d.h, d.color);
                 }
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
                 var importer = (TextureImporter)AssetImporter.GetAtPath(path);
@@ -236,6 +242,35 @@ namespace WildernessCultivation.EditorTools
                 (byte)(c32.r * 0.5f), (byte)(c32.g * 0.5f), (byte)(c32.b * 0.5f), 255);
             for (int x = 0; x < w; x++) { pixels[x] = border; pixels[(h - 1) * w + x] = border; }
             for (int y = 0; y < h; y++) { pixels[y * w] = border; pixels[y * w + (w - 1)] = border; }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
+            File.WriteAllBytes(path, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+        }
+
+        // Ellipse PNG fill — shadow nên là ellipse mềm thay vì rect (rect viền 1px sẽ hiện ngay).
+        // Pixel trong ellipse: alpha = color.a; ngoài: alpha = 0. Aliased (point filter giữ pixel-art).
+        static void WriteEllipsePng(string path, int w, int h, Color color)
+        {
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            var pixels = new Color32[w * h];
+            var transparent = new Color32(0, 0, 0, 0);
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = transparent;
+
+            float cx = (w - 1) * 0.5f;
+            float cy = (h - 1) * 0.5f;
+            float rx = w * 0.5f;
+            float ry = h * 0.5f;
+            var c32 = (Color32)color;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float dx = (x - cx) / rx;
+                    float dy = (y - cy) / ry;
+                    if (dx * dx + dy * dy <= 1f) pixels[y * w + x] = c32;
+                }
+            }
             tex.SetPixels32(pixels);
             tex.Apply(false, false);
             File.WriteAllBytes(path, tex.EncodeToPNG());
@@ -560,9 +595,37 @@ namespace WildernessCultivation.EditorTools
                 LinhMushroom, BerryBush, Cactus, DeathLily, LinhBamboo, MineralRock;
         }
 
+        // Cache shadow sprite cho mọi BuildXxxPrefab gọi AttachDropShadow tiện hơn
+        // (không cần thread sprites["shadow"] qua từng helper).
+        static Sprite s_shadowSprite;
+
+        // Attach DropShadow component + sinh child renderer ngay (Awake không tự
+        // chạy lúc AddComponent trong Editor → phải gọi EnsureChild thủ công để
+        // child shadow đi vào prefab khi SaveAsPrefab).
+        static void AttachDropShadow(GameObject go,
+            float offsetY = -0.35f, float scaleX = 0.85f, float scaleY = 0.35f)
+        {
+            if (s_shadowSprite == null) return;
+            var ds = go.AddComponent<DropShadow>();
+            ds.shadowSprite = s_shadowSprite;
+            ds.localOffset = new Vector2(0f, offsetY);
+            ds.localScale = new Vector2(scaleX, scaleY);
+            ds.EnsureChild();
+        }
+
+        static void AttachWindSway(GameObject go,
+            float amplitudeDegrees = 2.5f, float frequencyHz = 0.7f)
+        {
+            var ws = go.AddComponent<WindSway>();
+            ws.amplitudeDegrees = amplitudeDegrees;
+            ws.frequencyHz = frequencyHz;
+        }
+
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
             Dictionary<string, ItemSO> items, Dictionary<string, StatusEffectSO> statusEffects)
         {
+            s_shadowSprite = sprites.TryGetValue("shadow", out var shadow) ? shadow : null;
+
             var bundle = new PrefabBundle();
             bundle.Player = BuildPlayerPrefab(sprites);
             bundle.Tree = BuildResourceNodePrefab("Tree", sprites["tree"], items["stick"], min: 2, max: 4, hp: 4f);
@@ -637,6 +700,8 @@ namespace WildernessCultivation.EditorTools
             var interact = go.GetComponent<InteractAction>();
             if (interact != null) interact.interactMask = ~0;
 
+            AttachDropShadow(go);
+
             return SaveAsPrefab(go, $"{PrefabsDir}/Player.prefab");
         }
 
@@ -657,6 +722,12 @@ namespace WildernessCultivation.EditorTools
             {
                 new ResourceNode.Drop { item = drop, min = min, max = max }
             };
+            // Tree → drop shadow rộng + wind sway để cảm giác sống. Rock không cần.
+            if (name == "Tree")
+            {
+                AttachDropShadow(go, offsetY: -0.6f, scaleX: 1.1f, scaleY: 0.4f);
+                AttachWindSway(go, amplitudeDegrees: 2.0f, frequencyHz: 0.6f);
+            }
             return SaveAsPrefab(go, $"{PrefabsDir}/{name}.prefab");
         }
 
@@ -678,6 +749,7 @@ namespace WildernessCultivation.EditorTools
             ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 2 } };
             // playerMask default 0 → RabbitAI không detect player. Set Everything cho placeholder.
             ai.playerMask = ~0;
+            AttachDropShadow(go, offsetY: -0.25f, scaleX: 0.65f, scaleY: 0.3f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Rabbit.prefab");
         }
 
@@ -704,6 +776,7 @@ namespace WildernessCultivation.EditorTools
             ai.xpReward = 12f;
             ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 3 } };
             ai.playerMask = ~0;
+            AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.95f, scaleY: 0.35f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Wolf.prefab");
         }
 
@@ -730,6 +803,7 @@ namespace WildernessCultivation.EditorTools
             ai.xpReward = 18f;
             ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 2 } };
             ai.playerMask = ~0;
+            AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.85f, scaleY: 0.32f);
             return SaveAsPrefab(go, $"{PrefabsDir}/FoxSpirit.prefab");
         }
 
@@ -760,6 +834,7 @@ namespace WildernessCultivation.EditorTools
                 new ResourceNode.Drop { item = tusk, min = 0, max = 1 },
             };
             ai.playerMask = ~0;
+            AttachDropShadow(go, offsetY: -0.35f, scaleX: 1.1f, scaleY: 0.4f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Boar.prefab");
         }
 
@@ -786,6 +861,7 @@ namespace WildernessCultivation.EditorTools
                 new ResourceNode.Drop { item = antler, min = 0, max = 1 },
             };
             ai.playerMask = ~0;
+            AttachDropShadow(go, offsetY: -0.35f, scaleX: 0.9f, scaleY: 0.35f);
             return SaveAsPrefab(go, $"{PrefabsDir}/DeerSpirit.prefab");
         }
 
@@ -809,6 +885,8 @@ namespace WildernessCultivation.EditorTools
             ai.xpReward = 4f;
             ai.drops = new[] { new ResourceNode.Drop { item = feather, min = 1, max = 2 } };
             ai.playerMask = ~0;
+            // Crow bay → shadow nhỏ, offsetY thấp hơn entity để cảm giác bay trên không.
+            AttachDropShadow(go, offsetY: -0.45f, scaleX: 0.55f, scaleY: 0.22f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Crow.prefab");
         }
 
@@ -844,6 +922,7 @@ namespace WildernessCultivation.EditorTools
                 new ResourceNode.Drop { item = venom, min = 0, max = 1 },
             };
             ai.playerMask = ~0;
+            AttachDropShadow(go, offsetY: -0.15f, scaleX: 0.7f, scaleY: 0.22f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Snake.prefab");
         }
 
@@ -873,6 +952,8 @@ namespace WildernessCultivation.EditorTools
             ai.xpReward = 6f;
             ai.drops = new[] { new ResourceNode.Drop { item = wing, min = 1, max = 1 } };
             ai.playerMask = ~0;
+            // Bat bay → shadow thấp hơn.
+            AttachDropShadow(go, offsetY: -0.5f, scaleX: 0.6f, scaleY: 0.22f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Bat.prefab");
         }
 
