@@ -23,6 +23,8 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
+
             // Flee from player if too close
             var hit = Physics2D.OverlapCircle(transform.position, fleeRange, playerMask);
             if (hit != null)

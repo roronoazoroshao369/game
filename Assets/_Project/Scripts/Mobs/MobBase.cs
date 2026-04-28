@@ -32,8 +32,19 @@ namespace WildernessCultivation.Mobs
         public SpriteRenderer spriteRenderer;
         public Animator animator;
 
+        [Header("LOD (perf)")]
+        [Tooltip("Khoảng cách tới player vượt quá đây → AI tick chậm + tạm tắt physics. <= 0 → tắt LOD.")]
+        public float lodFarDistance = 18f;
+        [Tooltip("Khi xa hơn lodFarDistance, chỉ tick 1/N frame (mặc định 8 → giảm 87% CPU cost cho mob xa).")]
+        public int lodSlowFrameMod = 8;
+
         protected Rigidbody2D rb;
         protected float attackReadyAt;
+
+        // Cache player ref tránh FindObjectOfType mỗi frame trên mọi mob.
+        // Reset mỗi frame để pickup khi player respawn / scene reload.
+        static Transform s_cachedPlayer;
+        static int s_cachedPlayerFrame = -1;
 
         protected virtual void Awake()
         {
@@ -41,6 +52,54 @@ namespace WildernessCultivation.Mobs
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             HP = maxHP;
+        }
+
+        /// <summary>
+        /// Pure logic của LOD gating. Returns true → mob nên tick AI frame này.
+        /// <paramref name="wantSimulated"/> báo physics nên bật / tắt.
+        /// Tách static để EditMode test gọi được không cần Rigidbody2D.
+        /// </summary>
+        public static bool ComputeShouldTick(
+            float distance, float lodFarDistance, int lodSlowFrameMod,
+            int frameCount, int instanceId, out bool wantSimulated)
+        {
+            if (lodFarDistance <= 0f) { wantSimulated = true; return true; }
+            bool isFar = distance > lodFarDistance;
+            wantSimulated = !isFar;
+            if (!isFar) return true;
+            int mod = Mathf.Max(1, lodSlowFrameMod);
+            // Cộng instanceId để các mob xa lệch pha nhau (tránh spike cùng frame).
+            return ((frameCount + instanceId) % mod) == 0;
+        }
+
+        static Transform GetPlayerCached()
+        {
+            if (s_cachedPlayerFrame == Time.frameCount && s_cachedPlayer != null) return s_cachedPlayer;
+            var ps = Object.FindObjectOfType<WildernessCultivation.Player.PlayerStats>();
+            s_cachedPlayer = ps != null ? ps.transform : null;
+            s_cachedPlayerFrame = Time.frameCount;
+            return s_cachedPlayer;
+        }
+
+        /// <summary>
+        /// Gọi ở đầu Update(). Trả false → mob skip frame này (xa player).
+        /// Tự đồng bộ rb.simulated với khoảng cách. Mob không có player ref → luôn tick.
+        /// </summary>
+        protected bool ShouldTickAI()
+        {
+            var p = GetPlayerCached();
+            if (p == null) return true;
+            float dist = Vector2.Distance(p.position, transform.position);
+            bool tick = ComputeShouldTick(
+                dist, lodFarDistance, lodSlowFrameMod,
+                Time.frameCount, GetInstanceID(),
+                out bool wantSim);
+            if (rb != null && rb.simulated != wantSim)
+            {
+                if (!wantSim) rb.velocity = Vector2.zero;
+                rb.simulated = wantSim;
+            }
+            return tick;
         }
 
         public virtual void TakeDamage(float amount, GameObject source)

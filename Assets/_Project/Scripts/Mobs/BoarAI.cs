@@ -57,6 +57,8 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
+
             switch (State)
             {
                 case BoarState.Wander: TickWander(); break;

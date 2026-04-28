@@ -17,6 +17,7 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
             if (!TryFindPlayer()) { StopMoving(); return; }
 
             float dist = Vector2.Distance(target.position, transform.position);

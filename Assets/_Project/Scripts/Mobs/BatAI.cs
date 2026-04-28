@@ -35,6 +35,8 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
+
             // Day = hidden, night = active. Same pattern FoxSpiritAI.
             bool active = time == null || time.isNight;
             if (spriteRenderer != null) spriteRenderer.enabled = active;

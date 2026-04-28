@@ -36,6 +36,8 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
+
             // Sight: player trong sightRange → cập nhật lastSeenAt.
             var hit = Physics2D.OverlapCircle(transform.position, sightRange, playerMask);
             if (hit != null)

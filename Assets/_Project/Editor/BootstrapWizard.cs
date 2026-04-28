@@ -4,8 +4,10 @@ using System.IO;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.U2D;
 using UnityEngine.UI;
 using WildernessCultivation.Audio;
 using WildernessCultivation.CameraFx;
@@ -47,6 +49,7 @@ namespace WildernessCultivation.EditorTools
             {
                 EnsureDirs();
                 var sprites = CreateSprites();
+                CreateSpriteAtlas();
                 var items = CreateItems(sprites);
                 var recipes = CreateRecipes(items);
                 var spiritRoots = CreateSpiritRoots();
@@ -176,6 +179,50 @@ namespace WildernessCultivation.EditorTools
                 dict[d.id] = sp;
             }
             return dict;
+        }
+
+        // ---------------- SPRITE ATLAS (perf) ----------------
+        // Gộp tất cả PNG trong SpritesDir vào 1 atlas → SpriteRenderer dùng cùng atlas
+        // texture sẽ batch chung 1 draw call thay vì 1 draw call/sprite. Quan trọng cho
+        // mobile vì có hàng nghìn prop spawn từ WorldGenerator.
+        static void CreateSpriteAtlas()
+        {
+            const string atlasPath = SpritesDir + "/WorldAtlas.spriteatlasv2";
+            try
+            {
+                // Xoá cũ để re-run idempotent (Add() append, không replace).
+                if (File.Exists(atlasPath))
+                    AssetDatabase.DeleteAsset(atlasPath);
+
+                var atlas = new SpriteAtlasAsset();
+                atlas.SetIncludeInBuild(true);
+                atlas.SetPackingSettings(new SpriteAtlasPackingSettings
+                {
+                    padding = 2,
+                    enableTightPacking = false,
+                    enableRotation = false,
+                });
+                atlas.SetTextureSettings(new SpriteAtlasTextureSettings
+                {
+                    filterMode = FilterMode.Point,        // pixel-art
+                    generateMipMaps = false,
+                    readable = false,
+                    sRGB = true,
+                });
+
+                // Add toàn bộ folder Sprites (Unity sẽ pick mọi sprite con).
+                var folder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(SpritesDir);
+                if (folder != null)
+                    atlas.Add(new Object[] { folder });
+
+                SpriteAtlasAsset.Save(atlas, atlasPath);
+                AssetDatabase.ImportAsset(atlasPath, ImportAssetOptions.ForceUpdate);
+            }
+            catch (System.Exception ex)
+            {
+                // Atlas là tối ưu — fail không nên block bootstrap. Chỉ warn.
+                Debug.LogWarning($"[BootstrapWizard] CreateSpriteAtlas skipped: {ex.Message}");
+            }
         }
 
         static void WritePng(string path, int w, int h, Color color)

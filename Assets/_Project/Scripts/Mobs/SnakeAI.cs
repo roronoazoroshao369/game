@@ -56,6 +56,8 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
+
             // Reveal check: player vào revealRange.
             var hit = Physics2D.OverlapCircle(transform.position, revealRange, playerMask);
             if (hit != null)

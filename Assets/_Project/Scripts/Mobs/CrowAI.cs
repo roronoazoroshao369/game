@@ -31,6 +31,8 @@ namespace WildernessCultivation.Mobs
 
         void Update()
         {
+            if (!ShouldTickAI()) return;
+
             // Player gần → flit ngay sang patrol point mới (xa player), rồi tiếp tục patrol bình thường.
             var hit = Physics2D.OverlapCircle(transform.position, playerNoticeRange, playerMask);
             if (hit != null)
