@@ -27,14 +27,29 @@ namespace WildernessCultivation.Vfx
         public int sortingOrderOffset = -1;
         [Tooltip("Tên child GameObject (idempotent: nếu đã tồn tại thì re-use).")]
         public string childName = "DropShadow";
+        [Tooltip("Counter-rotate child mỗi LateUpdate để shadow luôn flat trên đất " +
+            "kể cả khi parent xoay (vd: WindSway). Tắt nếu chắc chắn parent không xoay.")]
+        public bool keepFlat = true;
 
         SpriteRenderer cachedRenderer;
+        Quaternion hostBaseRotation = Quaternion.identity;
 
         public SpriteRenderer Renderer => cachedRenderer;
 
         void Awake()
         {
+            hostBaseRotation = transform.localRotation;
             EnsureChild();
+        }
+
+        void LateUpdate()
+        {
+            if (!keepFlat || cachedRenderer == null) return;
+            // Counter-rotate: shadow giữ rotation = hostBaseRotation trong không gian
+            // parent. Nếu parent xoay (WindSway) thì shadow tự bù lại. Khi parent
+            // không xoay, delta = identity → assign no-op rẻ (1 quat/frame).
+            cachedRenderer.transform.localRotation =
+                Quaternion.Inverse(transform.localRotation) * hostBaseRotation;
         }
 
         /// <summary>

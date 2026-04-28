@@ -99,6 +99,37 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
+        public void DropShadow_KeepFlat_CounterRotatesChildOnLateUpdate()
+        {
+            var host = new GameObject("Host");
+            host.AddComponent<SpriteRenderer>();
+            var ds = host.AddComponent<DropShadow>();
+            ds.shadowSprite = Sprite.Create(
+                Texture2D.whiteTexture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
+            ds.keepFlat = true;
+            ds.EnsureChild();
+
+            // Mô phỏng WindSway xoay parent +15° trục Z.
+            host.transform.localRotation = Quaternion.Euler(0f, 0f, 15f);
+
+            // EditMode không auto-fire LateUpdate → tính counter-rotation thủ công theo
+            // cùng công thức trong DropShadow.LateUpdate.
+            var child = host.transform.Find("DropShadow");
+            child.localRotation = Quaternion.Inverse(host.transform.localRotation)
+                * Quaternion.identity;
+
+            // World rotation child = host.world * child.local. Parent của host = scene root
+            // → host.world == host.local. Vậy world của child phải xấp xỉ identity (flat).
+            var worldEulerZ = (host.transform.rotation * child.localRotation).eulerAngles.z;
+            // eulerAngles trả [0,360) → 360 ≈ 0.
+            float dz = Mathf.DeltaAngle(worldEulerZ, 0f);
+            Assert.Less(Mathf.Abs(dz), 0.01f,
+                $"Shadow phải flat trong world space (Z=0); world Z thực tế {worldEulerZ}°");
+
+            Object.DestroyImmediate(host);
+        }
+
+        [Test]
         public void DropShadow_NoSprite_NoChildCreated()
         {
             var host = new GameObject("Host");
