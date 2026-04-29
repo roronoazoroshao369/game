@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using WildernessCultivation.Mobs;
 
 namespace WildernessCultivation.World
@@ -16,8 +17,10 @@ namespace WildernessCultivation.World
         [TextArea] public string description;
 
         [Header("Ground")]
-        [Tooltip("Tile nền (sprite cỏ / cát / lá rụng …). Optional.")]
+        [Tooltip("Tile nền (sprite cỏ / cát / lá rụng …). Optional. Chỉ dùng khi WorldGenerator.groundTilemap == null (legacy per-tile Instantiate path).")]
         public GameObject groundPrefab;
+        [Tooltip("Tile asset cho Tilemap-based ground rendering. Ưu tiên hơn groundPrefab khi WorldGenerator.groundTilemap != null. Render hiệu quả hơn nhiều ở map lớn (1 SpriteRenderer batch thay vì N×M GameObjects).")]
+        public TileBase groundTile;
 
         [Header("Resource prefabs")]
         public GameObject treePrefab;

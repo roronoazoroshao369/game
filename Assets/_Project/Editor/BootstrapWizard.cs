@@ -7,6 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Tilemaps;
 using UnityEngine.U2D;
 using UnityEngine.UI;
 using WildernessCultivation.Audio;
@@ -79,7 +80,8 @@ namespace WildernessCultivation.EditorTools
             {
                 SpritesDir, PrefabsDir, SOsDir, ScenesDir,
                 SOsDir + "/Items", SOsDir + "/Recipes", SOsDir + "/SpiritRoots",
-                SOsDir + "/Biomes", SOsDir + "/StatusEffects", SOsDir + "/Database"
+                SOsDir + "/Biomes", SOsDir + "/StatusEffects", SOsDir + "/Database",
+                SOsDir + "/Tiles"
             })
             {
                 if (!AssetDatabase.IsValidFolder(d))
@@ -533,6 +535,26 @@ namespace WildernessCultivation.EditorTools
                 default:
                     return System.Array.Empty<BiomeSO.ExtraNode>();
             }
+        }
+
+        // ---------------- TILES ----------------
+        /// <summary>
+        /// Tạo (hoặc load) Tile asset từ sprite cho Tilemap-based ground rendering. Dùng thay
+        /// per-tile Instantiate ở WorldGenerator để giảm hàng ngàn GameObject ở map lớn.
+        /// </summary>
+        static Tile CreateGroundTile(string id, Sprite sprite)
+        {
+            string path = $"{SOsDir}/Tiles/Tile_{id}.asset";
+            var tile = AssetDatabase.LoadAssetAtPath<Tile>(path);
+            if (tile == null)
+            {
+                tile = ScriptableObject.CreateInstance<Tile>();
+                AssetDatabase.CreateAsset(tile, path);
+            }
+            tile.sprite = sprite;
+            tile.colliderType = Tile.ColliderType.None;
+            EditorUtility.SetDirty(tile);
+            return tile;
         }
 
         // ---------------- ITEM DATABASE ----------------
@@ -1187,12 +1209,30 @@ namespace WildernessCultivation.EditorTools
             wg.treePrefab = prefabs.Tree;
             wg.rockPrefab = prefabs.Rock;
             wg.waterSpringPrefab = prefabs.WaterSpring;
+
+            // Tilemap-based ground render: Grid > Ground (Tilemap + TilemapRenderer). Render
+            // 1 batch thay vì N×M GameObjects. SortingOrder âm để mob/player/resource đè lên.
+            var gridGo = new GameObject("Grid", typeof(Grid));
+            gridGo.transform.SetParent(worldGo.transform, false);
+            var groundGo = new GameObject("Ground", typeof(Tilemap), typeof(TilemapRenderer));
+            groundGo.transform.SetParent(gridGo.transform, false);
+            var groundTilemap = groundGo.GetComponent<Tilemap>();
+            var groundRenderer = groundGo.GetComponent<TilemapRenderer>();
+            groundRenderer.sortingOrder = -10;
+            wg.groundTilemap = groundTilemap;
+
+            // Default ground tile từ sprite "ground" placeholder. Per-biome tile share cùng asset
+            // ở MVP — artist có thể thay biome.groundTile bằng Tile khác (sand / leaf / cobble) sau.
+            var defaultGroundTile = CreateGroundTile("ground_default", sprites["ground"]);
+            wg.legacyGroundTile = defaultGroundTile;
+
             // Per-biome prefabs (BiomeSO chứa từng prefab riêng).
             foreach (var b in biomes)
             {
                 b.treePrefab = prefabs.Tree;
                 b.rockPrefab = prefabs.Rock;
                 b.waterSpringPrefab = prefabs.WaterSpring;
+                b.groundTile = defaultGroundTile;
                 b.extraNodes = BuildExtraNodesFor(b.biomeId, prefabs);
                 EditorUtility.SetDirty(b);
             }
