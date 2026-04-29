@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using WildernessCultivation.Core;
 using WildernessCultivation.Mobs;
 
@@ -26,6 +27,12 @@ namespace WildernessCultivation.World
         public BiomeSO[] biomes;
         [Tooltip("Scale của Perlin map dùng để chọn biome (giá trị nhỏ → vùng biome rộng).")]
         public float biomeNoiseScale = 0.025f;
+
+        [Header("Ground rendering (Tilemap — preferred)")]
+        [Tooltip("Tilemap dùng để vẽ nền. Khi set: Generate() gọi SetTile per cell (1 SpriteRenderer batch) thay vì Instantiate per tile — tiết kiệm hàng ngàn GameObject ở map lớn. Bỏ trống để fallback per-tile Instantiate (legacy).")]
+        public Tilemap groundTilemap;
+        [Tooltip("Tile asset fallback cho Tilemap khi 'biomes' rỗng (chế độ legacy single-biome).")]
+        public TileBase legacyGroundTile;
 
         [Header("Legacy single-biome fallback (chỉ dùng khi 'biomes' rỗng)")]
         public GameObject groundPrefab;
@@ -68,9 +75,7 @@ namespace WildernessCultivation.World
 
         void Start()
         {
-            if (contentParent == null) contentParent = transform;
-            Random.InitState(seed);
-            Generate();
+            GenerateNow();
 
             if (player != null)
                 player.position = new Vector3(size.x * 0.5f, size.y * 0.5f, 0f);
@@ -79,6 +84,18 @@ namespace WildernessCultivation.World
 
             SpawnTombstones();
             SpawnSpiritSpring();
+        }
+
+        /// <summary>
+        /// Public hook để EditMode test gọi Generate mà không kích hoạt full Start (mob spawner /
+        /// tombstone / player teleport — không relevant cho test ground rendering).
+        /// Cũng dùng được trong runtime nếu cần regen world (nhớ clear contentParent + tilemap trước).
+        /// </summary>
+        public void GenerateNow()
+        {
+            if (contentParent == null) contentParent = transform;
+            Random.InitState(seed);
+            Generate();
         }
 
         /// <summary>
@@ -160,9 +177,17 @@ namespace WildernessCultivation.World
                     float n = Mathf.PerlinNoise((x + seed) * ResourceNoiseScale, (y + seed) * ResourceNoiseScale);
                     BiomeSO biome = useBiomes ? PickBiomeFor(x, y) : null;
 
-                    GameObject ground = biome != null ? biome.groundPrefab : groundPrefab;
-                    if (ground != null)
-                        Instantiate(ground, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, contentParent);
+                    TileBase tile = biome != null ? biome.groundTile : legacyGroundTile;
+                    if (groundTilemap != null && tile != null)
+                    {
+                        groundTilemap.SetTile(new Vector3Int(x, y, 0), tile);
+                    }
+                    else
+                    {
+                        GameObject ground = biome != null ? biome.groundPrefab : groundPrefab;
+                        if (ground != null)
+                            Instantiate(ground, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, contentParent);
+                    }
 
                     GameObject tree = biome != null ? biome.treePrefab : treePrefab;
                     GameObject rock = biome != null ? biome.rockPrefab : rockPrefab;
