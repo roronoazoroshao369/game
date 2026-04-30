@@ -40,11 +40,14 @@ namespace WildernessCultivation.Cultivation
             stats = GetComponent<PlayerStats>();
             realm = GetComponent<RealmSystem>();
             controller = GetComponent<PlayerController>();
+            ServiceLocator.Register<MeditationAction>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<MeditationAction>(this);
 
         void Start()
         {
-            time = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            time = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
         }
 
         void Update()

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WildernessCultivation.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using WildernessCultivation.Items;
@@ -55,8 +56,8 @@ namespace WildernessCultivation.UI
         void Start()
         {
             if (closeButton != null) closeButton.onClick.AddListener(Close);
-            if (playerInventory == null) playerInventory = FindObjectOfType<Inventory>();
-            if (playerController == null) playerController = FindObjectOfType<PlayerController>();
+            if (playerInventory == null) playerInventory = ServiceLocator.Get<Inventory>();
+            if (playerController == null) playerController = ServiceLocator.Get<PlayerController>();
         }
 
         void Update()

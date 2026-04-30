@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Items;
 using WildernessCultivation.World;
 
@@ -40,7 +41,10 @@ namespace WildernessCultivation.Player
             lightSource.warmthBonus = warmthBonus;
             lightSource.emitting = false;
             UpdateVisual();
+            ServiceLocator.Register<TorchAction>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<TorchAction>(this);
 
         void Update()
         {

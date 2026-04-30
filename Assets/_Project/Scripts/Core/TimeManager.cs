@@ -8,6 +8,13 @@ namespace WildernessCultivation.Core
     /// </summary>
     public class TimeManager : MonoBehaviour
     {
+        void Awake()
+        {
+            ServiceLocator.Register<TimeManager>(this);
+        }
+
+        void OnDestroy() => ServiceLocator.Unregister<TimeManager>(this);
+
         [Header("Cycle")]
         [Tooltip("Một ngày = bao nhiêu giây thực. Mặc định 8 phút.")]
         public float dayLengthSeconds = 480f;

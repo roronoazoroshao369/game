@@ -1,4 +1,5 @@
 using System.Collections;
+using WildernessCultivation.Core;
 using UnityEngine;
 using WildernessCultivation.Items;
 using WildernessCultivation.World;
@@ -28,7 +29,10 @@ namespace WildernessCultivation.Player
         {
             if (inventory == null) inventory = GetComponentInParent<Inventory>();
             if (controller == null) controller = GetComponent<PlayerController>();
+            ServiceLocator.Register<FishingAction>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<FishingAction>(this);
 
         void Update()
         {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WildernessCultivation.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using WildernessCultivation.Items;
@@ -22,8 +23,8 @@ namespace WildernessCultivation.UI
 
         void Start()
         {
-            if (inventory == null) inventory = FindObjectOfType<Inventory>();
-            if (playerStats == null) playerStats = FindObjectOfType<PlayerStats>();
+            if (inventory == null) inventory = ServiceLocator.Get<Inventory>();
+            if (playerStats == null) playerStats = ServiceLocator.Get<PlayerStats>();
             if (inventory == null) return;
 
             for (int i = 0; i < inventory.Slots.Count; i++)

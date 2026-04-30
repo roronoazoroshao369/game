@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player.Status;
@@ -56,7 +57,10 @@ namespace WildernessCultivation.Player
             if (inventory == null) inventory = GetComponent<Inventory>();
             spiritRoot = GetComponent<SpiritRoot>();
             statusManager = GetComponent<StatusEffectManager>();
+            ServiceLocator.Register<PlayerController>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<PlayerController>(this);
 
         /// <summary>maxCarryWeight có cộng modifier linh căn (Thổ x1.5 …).</summary>
         public float EffectiveMaxCarryWeight => maxCarryWeight * (spiritRoot != null ? spiritRoot.CarryMul : 1f);

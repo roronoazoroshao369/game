@@ -29,8 +29,8 @@ namespace WildernessCultivation.UI
 
         void Start()
         {
-            if (timeManager == null) timeManager = FindObjectOfType<TimeManager>();
-            if (spiritRoot == null) spiritRoot = FindObjectOfType<SpiritRoot>();
+            if (timeManager == null) timeManager = ServiceLocator.Get<TimeManager>();
+            if (spiritRoot == null) spiritRoot = ServiceLocator.Get<SpiritRoot>();
             Refresh();
         }
 

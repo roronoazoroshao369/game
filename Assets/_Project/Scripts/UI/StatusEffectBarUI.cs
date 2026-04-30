@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WildernessCultivation.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using WildernessCultivation.Player.Status;
@@ -20,7 +21,7 @@ namespace WildernessCultivation.UI
 
         void Start()
         {
-            if (manager == null) manager = FindObjectOfType<StatusEffectManager>();
+            if (manager == null) manager = ServiceLocator.Get<StatusEffectManager>();
             if (manager != null) manager.OnEffectsChanged += Rebuild;
             Rebuild();
         }

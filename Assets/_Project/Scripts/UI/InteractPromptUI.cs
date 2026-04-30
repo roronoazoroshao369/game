@@ -1,4 +1,5 @@
 using TMPro;
+using WildernessCultivation.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using WildernessCultivation.Player;
@@ -19,7 +20,7 @@ namespace WildernessCultivation.UI
 
         void Start()
         {
-            if (interactAction == null) interactAction = FindObjectOfType<InteractAction>();
+            if (interactAction == null) interactAction = ServiceLocator.Get<InteractAction>();
             if (button != null) button.onClick.AddListener(OnInteractButton);
             Hide();
         }

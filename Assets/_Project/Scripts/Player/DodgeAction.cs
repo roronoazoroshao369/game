@@ -1,4 +1,5 @@
 using System.Collections;
+using WildernessCultivation.Core;
 using UnityEngine;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.UI;
@@ -53,7 +54,10 @@ namespace WildernessCultivation.Player
             stats = GetComponent<PlayerStats>();
             rb = GetComponent<Rigidbody2D>();
             spiritRoot = GetComponent<SpiritRoot>();
+            ServiceLocator.Register<DodgeAction>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<DodgeAction>(this);
 
         void Update()
         {

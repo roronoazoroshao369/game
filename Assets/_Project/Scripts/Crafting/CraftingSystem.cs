@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WildernessCultivation.Core;
 using UnityEngine;
 using WildernessCultivation.Items;
 
@@ -22,7 +23,13 @@ namespace WildernessCultivation.Crafting
         // Track recipe đang nấu để deliver output kể cả khi GameObject bị disable mid-cook.
         readonly List<RecipeSO> pendingCooks = new();
 
-        void Awake() { inv = GetComponent<Inventory>(); }
+        void Awake()
+        {
+            inv = GetComponent<Inventory>();
+            ServiceLocator.Register<CraftingSystem>(this);
+        }
+
+        void OnDestroy() => ServiceLocator.Unregister<CraftingSystem>(this);
 
         // Lazy-resolve so CanCraft / TryCraft remain safe if a UI component's
         // OnEnable on a different GameObject runs before our Awake.

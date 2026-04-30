@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Audio;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Cultivation;
@@ -44,7 +45,10 @@ namespace WildernessCultivation.Player
             stats = GetComponent<PlayerStats>();
             spiritRoot = GetComponent<SpiritRoot>();
             baseMeleeDamage = meleeDamage;
+            ServiceLocator.Register<PlayerCombat>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<PlayerCombat>(this);
 
         /// <summary>Reset meleeDamage về giá trị gốc (Awake-time). Gọi từ SaveLoadController
         /// trước <see cref="WildernessCultivation.Cultivation.RealmSystem.ReapplyAccumulatedBonuses"/>

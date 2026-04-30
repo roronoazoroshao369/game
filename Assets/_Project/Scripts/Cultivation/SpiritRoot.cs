@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 
 namespace WildernessCultivation.Cultivation
 {
@@ -30,7 +31,10 @@ namespace WildernessCultivation.Cultivation
             {
                 current = SpiritRootSO.CreateDefault();
             }
+            ServiceLocator.Register<SpiritRoot>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<SpiritRoot>(this);
 
         public void SetSpiritRoot(SpiritRootSO root)
         {
