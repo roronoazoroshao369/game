@@ -1,4 +1,5 @@
 using System;
+using WildernessCultivation.Core;
 using UnityEngine;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.Items;
@@ -43,10 +44,13 @@ namespace WildernessCultivation.UI
 
         void Awake()
         {
-            if (inventory == null) inventory = FindObjectOfType<Inventory>();
-            if (realm == null) realm = FindObjectOfType<RealmSystem>();
-            if (meditation == null) meditation = FindObjectOfType<MeditationAction>();
+            if (inventory == null) inventory = ServiceLocator.Get<Inventory>();
+            if (realm == null) realm = ServiceLocator.Get<RealmSystem>();
+            if (meditation == null) meditation = ServiceLocator.Get<MeditationAction>();
+            ServiceLocator.Register<DemoObjectivesTracker>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<DemoObjectivesTracker>(this);
 
         void OnEnable()
         {

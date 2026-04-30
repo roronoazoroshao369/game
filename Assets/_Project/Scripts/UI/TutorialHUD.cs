@@ -68,7 +68,7 @@ namespace WildernessCultivation.UI
 
         void Awake()
         {
-            if (tracker == null) tracker = FindObjectOfType<DemoObjectivesTracker>();
+            if (tracker == null) tracker = ServiceLocator.Get<DemoObjectivesTracker>();
             if (welcomeBodyText != null) welcomeBodyText.text = welcomeMessage;
             if (welcomePanel != null) welcomePanel.SetActive(showWelcomeOnStart);
             if (victoryPanel != null) victoryPanel.SetActive(false);

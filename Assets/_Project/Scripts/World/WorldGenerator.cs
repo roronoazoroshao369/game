@@ -69,9 +69,14 @@ namespace WildernessCultivation.World
             if (Instance != null && Instance != this)
                 Debug.LogWarning("[WorldGenerator] >1 instance trong scene — chỉ giữ instance mới nhất.");
             Instance = this;
+            ServiceLocator.Register<WorldGenerator>(this);
         }
 
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        void OnDestroy()
+        {
+            ServiceLocator.Unregister<WorldGenerator>(this);
+            if (Instance == this) Instance = null;
+        }
 
         void Start()
         {

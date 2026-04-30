@@ -35,13 +35,13 @@ namespace WildernessCultivation.UI
 
         float toastHideAt;
 
-        // Cache modal để không FindObjectOfType mỗi frame khi check collision Esc.
+        // Cache modal để không ServiceLocator.Get mỗi frame khi check collision Esc.
         StorageChestUI cachedChestUI;
 
         void Awake()
         {
-            if (gameManager == null) gameManager = FindObjectOfType<GameManager>();
-            if (saveLoad == null) saveLoad = FindObjectOfType<SaveLoadController>();
+            if (gameManager == null) gameManager = ServiceLocator.Get<GameManager>();
+            if (saveLoad == null) saveLoad = ServiceLocator.Get<SaveLoadController>();
             if (overlay != null) overlay.SetActive(false);
             if (toastText != null) toastText.gameObject.SetActive(false);
 
@@ -90,7 +90,7 @@ namespace WildernessCultivation.UI
 
         bool IsAnotherModalOpen()
         {
-            if (cachedChestUI == null) cachedChestUI = FindObjectOfType<StorageChestUI>();
+            if (cachedChestUI == null) cachedChestUI = ServiceLocator.Get<StorageChestUI>();
             if (cachedChestUI != null && cachedChestUI.panel != null && cachedChestUI.panel.activeSelf)
                 return true;
             return false;

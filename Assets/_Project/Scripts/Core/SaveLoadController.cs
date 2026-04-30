@@ -11,6 +11,13 @@ namespace WildernessCultivation.Core
     /// </summary>
     public class SaveLoadController : MonoBehaviour
     {
+        void Awake()
+        {
+            ServiceLocator.Register<SaveLoadController>(this);
+        }
+
+        void OnDestroy() => ServiceLocator.Unregister<SaveLoadController>(this);
+
         public PlayerStats playerStats;
         public PlayerCombat playerCombat;
         public RealmSystem realm;
@@ -31,13 +38,13 @@ namespace WildernessCultivation.Core
 
         void Start()
         {
-            if (playerStats == null) playerStats = FindObjectOfType<PlayerStats>();
-            if (playerCombat == null) playerCombat = FindObjectOfType<PlayerCombat>();
-            if (realm == null) realm = FindObjectOfType<RealmSystem>();
-            if (inventory == null) inventory = FindObjectOfType<Inventory>();
-            if (timeManager == null) timeManager = FindObjectOfType<TimeManager>();
-            if (worldGenerator == null) worldGenerator = FindObjectOfType<WorldGenerator>();
-            if (spiritRoot == null) spiritRoot = FindObjectOfType<SpiritRoot>();
+            if (playerStats == null) playerStats = ServiceLocator.Get<PlayerStats>();
+            if (playerCombat == null) playerCombat = ServiceLocator.Get<PlayerCombat>();
+            if (realm == null) realm = ServiceLocator.Get<RealmSystem>();
+            if (inventory == null) inventory = ServiceLocator.Get<Inventory>();
+            if (timeManager == null) timeManager = ServiceLocator.Get<TimeManager>();
+            if (worldGenerator == null) worldGenerator = ServiceLocator.Get<WorldGenerator>();
+            if (spiritRoot == null) spiritRoot = ServiceLocator.Get<SpiritRoot>();
 
             if (autoLoadOnStart) LoadAndApply();
 

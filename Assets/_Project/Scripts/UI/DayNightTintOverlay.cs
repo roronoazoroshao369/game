@@ -41,14 +41,14 @@ namespace WildernessCultivation.UI
         {
             img = GetComponent<Image>();
             img.raycastTarget = false; // overlay không chặn click UI bên dưới
-            if (timeManager == null) timeManager = FindObjectOfType<TimeManager>();
+            if (timeManager == null) timeManager = ServiceLocator.Get<TimeManager>();
         }
 
         void Update()
         {
             if (timeManager == null)
             {
-                timeManager = FindObjectOfType<TimeManager>();
+                timeManager = ServiceLocator.Get<TimeManager>();
                 if (timeManager == null) return;
             }
             img.color = SampleTint(timeManager.currentTime01);

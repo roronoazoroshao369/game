@@ -67,6 +67,7 @@ namespace WildernessCultivation.Audio
 
             BuildProceduralSfx();
             ApplyVolumes();
+            ServiceLocator.Register<AudioManager>(this);
         }
 
         RealmSystem subscribedRealm;
@@ -80,11 +81,11 @@ namespace WildernessCultivation.Audio
         void Start()
         {
             // Subscribe breakthrough SFX qua event có sẵn của RealmSystem.
-            subscribedRealm = FindObjectOfType<RealmSystem>();
+            subscribedRealm = ServiceLocator.Get<RealmSystem>();
             if (subscribedRealm != null)
                 subscribedRealm.OnBreakthroughAttempted += OnBreakthroughAttempted;
 
-            subscribedGm = GameManager.Instance != null ? GameManager.Instance : FindObjectOfType<GameManager>();
+            subscribedGm = GameManager.Instance != null ? GameManager.Instance : ServiceLocator.Get<GameManager>();
         }
 
         void Update()
@@ -110,6 +111,7 @@ namespace WildernessCultivation.Audio
             if (subscribedRealm != null)
                 subscribedRealm.OnBreakthroughAttempted -= OnBreakthroughAttempted;
             if (Instance == this) Instance = null;
+            ServiceLocator.Unregister<AudioManager>(this);
         }
 
         void OnBreakthroughAttempted(bool success)

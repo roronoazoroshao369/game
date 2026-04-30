@@ -1,4 +1,5 @@
 using System;
+using WildernessCultivation.Core;
 using UnityEngine;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player;
@@ -67,7 +68,10 @@ namespace WildernessCultivation.Cultivation
             combat = GetComponent<PlayerCombat>();
             spiritRootHolder = GetComponent<SpiritRoot>();
             if (realms == null || realms.Length == 0) realms = DefaultRealms();
+            ServiceLocator.Register<RealmSystem>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<RealmSystem>(this);
 
         public RealmDefinition Current => realms[Mathf.Clamp(currentTier, 0, realms.Length - 1)];
         public bool HasNext => currentTier + 1 < realms.Length;

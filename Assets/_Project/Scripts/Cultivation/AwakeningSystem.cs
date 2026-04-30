@@ -37,11 +37,14 @@ namespace WildernessCultivation.Cultivation
             realm = GetComponent<RealmSystem>();
             if (config == null) config = AwakeningConfigSO.CreateDefault();
             if (testSeed >= 0) rng = new System.Random(testSeed);
+            ServiceLocator.Register<AwakeningSystem>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<AwakeningSystem>(this);
 
         void Start()
         {
-            timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
         }
 
         /// <summary>Inject TimeManager cho EditMode test (tránh phụ thuộc Start).</summary>

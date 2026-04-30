@@ -166,11 +166,14 @@ namespace WildernessCultivation.Player
             statusManager = GetComponent<StatusEffectManager>();
             baseMaxHP = maxHP;
             baseMaxMana = maxMana;
+            ServiceLocator.Register<PlayerStats>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<PlayerStats>(this);
 
         void Start()
         {
-            timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
             ApplySpiritRootMaxHP();
         }
 

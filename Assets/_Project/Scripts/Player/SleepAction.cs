@@ -39,11 +39,17 @@ namespace WildernessCultivation.Player
         float prevTimeScale;
         float prevHP;
 
-        void Awake() { stats = GetComponent<PlayerStats>(); }
+        void Awake()
+        {
+            stats = GetComponent<PlayerStats>();
+            ServiceLocator.Register<SleepAction>(this);
+        }
+
+        void OnDestroy() => ServiceLocator.Unregister<SleepAction>(this);
 
         void Start()
         {
-            time = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            time = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
         }
 
         void Update()

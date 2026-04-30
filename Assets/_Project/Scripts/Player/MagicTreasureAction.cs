@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Cultivation;
 using WildernessCultivation.Items;
 
@@ -30,8 +31,11 @@ namespace WildernessCultivation.Player
         {
             stats = GetComponent<PlayerStats>();
             realm = GetComponent<RealmSystem>();
-            if (inventory == null) inventory = GetComponent<Inventory>() ?? FindObjectOfType<Inventory>();
+            if (inventory == null) inventory = GetComponent<Inventory>() ?? ServiceLocator.Get<Inventory>();
+            ServiceLocator.Register<MagicTreasureAction>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<MagicTreasureAction>(this);
 
         void OnValidate() { chargesLeftInstance = -1; }
 

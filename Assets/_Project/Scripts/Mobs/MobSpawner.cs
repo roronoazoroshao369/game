@@ -41,9 +41,9 @@ namespace WildernessCultivation.Mobs
 
         void Start()
         {
-            time = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            time = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
             if (parent == null) parent = transform;
-            playerRef = FindObjectOfType<PlayerStats>();
+            playerRef = ServiceLocator.Get<PlayerStats>();
         }
 
         bool IsPlayerInDeepDark()

@@ -1,4 +1,5 @@
 using System;
+using WildernessCultivation.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -48,7 +49,10 @@ namespace WildernessCultivation.Items
         void Awake()
         {
             while (slots.Count < slotCount) slots.Add(new InventorySlot());
+            ServiceLocator.Register<Inventory>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<Inventory>(this);
 
         /// <summary>Thêm item; trả về số lượng KHÔNG add được (=0 nếu đầy đủ).</summary>
         public int Add(ItemSO item, int count)

@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using UnityEngine.UI;
 using WildernessCultivation.Player;
 
@@ -23,12 +24,12 @@ namespace WildernessCultivation.UI
 
         void OnClick()
         {
-            var combat = FindObjectOfType<PlayerCombat>();
-            var med = FindObjectOfType<WildernessCultivation.Cultivation.MeditationAction>();
-            var interact = FindObjectOfType<InteractAction>();
-            var sleep = FindObjectOfType<SleepAction>();
-            var treasure = FindObjectOfType<MagicTreasureAction>();
-            var realm = FindObjectOfType<WildernessCultivation.Cultivation.RealmSystem>();
+            var combat = ServiceLocator.Get<PlayerCombat>();
+            var med = ServiceLocator.Get<WildernessCultivation.Cultivation.MeditationAction>();
+            var interact = ServiceLocator.Get<InteractAction>();
+            var sleep = ServiceLocator.Get<SleepAction>();
+            var treasure = ServiceLocator.Get<MagicTreasureAction>();
+            var realm = ServiceLocator.Get<WildernessCultivation.Cultivation.RealmSystem>();
             switch (action)
             {
                 case Action.MeleeAttack: combat?.TryMeleeAttack(); break;
@@ -42,19 +43,19 @@ namespace WildernessCultivation.UI
                 case Action.UseMagicTreasure: treasure?.TryUse(); break;
                 case Action.Breakthrough:
                     {
-                        var stats = FindObjectOfType<PlayerStats>();
+                        var stats = ServiceLocator.Get<PlayerStats>();
                         if (stats == null || stats.IsAwakened) realm?.TryBreakthrough();
                         break;
                     }
                 case Action.ToggleTorch:
                     {
-                        var torch = FindObjectOfType<TorchAction>();
+                        var torch = ServiceLocator.Get<TorchAction>();
                         torch?.Toggle();
                         break;
                     }
                 case Action.Dodge:
                     {
-                        var dodge = FindObjectOfType<DodgeAction>();
+                        var dodge = ServiceLocator.Get<DodgeAction>();
                         dodge?.TryDodge();
                         break;
                     }

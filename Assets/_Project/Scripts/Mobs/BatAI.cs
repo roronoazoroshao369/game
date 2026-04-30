@@ -30,7 +30,7 @@ namespace WildernessCultivation.Mobs
 
         void Start()
         {
-            time = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            time = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
         }
 
         void Update()

@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Items;
 using WildernessCultivation.World;
@@ -41,7 +42,7 @@ namespace WildernessCultivation.Mobs
         protected Rigidbody2D rb;
         protected float attackReadyAt;
 
-        // Cache player ref tránh FindObjectOfType mỗi frame trên mọi mob.
+        // Cache player ref tránh ServiceLocator.Get fallback mỗi frame trên mọi mob.
         // Reset mỗi frame để pickup khi player respawn / scene reload.
         static Transform s_cachedPlayer;
         static int s_cachedPlayerFrame = -1;
@@ -75,7 +76,7 @@ namespace WildernessCultivation.Mobs
         static Transform GetPlayerCached()
         {
             if (s_cachedPlayerFrame == Time.frameCount && s_cachedPlayer != null) return s_cachedPlayer;
-            var ps = Object.FindObjectOfType<WildernessCultivation.Player.PlayerStats>();
+            var ps = ServiceLocator.Get<WildernessCultivation.Player.PlayerStats>();
             s_cachedPlayer = ps != null ? ps.transform : null;
             s_cachedPlayerFrame = Time.frameCount;
             return s_cachedPlayer;

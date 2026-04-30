@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Cultivation;
 
@@ -46,7 +47,7 @@ namespace WildernessCultivation.CameraFx
         void OnEnable()
         {
             CombatEvents.OnDamageDealt += OnDamageDealt;
-            // RealmSystem instance có thể không tồn tại lúc enable → subscribe trễ qua FindObjectOfType.
+            // RealmSystem instance có thể không tồn tại lúc enable → subscribe trễ qua ServiceLocator.
             TryHookRealm();
         }
 
@@ -62,7 +63,7 @@ namespace WildernessCultivation.CameraFx
         void TryHookRealm()
         {
             if (hookedRealm != null) return;
-            hookedRealm = FindObjectOfType<RealmSystem>();
+            hookedRealm = ServiceLocator.Get<RealmSystem>();
             if (hookedRealm != null) hookedRealm.OnBreakthroughAttempted += OnBreakthrough;
         }
 

@@ -1,4 +1,5 @@
 using System;
+using WildernessCultivation.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -33,7 +34,13 @@ namespace WildernessCultivation.Player.Status
 
         PlayerStats stats;
 
-        void Awake() { stats = GetComponent<PlayerStats>(); }
+        void Awake()
+        {
+            stats = GetComponent<PlayerStats>();
+            ServiceLocator.Register<StatusEffectManager>(this);
+        }
+
+        void OnDestroy() => ServiceLocator.Unregister<StatusEffectManager>(this);
 
         void Update()
         {

@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using UnityEngine.UI;
 using TMPro;
 using WildernessCultivation.Items;
@@ -45,9 +46,9 @@ namespace WildernessCultivation.UI
 
         void Start()
         {
-            if (stats == null) stats = FindObjectOfType<PlayerStats>();
-            if (controller == null) controller = FindObjectOfType<PlayerController>();
-            if (inventory == null) inventory = FindObjectOfType<Inventory>();
+            if (stats == null) stats = ServiceLocator.Get<PlayerStats>();
+            if (controller == null) controller = ServiceLocator.Get<PlayerController>();
+            if (inventory == null) inventory = ServiceLocator.Get<Inventory>();
             if (stats != null) stats.OnStatsChanged += Refresh;
             Refresh();
         }

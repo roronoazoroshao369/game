@@ -33,9 +33,9 @@ namespace WildernessCultivation.UI
 
         void Awake()
         {
-            if (playerStats == null) playerStats = FindObjectOfType<PlayerStats>();
-            if (awakening == null) awakening = FindObjectOfType<AwakeningSystem>();
-            if (timeManager == null) timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : FindObjectOfType<TimeManager>();
+            if (playerStats == null) playerStats = ServiceLocator.Get<PlayerStats>();
+            if (awakening == null) awakening = ServiceLocator.Get<AwakeningSystem>();
+            if (timeManager == null) timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
             if (panelRoot == null) panelRoot = gameObject;
         }
 

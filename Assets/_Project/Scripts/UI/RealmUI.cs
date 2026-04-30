@@ -1,4 +1,5 @@
 using TMPro;
+using WildernessCultivation.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using WildernessCultivation.Cultivation;
@@ -22,8 +23,8 @@ namespace WildernessCultivation.UI
 
         void Start()
         {
-            if (realm == null) realm = FindObjectOfType<RealmSystem>();
-            if (playerStats == null) playerStats = FindObjectOfType<PlayerStats>();
+            if (realm == null) realm = ServiceLocator.Get<RealmSystem>();
+            if (playerStats == null) playerStats = ServiceLocator.Get<PlayerStats>();
             if (realm == null) return;
 
             realm.OnRealmAdvanced += _ => Refresh();

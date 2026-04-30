@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WildernessCultivation.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,7 +20,7 @@ namespace WildernessCultivation.UI
 
         void OnEnable()
         {
-            if (craftingSystem == null) craftingSystem = FindObjectOfType<CraftingSystem>();
+            if (craftingSystem == null) craftingSystem = ServiceLocator.Get<CraftingSystem>();
             BuildList();
         }
 

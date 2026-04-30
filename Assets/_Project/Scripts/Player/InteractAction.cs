@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 using WildernessCultivation.World;
 
 namespace WildernessCultivation.Player
@@ -9,6 +10,13 @@ namespace WildernessCultivation.Player
     /// </summary>
     public class InteractAction : MonoBehaviour
     {
+        void Awake()
+        {
+            ServiceLocator.Register<InteractAction>(this);
+        }
+
+        void OnDestroy() => ServiceLocator.Unregister<InteractAction>(this);
+
         [Header("Detect")]
         public float interactRadius = 1.6f;
         public LayerMask interactMask = ~0;

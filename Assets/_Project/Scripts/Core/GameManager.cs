@@ -24,7 +24,10 @@ namespace WildernessCultivation.Core
             // (and is no-op outside Play mode) — guard so Awake stays runnable
             // from EditMode tests that invoke lifecycle reflectively.
             if (Application.isPlaying) DontDestroyOnLoad(gameObject);
+            ServiceLocator.Register<GameManager>(this);
         }
+
+        void OnDestroy() => ServiceLocator.Unregister<GameManager>(this);
 
         public void SetPaused(bool paused)
         {
