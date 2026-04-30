@@ -1,7 +1,16 @@
-# Leonardo AI prompts
+# AI prompts cho asset pipeline
 
-Bộ prompt sẵn cho Leonardo AI để sinh asset cho Wilderness Cultivation Chronicle.
+Bộ prompt sẵn để sinh asset cho Wilderness Cultivation Chronicle.
 Mỗi prompt follow template 5-part trong [`../Documentation/ART_STYLE.md`](../Documentation/ART_STYLE.md) §5.2.
+
+## Tool support
+
+| Tool | File mặc định | Status |
+|---|---|---|
+| **Leonardo AI** | `hero.txt`, `tileset.txt` | Native seamless + Element training |
+| **GPT image 2.0** (`gpt-image-1`, OpenAI 2025) | `tileset_gpt.txt`, dùng chung `hero.txt` | Cần seam fix Photopea cho ~70% tile — xem [`gpt_workflow.md`](gpt_workflow.md) |
+
+→ Nếu dùng GPT image 2.0 thay Leonardo, đọc [`gpt_workflow.md`](gpt_workflow.md) trước.
 
 ## Workflow
 
@@ -13,8 +22,10 @@ Mỗi prompt follow template 5-part trong [`../Documentation/ART_STYLE.md`](../D
 
 | File | Purpose | Count |
 |---|---|---|
-| `hero.txt` | 6 hero scene anchor cho Element training | 6 prompt |
-| `tileset.txt` | Ground tile seamless 64×64 cho 3 biome | 12 prompt (3 biome × 4 variants) |
+| `hero.txt` | 6 hero scene (Leonardo + GPT đều dùng được) | 6 prompt |
+| `tileset.txt` | Ground tile seamless 64×64 cho 3 biome (Leonardo native tile mode) | 12 prompt (3 biome × 4 variants) |
+| `tileset_gpt.txt` | Cùng 12 tile, adapted cho GPT image 2.0 (rule seamless mạnh + cần Photopea seam fix ~70% tile) | 12 prompt |
+| `gpt_workflow.md` | GPT image 2.0 workflow: tool comparison, Photopea seam fix step-by-step, recommendations | doc |
 | (future) `mob.txt` | 9 mob walk/attack/death sheet | ~30 prompt |
 | (future) `decoration.txt` | Visual ambient (flower, bone, lantern…) | ~20 prompt |
 | (future) `item_icon.txt` | 22 item icon 128×128 | ~22 prompt |
