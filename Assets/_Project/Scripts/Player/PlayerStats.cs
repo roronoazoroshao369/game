@@ -22,7 +22,7 @@ namespace WildernessCultivation.Player
     /// Awake auto-add component nếu prefab chưa có — test chỉ cần
     /// <c>go.AddComponent&lt;PlayerStats&gt;()</c> là full subsystem khả dụng.
     /// </summary>
-    public class PlayerStats : MonoBehaviour, IDamageable
+    public class PlayerStats : CharacterBase
     {
         [Header("Max values")]
         public float maxHP = 100f;
@@ -68,7 +68,9 @@ namespace WildernessCultivation.Player
             GameEvents.RaisePlayerStatsChanged();
         }
 
-        public bool IsDead => HP <= 0f;
+        public override bool IsDead => HP <= 0f;
+        public override float CurrentHP => HP;
+        public override float CurrentMaxHP => maxHP;
 
         [Header("Tu tiên gating")]
         [Tooltip("True = đã khai mở tu tiên. Mặc định Thường Nhân (false). Set qua AwakeningSystem.")]
@@ -229,7 +231,7 @@ namespace WildernessCultivation.Player
         /// status modifier như overload <see cref="TakeDamage(float)"/>; <paramref name="source"/>
         /// reserved cho threat/aggro/log sau này.
         /// </summary>
-        public void TakeDamage(float amount, GameObject source) => TakeDamage(amount);
+        public override void TakeDamage(float amount, GameObject source) => TakeDamage(amount);
 
         /// <summary>Nhận dame KHÔNG nhân IncomingDamageMultiplier (dùng cho tick status).</summary>
         public void TakeDamageRaw(float dmg)
