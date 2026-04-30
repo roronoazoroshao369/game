@@ -3,6 +3,7 @@ using UnityEngine;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Core;
 using WildernessCultivation.Cultivation;
+using WildernessCultivation.Items;
 using WildernessCultivation.Player.Stats;
 using WildernessCultivation.Player.Status;
 using WildernessCultivation.World;
@@ -58,6 +59,15 @@ namespace WildernessCultivation.Player
         public event Action OnDeath;
         public event Action OnStatsChanged;
 
+        // Fire instance + global hub. R4: GameEvents là entry point cho UI/audio mới — instance
+        // event giữ cho code cũ + test subscribe trực tiếp. Mọi field mutation gọi method này
+        // thay vì OnStatsChanged?.Invoke() trực tiếp.
+        void RaiseStatsChanged()
+        {
+            OnStatsChanged?.Invoke();
+            GameEvents.RaisePlayerStatsChanged();
+        }
+
         public bool IsDead => HP <= 0f;
 
         [Header("Tu tiên gating")]
@@ -110,10 +120,23 @@ namespace WildernessCultivation.Player
             if (thermal == null) thermal = GetComponent<ThermalComponent>() ?? gameObject.AddComponent<ThermalComponent>();
             if (permadeath == null) permadeath = GetComponent<PermadeathHandler>() ?? gameObject.AddComponent<PermadeathHandler>();
 
+            // R4 GameEvents bridge: Inventory KHÔNG biết nó thuộc player hay chest, nên
+            // PlayerStats (marker singleton) hook OnInventoryChanged → GameEvents.RaisePlayerInventoryChanged.
+            // Chest inventory không có PlayerStats kế bên ⇒ không bắc cầu.
+            playerInventory = GetComponent<Inventory>();
+            if (playerInventory != null) playerInventory.OnInventoryChanged += BridgeInventoryToGameEvents;
+
             ServiceLocator.Register<PlayerStats>(this);
         }
 
-        void OnDestroy() => ServiceLocator.Unregister<PlayerStats>(this);
+        void OnDestroy()
+        {
+            if (playerInventory != null) playerInventory.OnInventoryChanged -= BridgeInventoryToGameEvents;
+            ServiceLocator.Unregister<PlayerStats>(this);
+        }
+
+        Inventory playerInventory;
+        void BridgeInventoryToGameEvents() => GameEvents.RaisePlayerInventoryChanged();
 
         void Start()
         {
@@ -183,7 +206,7 @@ namespace WildernessCultivation.Player
 
             Mana = Mathf.Min(maxMana, Mana + manaRegenIdle * dt);
 
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
 
             if (HP <= 0f) Die();
         }
@@ -224,7 +247,7 @@ namespace WildernessCultivation.Player
                 Shield = 0f;
             }
             if (dmg > 0f) HP = Mathf.Max(0f, HP - dmg);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
             // Bắn event juice (camera shake, damage numbers) — bao gồm cả damage bị shield ăn.
             if (incoming > 0f) CombatEvents.RaiseDamage(transform.position, incoming, false);
             if (HP <= 0f) Die();
@@ -236,7 +259,7 @@ namespace WildernessCultivation.Player
             if (amount <= 0f || durationSec <= 0f) return;
             Shield = Mathf.Max(Shield, 0f) + amount;
             ShieldEndsAt = Mathf.Max(ShieldEndsAt, Time.time + durationSec);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         /// <summary>Set i-frames trong duration giây tính từ thời điểm gọi.</summary>
@@ -249,25 +272,25 @@ namespace WildernessCultivation.Player
         public void Heal(float amount)
         {
             HP = Mathf.Min(maxHP, HP + amount);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         public void Eat(float foodValue)
         {
             Hunger = Mathf.Min(maxHunger, Hunger + foodValue);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         public void Drink(float waterValue)
         {
             Thirst = Mathf.Min(maxThirst, Thirst + waterValue);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         public void RestoreSanity(float amount)
         {
             Sanity = Mathf.Min(maxSanity, Sanity + amount);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         /// <summary>Trừ Sanity (clamp >= 0), fire OnStatsChanged. Dùng cho environmental SAN drain.</summary>
@@ -275,21 +298,21 @@ namespace WildernessCultivation.Player
         {
             if (amount <= 0f) return;
             Sanity = Mathf.Max(0f, Sanity - amount);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         public bool TryConsumeMana(float cost)
         {
             if (Mana < cost) return false;
             Mana -= cost;
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
             return true;
         }
 
         public void AddMana(float amount)
         {
             Mana = Mathf.Min(maxMana, Mana + amount);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         // ===== Wetness façade (delegate to WetnessComponent) =====
@@ -351,7 +374,7 @@ namespace WildernessCultivation.Player
         {
             if (wetness == null) return;
             wetness.Add(amount);
-            OnStatsChanged?.Invoke();
+            RaiseStatsChanged();
         }
 
         /// <summary>
@@ -443,6 +466,7 @@ namespace WildernessCultivation.Player
         void Die()
         {
             OnDeath?.Invoke();
+            GameEvents.RaisePlayerDied();
             Debug.Log("[Player] Died.");
             // Permadeath chỉ chạy auto trong PlayMode — tránh EditMode tests vô tình
             // ghi vào persistentDataPath / reload scene khi assert HP=0. Test gọi

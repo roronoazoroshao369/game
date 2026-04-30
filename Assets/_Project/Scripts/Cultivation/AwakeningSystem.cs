@@ -77,6 +77,7 @@ namespace WildernessCultivation.Cultivation
                 result.eligibility = eligibility;
                 result.outcome = AwakenOutcome.Ineligible;
                 OnAwakenAttempted?.Invoke(result);
+                Core.GameEvents.RaiseAwakeningAttempted(result);
                 return false;
             }
 
@@ -100,6 +101,7 @@ namespace WildernessCultivation.Cultivation
             }
 
             OnAwakenAttempted?.Invoke(result);
+            Core.GameEvents.RaiseAwakeningAttempted(result);
             return true;
         }
 
