@@ -19,12 +19,17 @@ from PIL import Image
 
 
 def feather_1d(n: int, band: int) -> np.ndarray:
+    # Clamp so the two edge ramps don't overlap (else mask becomes
+    # discontinuous and produces a visible seam in the output).
+    band = max(0, min(band, n // 2))
     m = np.ones(n, dtype=np.float32)
     if band > 0:
         x = np.arange(band, dtype=np.float32)
         t = x / max(band - 1, 1)
-        m[:band] = t * t * (3 - 2 * t)  # smoothstep
-        m[-band:] = m[:band][::-1]
+        ramp = (t * t * (3 - 2 * t)).astype(np.float32)  # smoothstep 0..1
+        m[:band] = ramp
+        # `.copy()` to avoid aliasing read on the buffer we just wrote to.
+        m[-band:] = ramp.copy()[::-1]
     return m
 
 
