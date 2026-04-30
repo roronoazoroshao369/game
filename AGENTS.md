@@ -45,6 +45,10 @@ Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
    Post-restore cross-system ordering (ReapplySpiritRootMaxHP → ReapplyAccumulatedBonuses → clamp HP)
    qua `SaveRegistry.RegisterFixup(owner, order, action)`. Register OnEnable / Unregister OnDisable.
    Test PHẢI gọi `SaveRegistry.ClearAll()` trong `SetUp`/`TearDown` (tương tự rule 7).
+9. **Mob AI qua FSM** (R7). Mob mới nên dùng `StateMachine<T>` + `IState<T>` (Scripts/Core/StateMachine.cs).
+   Exemplar: `WolfAI` (chase/attack) + `RabbitAI` (wander/flee). State class ở `Scripts/Mobs/States/`,
+   singleton `IState<T>` per state (no alloc per frame), state mutable sống trên mob context.
+   Transition safe trong OnEnter/OnTick/OnExit (queue + apply sau tick). Xem `.agents/skills/add-mob/`.
 
 ## Code conventions
 
@@ -97,7 +101,8 @@ Tests vẫn compile-pass nhưng KHÔNG execute trong CI. Để gate thật, user
 - `Scripts/Cultivation/` — `RealmSystem`, `SpiritRoot`, công pháp, breakthrough
 - `Scripts/Inventory/` — `Inventory`, `InventorySlot`
 - `Scripts/Crafting/` — `CraftingSystem`, `RecipeSO`, `CraftStationMarker`
-- `Scripts/Mobs/` — `MobBase`, `WolfAI`, `FoxSpiritAI`, `RabbitAI`, `BossMobAI`
+- `Scripts/Mobs/` — `MobBase`, `WolfAI` (FSM), `RabbitAI` (FSM), `FoxSpiritAI` (legacy), `BossMobAI` (legacy)
+- `Scripts/Mobs/States/` — R7 state classes per-mob (`WolfStates`, `RabbitStates`, …). Singleton `IState<T>` instance, no alloc per frame. State mutable sống trên mob context, không lưu trong class state.
 - `Scripts/Combat/` — `IDamageable`, `Projectile`
 - `Scripts/UI/` — `*UI` panels, `VirtualJoystick`, `SkillButton`
 - `Scripts/World/` — `WorldGenerator`, `BiomeSO`, `ResourceNode`, `Workbench`, `Campfire`,

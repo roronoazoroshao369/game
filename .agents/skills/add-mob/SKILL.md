@@ -1,34 +1,65 @@
 # Skill: Add new mob (AI)
 
-Mục tiêu: thêm 1 loại quái mới (vd: Bear / SpiderQueen / Cultist) theo pattern `WolfAI` / `FoxSpiritAI`.
+Mục tiêu: thêm 1 loại quái mới (vd: Bear / SpiderQueen / Cultist) theo pattern
+`WolfAI` / `RabbitAI` (FSM, R7 pattern) hoặc `FoxSpiritAI` (Update if/else, pre-R7 legacy).
 
-## Bước
+## Pattern khuyến nghị: FSM (R7)
 
-1. Tạo `Assets/_Project/Scripts/Mobs/<MobName>AI.cs` extend `MobBase`.
-2. Override `Awake()` để set `mobName`.
-3. Implement `Update()`:
-   - `TryFindPlayer()` → return early nếu không có target
-   - Compute `dist = Vector2.Distance(target.position, transform.position)`
-   - Nếu `dist > attackRange` → `MoveTowards(target.position)`
-   - Nếu `dist <= attackRange` + `Time.time >= attackReadyAt` → attack
-4. **Damage qua IDamageable.** `PlayerStats` IMPLEMENT `IDamageable` (R2 refactor) — KHÔNG cần fallback `GetComponent<PlayerStats>()` nữa:
+Mob mới nên dùng `StateMachine<T>` + `IState<T>` trong `Scripts/Core/StateMachine.cs`.
+Lý do: state transition rõ ràng, OnEnter/OnExit hook đúng vị trí, dễ extend Block/Parry/Charge.
+
+### Bước
+
+1. Tạo `Assets/_Project/Scripts/Mobs/<Name>AI.cs` extend `MobBase` với field
+   `internal readonly StateMachine<NameAI> Fsm = new();`
+2. Tạo `Assets/_Project/Scripts/Mobs/States/<Name>States.cs`:
+   - `public static class <Name>States { public static readonly IState<NameAI> Idle = ...; ... }`
+   - Mỗi state là `sealed class` implement `IState<NameAI>` (Enter/Tick/Exit).
+   - State singleton (no alloc per frame).
+3. Override `Awake()`: gọi `base.Awake()`, set `mobName`, `Fsm.Init(this, <Name>States.Idle)`.
+4. Implement `Update()`:
+   ```csharp
+   void Update()
+   {
+       if (!ShouldTickAI()) return;
+       Fsm.Tick(Time.deltaTime);
+   }
+   ```
+5. Override `Die()`:
+   ```csharp
+   protected override void Die(GameObject killer)
+   {
+       Fsm.Shutdown();
+       base.Die(killer);
+   }
+   ```
+6. Damage qua `IDamageable` (R2). Rule 2 AGENTS:
    ```csharp
    var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
    if (dmg != null) dmg.TakeDamage(damage, gameObject);
    ```
-5. Register vào `BootstrapWizard` để spawn vào default scene (optional).
-6. Viết PlayMode test (xem `add-play-mode-test`):
+7. State truy cập field của mob qua instance param (same-assembly `internal`):
+   `w.target`, `w.attackRange`, `w.MoveTowards(...)`, `w.AttackReadyAt`, …
+8. Register vào `BootstrapWizard` để spawn vào default scene (optional).
+9. Viết PlayMode test (xem `add-play-mode-test`):
    - Aggro within range → `target != null`
    - Aggro outside range → `target == null`
    - Attack damages player (verify `PlayerStats.HP` giảm)
    - Drop loot to killer's inventory
    - Award XP to killer's RealmSystem
 
+## Pattern legacy (pre-R7): Update if/else
+
+Nếu mob rất đơn giản (< 30 LoC AI logic), if/else trong `Update()` vẫn OK. Mob legacy
+(FoxSpirit, Snake, Bat, Boar, Boss, Deer, Crow) dùng pattern này — sẽ dần convert sang FSM
+trong PR sau.
+
 ## Reference implementations
 
-- `Assets/_Project/Scripts/Mobs/WolfAI.cs` — chase + melee
-- `Assets/_Project/Scripts/Mobs/FoxSpiritAI.cs` — night-only gating qua `TimeManager.isNight`
-- `Assets/_Project/Scripts/Mobs/BossMobAI.cs` — đa pha, projectile pattern, summon
+- `Assets/_Project/Scripts/Mobs/WolfAI.cs` + `States/WolfStates.cs` — **FSM exemplar** (chase + melee, R7)
+- `Assets/_Project/Scripts/Mobs/RabbitAI.cs` + `States/RabbitStates.cs` — **FSM exemplar** (wander + flee, R7)
+- `Assets/_Project/Scripts/Mobs/FoxSpiritAI.cs` — night-only gating qua `TimeManager.isNight` (legacy Update)
+- `Assets/_Project/Scripts/Mobs/BossMobAI.cs` — đa pha, projectile pattern, summon (legacy Update)
 
 ## Pitfalls
 

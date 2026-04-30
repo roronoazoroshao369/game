@@ -1,41 +1,33 @@
-using UnityEngine;
-using WildernessCultivation.Combat;
-using WildernessCultivation.Player;
+using WildernessCultivation.Core;
+using WildernessCultivation.Mobs.States;
 
 namespace WildernessCultivation.Mobs
 {
     /// <summary>
-    /// Sói — chase + melee. Aggro ngay khi thấy player trong tầm.
+    /// Sói — chase + melee. R7 FSM: <see cref="WolfStates.Idle"/> → Chase → Attack → Dead.
+    /// Transition logic sống trong state class (WolfStates.cs). Update() chỉ tick FSM.
     /// </summary>
     public class WolfAI : MobBase
     {
+        internal readonly StateMachine<WolfAI> Fsm = new();
+
         protected override void Awake()
         {
             base.Awake();
             mobName = "Sói Hoang";
+            Fsm.Init(this, WolfStates.Idle);
         }
 
         void Update()
         {
             if (!ShouldTickAI()) return;
-            if (!TryFindPlayer()) { StopMoving(); return; }
+            Fsm.Tick(UnityEngine.Time.deltaTime);
+        }
 
-            float dist = Vector2.Distance(target.position, transform.position);
-
-            if (dist > attackRange)
-            {
-                MoveTowards(target.position);
-            }
-            else
-            {
-                StopMoving();
-                if (Time.time >= attackReadyAt)
-                {
-                    attackReadyAt = Time.time + attackCooldown;
-                    var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
-                    if (dmg != null) dmg.TakeDamage(damage, gameObject);
-                }
-            }
+        protected override void Die(UnityEngine.GameObject killer)
+        {
+            Fsm.Shutdown();
+            base.Die(killer);
         }
     }
 }

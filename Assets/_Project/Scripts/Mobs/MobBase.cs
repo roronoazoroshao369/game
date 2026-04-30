@@ -167,7 +167,9 @@ namespace WildernessCultivation.Mobs
             Destroy(gameObject);
         }
 
-        protected void MoveTowards(Vector2 dest)
+        // R7: promote sang internal (từ protected) để state class trong assembly gọi được.
+        // Semantics không đổi — subclass tiếp tục override được và gọi như trước.
+        internal void MoveTowards(Vector2 dest)
         {
             Vector2 dir = ((Vector2)dest - (Vector2)transform.position).normalized;
             rb.velocity = dir * moveSpeed;
@@ -175,14 +177,17 @@ namespace WildernessCultivation.Mobs
                 spriteRenderer.flipX = dir.x < 0;
         }
 
-        protected void StopMoving() => rb.velocity = Vector2.zero;
+        internal void StopMoving() => rb.velocity = Vector2.zero;
 
-        protected bool TryFindPlayer()
+        internal bool TryFindPlayer()
         {
             if (target != null) return true;
             var hit = Physics2D.OverlapCircle(transform.position, aggroRange, playerMask);
             if (hit != null) { target = hit.transform; return true; }
             return false;
         }
+
+        /// <summary>R7: internal accessor cho state classes (cùng assembly) đọc/ghi attackReadyAt.</summary>
+        internal float AttackReadyAt { get => attackReadyAt; set => attackReadyAt = value; }
     }
 }
