@@ -11,66 +11,43 @@ using WildernessCultivation.World;
 namespace WildernessCultivation.Player
 {
     /// <summary>
-    /// 5 chỉ số sinh tồn cốt lõi (HP, Đói, Khát, SAN, Linh Khí) + orchestrator cho subsystem
-    /// components: <see cref="WetnessComponent"/>, <see cref="ThermalComponent"/>,
+    /// Façade cho player stat subsystems. State + logic chi tiết nằm trên các MonoBehaviour
+    /// component con (<see cref="HealthComponent"/>, <see cref="HungerComponent"/>, …).
+    /// PlayerStats chỉ giữ:
+    /// 1. Public properties + methods (façade API) — consumer + test cũ không break.
+    /// 2. Orchestrator <see cref="Update"/> gọi Tick từng component đúng thứ tự.
+    /// 3. Cross-concern lifecycle: spirit root scale maxHP, GameEvents bridge, Die + Permadeath.
+    ///
+    /// R1 phase 1 tách: <see cref="WetnessComponent"/>, <see cref="ThermalComponent"/>,
     /// <see cref="PermadeathHandler"/>.
+    /// R1 phase 2 tách: <see cref="HealthComponent"/>, <see cref="HungerComponent"/>,
+    /// <see cref="ThirstComponent"/>, <see cref="SanityComponent"/>, <see cref="ManaComponent"/>,
+    /// <see cref="ShieldComponent"/>, <see cref="InvulnerabilityComponent"/>.
     ///
-    /// R1 refactor: tách 3 subsystem có logic riêng (Wetness 100+ LoC, Thermal 60+ LoC,
-    /// Permadeath 80+ LoC) ra component MonoBehaviour. PlayerStats giữ public surface
-    /// (properties + methods façade) để consumer + 100+ test cũ không break.
-    ///
-    /// Awake auto-add component nếu prefab chưa có — test chỉ cần
-    /// <c>go.AddComponent&lt;PlayerStats&gt;()</c> là full subsystem khả dụng.
+    /// Lazy auto-add: bất kỳ property nào chạm tới component sẽ auto-add component nếu prefab
+    /// chưa có — test chỉ cần <c>go.AddComponent&lt;PlayerStats&gt;()</c> mà không cần wiring.
+    /// Field initializer trên mỗi component cung cấp default values giống PlayerStats cũ.
     /// </summary>
     public class PlayerStats : CharacterBase
     {
-        [Header("Max values")]
-        public float maxHP = 100f;
-        public float maxHunger = 100f;
-        public float maxThirst = 100f;
-        public float maxSanity = 100f;
-        public float maxMana = 50f;
-
-        [Header("Current values")]
-        public float HP = 100f;
-        public float Hunger = 100f;
-        public float Thirst = 100f;
-        public float Sanity = 100f;
-        public float Mana = 50f;
-
-        [Header("Decay (per second)")]
-        public float hungerDecay = 0.25f;     // ~6.6 phút từ full về 0
-        public float thirstDecay = 0.4f;      // ~4.1 phút (khát đến nhanh hơn)
-        public float sanityNightDecay = 0.6f; // chỉ giảm khi đêm + ngoài trời + xa lửa
-        public float manaRegenIdle = 0.5f;    // hồi mana chậm khi không thiền
-
-        [Header("Damage rates when starving/dehydrated")]
-        public float starveDamagePerSec = 1.5f;
-        public float dehydrateDamagePerSec = 2.5f;
-
-        [Header("Weather effects")]
-        [Tooltip("Khi trời mưa + đứng ngoài (không trong shelter/nhà) → refill Thirst chậm.")]
-        public float rainThirstRefillPerSec = 0.6f;
-        [Tooltip("Khi bão đêm → trừ SAN bonus.")]
-        public float stormSanityPenaltyPerSec = 0.4f;
-        [Tooltip("Khi đứng ngoài aura sáng vào đêm sâu (deep dark) → trừ SAN bonus.")]
-        public float darknessSanityPenaltyPerSec = 0.8f;
-
         public event Action OnDeath;
         public event Action OnStatsChanged;
 
-        // Fire instance + global hub. R4: GameEvents là entry point cho UI/audio mới — instance
-        // event giữ cho code cũ + test subscribe trực tiếp. Mọi field mutation gọi method này
-        // thay vì OnStatsChanged?.Invoke() trực tiếp.
-        void RaiseStatsChanged()
-        {
-            OnStatsChanged?.Invoke();
-            GameEvents.RaisePlayerStatsChanged();
-        }
+        // ===== Subsystem components (auto-added in Awake + lazy on property access) =====
 
-        public override bool IsDead => HP <= 0f;
-        public override float CurrentHP => HP;
-        public override float CurrentMaxHP => maxHP;
+        [Header("Core stat components (auto-add)")]
+        public HealthComponent health;
+        public HungerComponent hunger;
+        public ThirstComponent thirst;
+        public SanityComponent sanity;
+        public ManaComponent mana;
+        public ShieldComponent shieldComp;
+        public InvulnerabilityComponent invuln;
+
+        [Header("Environmental stat components (auto-add)")]
+        public WetnessComponent wetness;
+        public ThermalComponent thermal;
+        public PermadeathHandler permadeath;
 
         [Header("Tu tiên gating")]
         [Tooltip("True = đã khai mở tu tiên. Mặc định Thường Nhân (false). Set qua AwakeningSystem.")]
@@ -79,48 +56,34 @@ namespace WildernessCultivation.Player
         [Tooltip("Pity counter — số lần roll Phàm liên tiếp. AwakeningSystem cộng dồn mỗi fail, reset 0 khi success bất kỳ grade. Per-run.")]
         public int phamFailStreak = 0;
 
-        /// <summary>True nếu player đang trong aura của 1 <see cref="Campfire"/> đang cháy.</summary>
-        public bool IsWarm => Campfire.FindWarmthAt(transform.position) != null;
-
-        [Header("Shield (do pháp bảo cấp tạm thời — không persist save)")]
-        [Tooltip("Giá trị chắn còn lại; dame trừ vào shield trước, rồi mới HP.")]
-        public float Shield;
-        [Tooltip("Time.time mà shield hết hạn.")]
-        public float ShieldEndsAt;
-        public bool HasShield => Shield > 0f && Time.time < ShieldEndsAt;
-
-        [Header("Invulnerability (i-frames cho dodge / hồi sinh)")]
-        [Tooltip("Time.time mà i-frames hết hạn. Trong khoảng này TakeDamage bỏ qua.")]
-        public float InvulnerableUntil;
-        public bool IsInvulnerable => Time.time < InvulnerableUntil;
-
-        // ===== Subsystem components (auto-added in Awake) =====
-
-        [Header("Subsystem components (auto-add)")]
-        [Tooltip("Wetness subsystem (gauge + tier + sickness chain). Auto-add nếu null.")]
-        public WetnessComponent wetness;
-        [Tooltip("Thermal subsystem (BodyTemp + ambient + freeze/heat damage). Auto-add nếu null.")]
-        public ThermalComponent thermal;
-        [Tooltip("Permadeath subsystem (tombstone + save wipe + reload). Auto-add nếu null.")]
-        public PermadeathHandler permadeath;
-
         TimeManager timeManager;
         SpiritRoot spiritRoot;
         StatusEffectManager statusManager;
+        Inventory playerInventory;
         bool maxHPApplied;
         float baseMaxHP;
         float baseMaxMana;
+
+        // ===== Awake / lifecycle =====
 
         void Awake()
         {
             spiritRoot = GetComponent<SpiritRoot>();
             statusManager = GetComponent<StatusEffectManager>();
-            baseMaxHP = maxHP;
-            baseMaxMana = maxMana;
 
-            if (wetness == null) wetness = GetComponent<WetnessComponent>() ?? gameObject.AddComponent<WetnessComponent>();
-            if (thermal == null) thermal = GetComponent<ThermalComponent>() ?? gameObject.AddComponent<ThermalComponent>();
-            if (permadeath == null) permadeath = GetComponent<PermadeathHandler>() ?? gameObject.AddComponent<PermadeathHandler>();
+            EnsureComponent(ref health);
+            EnsureComponent(ref hunger);
+            EnsureComponent(ref thirst);
+            EnsureComponent(ref sanity);
+            EnsureComponent(ref mana);
+            EnsureComponent(ref shieldComp);
+            EnsureComponent(ref invuln);
+            EnsureComponent(ref wetness);
+            EnsureComponent(ref thermal);
+            EnsureComponent(ref permadeath);
+
+            baseMaxHP = health.maxHP;
+            baseMaxMana = mana.maxMana;
 
             // R4 GameEvents bridge: Inventory KHÔNG biết nó thuộc player hay chest, nên
             // PlayerStats (marker singleton) hook OnInventoryChanged → GameEvents.RaisePlayerInventoryChanged.
@@ -137,7 +100,6 @@ namespace WildernessCultivation.Player
             ServiceLocator.Unregister<PlayerStats>(this);
         }
 
-        Inventory playerInventory;
         void BridgeInventoryToGameEvents() => GameEvents.RaisePlayerInventoryChanged();
 
         void Start()
@@ -145,6 +107,158 @@ namespace WildernessCultivation.Player
             timeManager = GameManager.Instance != null ? GameManager.Instance.timeManager : ServiceLocator.Get<TimeManager>();
             ApplySpiritRootMaxHP();
         }
+
+        /// <summary>
+        /// Resolve existing component hoặc add mới. Safe gọi từ Awake + từ property getter
+        /// (EditMode AddComponent không tự fire Awake → property access đầu tiên lazy-resolve).
+        /// </summary>
+        T EnsureComponent<T>(ref T cache) where T : MonoBehaviour
+        {
+            if (cache != null) return cache;
+            cache = GetComponent<T>();
+            if (cache == null) cache = gameObject.AddComponent<T>();
+            return cache;
+        }
+
+        // ===== Façade: Health =====
+
+        public float HP
+        {
+            get => EnsureComponent(ref health).HP;
+            set => EnsureComponent(ref health).HP = value;
+        }
+        public float maxHP
+        {
+            get => EnsureComponent(ref health).maxHP;
+            set => EnsureComponent(ref health).maxHP = value;
+        }
+        public float starveDamagePerSec
+        {
+            get => EnsureComponent(ref health).starveDamagePerSec;
+            set => EnsureComponent(ref health).starveDamagePerSec = value;
+        }
+        public float dehydrateDamagePerSec
+        {
+            get => EnsureComponent(ref health).dehydrateDamagePerSec;
+            set => EnsureComponent(ref health).dehydrateDamagePerSec = value;
+        }
+
+        public override bool IsDead => HP <= 0f;
+        public override float CurrentHP => HP;
+        public override float CurrentMaxHP => maxHP;
+
+        // ===== Façade: Hunger =====
+
+        public float Hunger
+        {
+            get => EnsureComponent(ref hunger).Hunger;
+            set => EnsureComponent(ref hunger).Hunger = value;
+        }
+        public float maxHunger
+        {
+            get => EnsureComponent(ref hunger).maxHunger;
+            set => EnsureComponent(ref hunger).maxHunger = value;
+        }
+        public float hungerDecay
+        {
+            get => EnsureComponent(ref hunger).hungerDecay;
+            set => EnsureComponent(ref hunger).hungerDecay = value;
+        }
+
+        // ===== Façade: Thirst =====
+
+        public float Thirst
+        {
+            get => EnsureComponent(ref thirst).Thirst;
+            set => EnsureComponent(ref thirst).Thirst = value;
+        }
+        public float maxThirst
+        {
+            get => EnsureComponent(ref thirst).maxThirst;
+            set => EnsureComponent(ref thirst).maxThirst = value;
+        }
+        public float thirstDecay
+        {
+            get => EnsureComponent(ref thirst).thirstDecay;
+            set => EnsureComponent(ref thirst).thirstDecay = value;
+        }
+        public float rainThirstRefillPerSec
+        {
+            get => EnsureComponent(ref thirst).rainThirstRefillPerSec;
+            set => EnsureComponent(ref thirst).rainThirstRefillPerSec = value;
+        }
+
+        // ===== Façade: Sanity =====
+
+        public float Sanity
+        {
+            get => EnsureComponent(ref sanity).Sanity;
+            set => EnsureComponent(ref sanity).Sanity = value;
+        }
+        public float maxSanity
+        {
+            get => EnsureComponent(ref sanity).maxSanity;
+            set => EnsureComponent(ref sanity).maxSanity = value;
+        }
+        public float sanityNightDecay
+        {
+            get => EnsureComponent(ref sanity).sanityNightDecay;
+            set => EnsureComponent(ref sanity).sanityNightDecay = value;
+        }
+        public float stormSanityPenaltyPerSec
+        {
+            get => EnsureComponent(ref sanity).stormSanityPenaltyPerSec;
+            set => EnsureComponent(ref sanity).stormSanityPenaltyPerSec = value;
+        }
+        public float darknessSanityPenaltyPerSec
+        {
+            get => EnsureComponent(ref sanity).darknessSanityPenaltyPerSec;
+            set => EnsureComponent(ref sanity).darknessSanityPenaltyPerSec = value;
+        }
+
+        // ===== Façade: Mana =====
+
+        public float Mana
+        {
+            get => EnsureComponent(ref mana).Mana;
+            set => EnsureComponent(ref mana).Mana = value;
+        }
+        public float maxMana
+        {
+            get => EnsureComponent(ref mana).maxMana;
+            set => EnsureComponent(ref mana).maxMana = value;
+        }
+        public float manaRegenIdle
+        {
+            get => EnsureComponent(ref mana).manaRegenIdle;
+            set => EnsureComponent(ref mana).manaRegenIdle = value;
+        }
+
+        // ===== Façade: Shield =====
+
+        public float Shield
+        {
+            get => EnsureComponent(ref shieldComp).Shield;
+            set => EnsureComponent(ref shieldComp).Shield = value;
+        }
+        public float ShieldEndsAt
+        {
+            get => EnsureComponent(ref shieldComp).ShieldEndsAt;
+            set => EnsureComponent(ref shieldComp).ShieldEndsAt = value;
+        }
+        public bool HasShield => EnsureComponent(ref shieldComp).HasShield;
+
+        // ===== Façade: Invulnerability =====
+
+        public float InvulnerableUntil
+        {
+            get => EnsureComponent(ref invuln).InvulnerableUntil;
+            set => EnsureComponent(ref invuln).InvulnerableUntil = value;
+        }
+        public bool IsInvulnerable => EnsureComponent(ref invuln).IsInvulnerable;
+
+        /// <summary>True nếu player đang trong aura của 1 <see cref="Campfire"/> đang cháy.</summary>
+        public bool IsWarm => Campfire.FindWarmthAt(transform.position) != null;
 
         // ===== Spirit root maxHP =====
 
@@ -156,10 +270,10 @@ namespace WildernessCultivation.Player
             float mul = spiritRoot.MaxHPMul;
             if (Mathf.Abs(mul - 1f) > 0.001f)
             {
-                float oldMax = maxHP;
-                maxHP *= mul;
-                if (HP >= oldMax - 0.01f) HP = maxHP;
-                else HP = Mathf.Min(HP, maxHP);
+                float oldMax = health.maxHP;
+                health.maxHP *= mul;
+                if (health.HP >= oldMax - 0.01f) health.HP = health.maxHP;
+                else health.HP = Mathf.Min(health.HP, health.maxHP);
             }
             maxHPApplied = true;
         }
@@ -168,9 +282,19 @@ namespace WildernessCultivation.Player
         public void ReapplySpiritRootMaxHP()
         {
             maxHPApplied = false;
-            if (baseMaxHP > 0f) maxHP = baseMaxHP;
-            if (baseMaxMana > 0f) maxMana = baseMaxMana;
+            if (baseMaxHP > 0f) health.maxHP = baseMaxHP;
+            if (baseMaxMana > 0f) mana.maxMana = baseMaxMana;
             ApplySpiritRootMaxHP();
+        }
+
+        // ===== Fire instance + global event =====
+
+        // R4: GameEvents là entry point cho UI/audio mới — instance event giữ cho code cũ +
+        // test subscribe trực tiếp. Mọi field mutation gọi method này thay vì OnStatsChanged?.Invoke().
+        void RaiseStatsChanged()
+        {
+            OnStatsChanged?.Invoke();
+            GameEvents.RaisePlayerStatsChanged();
         }
 
         // ===== Update orchestrator =====
@@ -184,18 +308,18 @@ namespace WildernessCultivation.Player
             float thirstMul = spiritRoot != null ? spiritRoot.ThirstDecayMul : 1f;
             float sanityMul = spiritRoot != null ? spiritRoot.SanityDecayMul : 1f;
 
-            Hunger = Mathf.Max(0f, Hunger - hungerDecay * hungerMul * dt);
-            Thirst = Mathf.Max(0f, Thirst - thirstDecay * thirstMul * dt);
+            hunger.Tick(dt, hungerMul);
+            thirst.Tick(dt, thirstMul);
 
             if (timeManager != null && timeManager.isNight && !IsWarm)
-                Sanity = Mathf.Max(0f, Sanity - sanityNightDecay * sanityMul * dt);
+                sanity.TickNightDecay(dt, sanityMul);
 
             // Biome ambient SAN damage (vd Hoang Mạc Tử Khí về đêm). Lửa trại không chống được.
             if (timeManager != null && timeManager.isNight && WorldGenerator.Instance != null)
             {
                 var biome = WorldGenerator.Instance.BiomeAt(transform.position);
                 if (biome != null && biome.ambientNightSanDamage > 0f)
-                    Sanity = Mathf.Max(0f, Sanity - biome.ambientNightSanDamage * dt);
+                    sanity.Damage(biome.ambientNightSanDamage * dt);
             }
 
             UpdateWetness(dt);
@@ -203,14 +327,12 @@ namespace WildernessCultivation.Player
             UpdateWeatherEffects(dt);
             UpdateDarkness(dt);
 
-            if (Hunger <= 0f) HP = Mathf.Max(0f, HP - starveDamagePerSec * dt);
-            if (Thirst <= 0f) HP = Mathf.Max(0f, HP - dehydrateDamagePerSec * dt);
-
-            Mana = Mathf.Min(maxMana, Mana + manaRegenIdle * dt);
+            health.TickStarvation(dt, hunger.IsStarving, thirst.IsDehydrated);
+            mana.TickRegen(dt);
 
             RaiseStatsChanged();
 
-            if (HP <= 0f) Die();
+            if (health.IsDead) Die();
         }
 
         // ===== Damage / heal API =====
@@ -219,7 +341,7 @@ namespace WildernessCultivation.Player
         {
             // I-frames: bỏ qua mọi dame ngoài (melee/projectile/env). Tick status (TakeDamageRaw)
             // vẫn vào để tránh dodge cancel poison/burn đang stack.
-            if (IsInvulnerable) return;
+            if (invuln != null && invuln.IsInvulnerable) return;
             // Status effect modifier (Burn x1.2…) chỉ áp cho dame ngoài.
             if (statusManager != null) dmg *= statusManager.IncomingDamageMultiplier;
             TakeDamageRaw(dmg);
@@ -236,62 +358,52 @@ namespace WildernessCultivation.Player
         /// <summary>Nhận dame KHÔNG nhân IncomingDamageMultiplier (dùng cho tick status).</summary>
         public void TakeDamageRaw(float dmg)
         {
-            if (IsDead) return;
+            EnsureComponent(ref health);
+            EnsureComponent(ref shieldComp);
+            if (health.IsDead) return;
             float incoming = dmg;
-            if (HasShield)
-            {
-                float absorbed = Mathf.Min(Shield, dmg);
-                Shield -= absorbed;
-                dmg -= absorbed;
-            }
-            else if (Shield > 0f)
-            {
-                Shield = 0f;
-            }
-            if (dmg > 0f) HP = Mathf.Max(0f, HP - dmg);
+            float remaining = shieldComp.Absorb(dmg);
+            if (remaining > 0f) health.TakeRaw(remaining);
             RaiseStatsChanged();
             // Bắn event juice (camera shake, damage numbers) — bao gồm cả damage bị shield ăn.
             if (incoming > 0f) CombatEvents.RaiseDamage(transform.position, incoming, false);
-            if (HP <= 0f) Die();
+            if (health.IsDead) Die();
         }
 
         /// <summary>Tạo / cộng dồn shield. Lấy max(durationSec) để không bị shield mới ngắn hơn ghi đè cũ dài hơn.</summary>
         public void AddShield(float amount, float durationSec)
         {
-            if (amount <= 0f || durationSec <= 0f) return;
-            Shield = Mathf.Max(Shield, 0f) + amount;
-            ShieldEndsAt = Mathf.Max(ShieldEndsAt, Time.time + durationSec);
-            RaiseStatsChanged();
+            EnsureComponent(ref shieldComp).Add(amount, durationSec);
+            if (amount > 0f && durationSec > 0f) RaiseStatsChanged();
         }
 
         /// <summary>Set i-frames trong duration giây tính từ thời điểm gọi.</summary>
         public void SetInvulnerable(float duration)
         {
-            float end = Time.time + Mathf.Max(0f, duration);
-            if (end > InvulnerableUntil) InvulnerableUntil = end;
+            EnsureComponent(ref invuln).Set(duration);
         }
 
         public void Heal(float amount)
         {
-            HP = Mathf.Min(maxHP, HP + amount);
+            EnsureComponent(ref health).Heal(amount);
             RaiseStatsChanged();
         }
 
         public void Eat(float foodValue)
         {
-            Hunger = Mathf.Min(maxHunger, Hunger + foodValue);
+            EnsureComponent(ref hunger).Eat(foodValue);
             RaiseStatsChanged();
         }
 
         public void Drink(float waterValue)
         {
-            Thirst = Mathf.Min(maxThirst, Thirst + waterValue);
+            EnsureComponent(ref thirst).Drink(waterValue);
             RaiseStatsChanged();
         }
 
         public void RestoreSanity(float amount)
         {
-            Sanity = Mathf.Min(maxSanity, Sanity + amount);
+            EnsureComponent(ref sanity).Restore(amount);
             RaiseStatsChanged();
         }
 
@@ -299,21 +411,20 @@ namespace WildernessCultivation.Player
         public void DamageSanity(float amount)
         {
             if (amount <= 0f) return;
-            Sanity = Mathf.Max(0f, Sanity - amount);
+            EnsureComponent(ref sanity).Damage(amount);
             RaiseStatsChanged();
         }
 
         public bool TryConsumeMana(float cost)
         {
-            if (Mana < cost) return false;
-            Mana -= cost;
+            if (!EnsureComponent(ref mana).TryConsume(cost)) return false;
             RaiseStatsChanged();
             return true;
         }
 
         public void AddMana(float amount)
         {
-            Mana = Mathf.Min(maxMana, Mana + amount);
+            EnsureComponent(ref mana).Add(amount);
             RaiseStatsChanged();
         }
 
@@ -322,60 +433,59 @@ namespace WildernessCultivation.Player
         /// <summary>Wetness gauge [0..maxWetness]. R1: storage trên WetnessComponent.</summary>
         public float Wetness
         {
-            get => wetness != null ? wetness.Wetness : 0f;
-            set { if (wetness != null) wetness.Wetness = value; }
+            get => EnsureComponent(ref wetness).Wetness;
+            set => EnsureComponent(ref wetness).Wetness = value;
         }
         public float maxWetness
         {
-            get => wetness != null ? wetness.maxWetness : 100f;
-            set { if (wetness != null) wetness.maxWetness = value; }
+            get => EnsureComponent(ref wetness).maxWetness;
+            set => EnsureComponent(ref wetness).maxWetness = value;
         }
-        public float wetnessRainPerSec => wetness != null ? wetness.wetnessRainPerSec : 0f;
-        public float wetnessStormMultiplier => wetness != null ? wetness.wetnessStormMultiplier : 1f;
-        public float wetnessDryBasePerSec => wetness != null ? wetness.wetnessDryBasePerSec : 0f;
-        public float wetnessDryFireBonus => wetness != null ? wetness.wetnessDryFireBonus : 0f;
-        public float wetnessDryShelterBonus => wetness != null ? wetness.wetnessDryShelterBonus : 0f;
-        public float wetnessDryDayBonus => wetness != null ? wetness.wetnessDryDayBonus : 0f;
-        public float dampColdDriftMultiplier => wetness != null ? wetness.dampColdDriftMultiplier : 1f;
-        public float wetColdDriftMultiplier => wetness != null ? wetness.wetColdDriftMultiplier : 1f;
-        public float drenchedColdDriftMultiplier => wetness != null ? wetness.drenchedColdDriftMultiplier : 1f;
-        public float wetSanityPenaltyPerSec => wetness != null ? wetness.wetSanityPenaltyPerSec : 0f;
-        public float drenchedSanityPenaltyPerSec => wetness != null ? wetness.drenchedSanityPenaltyPerSec : 0f;
-        public WetnessTier CurrentWetnessTier => wetness != null ? wetness.CurrentTier : WetnessTier.Dry;
+        public float wetnessRainPerSec => EnsureComponent(ref wetness).wetnessRainPerSec;
+        public float wetnessStormMultiplier => EnsureComponent(ref wetness).wetnessStormMultiplier;
+        public float wetnessDryBasePerSec => EnsureComponent(ref wetness).wetnessDryBasePerSec;
+        public float wetnessDryFireBonus => EnsureComponent(ref wetness).wetnessDryFireBonus;
+        public float wetnessDryShelterBonus => EnsureComponent(ref wetness).wetnessDryShelterBonus;
+        public float wetnessDryDayBonus => EnsureComponent(ref wetness).wetnessDryDayBonus;
+        public float dampColdDriftMultiplier => EnsureComponent(ref wetness).dampColdDriftMultiplier;
+        public float wetColdDriftMultiplier => EnsureComponent(ref wetness).wetColdDriftMultiplier;
+        public float drenchedColdDriftMultiplier => EnsureComponent(ref wetness).drenchedColdDriftMultiplier;
+        public float wetSanityPenaltyPerSec => EnsureComponent(ref wetness).wetSanityPenaltyPerSec;
+        public float drenchedSanityPenaltyPerSec => EnsureComponent(ref wetness).drenchedSanityPenaltyPerSec;
+        public WetnessTier CurrentWetnessTier => EnsureComponent(ref wetness).CurrentTier;
 
         // Sickness chain knobs (test mutate qua façade) — set-through tới WetnessComponent.
         public float sicknessChancePerSec
         {
-            get => wetness != null ? wetness.sicknessChancePerSec : 0f;
-            set { if (wetness != null) wetness.sicknessChancePerSec = value; }
+            get => EnsureComponent(ref wetness).sicknessChancePerSec;
+            set => EnsureComponent(ref wetness).sicknessChancePerSec = value;
         }
         public StatusEffectSO sicknessEffect
         {
-            get => wetness != null ? wetness.sicknessEffect : null;
-            set { if (wetness != null) wetness.sicknessEffect = value; }
+            get => EnsureComponent(ref wetness).sicknessEffect;
+            set => EnsureComponent(ref wetness).sicknessEffect = value;
         }
         public float sicknessColdThreshold
         {
-            get => wetness != null ? wetness.sicknessColdThreshold : -1f;
-            set { if (wetness != null) wetness.sicknessColdThreshold = value; }
+            get => EnsureComponent(ref wetness).sicknessColdThreshold;
+            set => EnsureComponent(ref wetness).sicknessColdThreshold = value;
         }
         public float sicknessApplyCooldownSec
         {
-            get => wetness != null ? wetness.sicknessApplyCooldownSec : 0f;
-            set { if (wetness != null) wetness.sicknessApplyCooldownSec = value; }
+            get => EnsureComponent(ref wetness).sicknessApplyCooldownSec;
+            set => EnsureComponent(ref wetness).sicknessApplyCooldownSec = value;
         }
 
         /// <summary>Map giá trị wetness → tier (static façade).</summary>
         public static WetnessTier WetnessTierOf(float wetness) => WetnessComponent.TierOf(wetness);
 
         /// <summary>Multiplier vào thermalDriftRate khi ambient lạnh hơn BodyTemp, theo tier ướt.</summary>
-        public float WetnessColdDriftMultiplier() => wetness != null ? wetness.ColdDriftMultiplier() : 1f;
+        public float WetnessColdDriftMultiplier() => EnsureComponent(ref wetness).ColdDriftMultiplier();
 
         /// <summary>Cộng wetness (vd splash khi uống nước, lội vũng). Clamp 0..max.</summary>
         public void AddWetness(float amount)
         {
-            if (wetness == null) return;
-            wetness.Add(amount);
+            EnsureComponent(ref wetness).Add(amount);
             RaiseStatsChanged();
         }
 
@@ -385,8 +495,7 @@ namespace WildernessCultivation.Player
         public void TickWetness(float dt, Weather weather, bool sheltered, bool warm, float dayLight,
             bool applySanityPenalty = true, bool applySicknessRoll = true)
         {
-            if (wetness == null) return;
-            wetness.Tick(dt, weather, sheltered, warm, dayLight, applySanityPenalty, applySicknessRoll);
+            EnsureComponent(ref wetness).Tick(dt, weather, sheltered, warm, dayLight, applySanityPenalty, applySicknessRoll);
         }
 
         void UpdateWetness(float dt)
@@ -402,41 +511,41 @@ namespace WildernessCultivation.Player
 
         public float BodyTemp
         {
-            get => thermal != null ? thermal.BodyTemp : 50f;
-            set { if (thermal != null) thermal.BodyTemp = value; }
+            get => EnsureComponent(ref thermal).BodyTemp;
+            set => EnsureComponent(ref thermal).BodyTemp = value;
         }
-        public float comfortMin => thermal != null ? thermal.comfortMin : 30f;
-        public float comfortMax => thermal != null ? thermal.comfortMax : 70f;
-        public float thermalDriftRate => thermal != null ? thermal.thermalDriftRate : 4f;
-        public float freezeThreshold => thermal != null ? thermal.freezeThreshold : 10f;
-        public float freezeDamagePerSec => thermal != null ? thermal.freezeDamagePerSec : 1.5f;
-        public float heatThreshold => thermal != null ? thermal.heatThreshold : 90f;
-        public float heatThirstMult => thermal != null ? thermal.heatThirstMult : 2.5f;
-        public float heatSanityPenaltyPerSec => thermal != null ? thermal.heatSanityPenaltyPerSec : 0.5f;
-        public float EffectiveFreezeThreshold => thermal != null ? thermal.EffectiveFreezeThreshold : 10f;
-        public float EffectiveHeatThreshold => thermal != null ? thermal.EffectiveHeatThreshold : 90f;
-        public float ComputeAmbientTemperature() => thermal != null ? thermal.ComputeAmbientTemperature() : 50f;
+        public float comfortMin => EnsureComponent(ref thermal).comfortMin;
+        public float comfortMax => EnsureComponent(ref thermal).comfortMax;
+        public float thermalDriftRate => EnsureComponent(ref thermal).thermalDriftRate;
+        public float freezeThreshold => EnsureComponent(ref thermal).freezeThreshold;
+        public float freezeDamagePerSec => EnsureComponent(ref thermal).freezeDamagePerSec;
+        public float heatThreshold => EnsureComponent(ref thermal).heatThreshold;
+        public float heatThirstMult => EnsureComponent(ref thermal).heatThirstMult;
+        public float heatSanityPenaltyPerSec => EnsureComponent(ref thermal).heatSanityPenaltyPerSec;
+        public float EffectiveFreezeThreshold => EnsureComponent(ref thermal).EffectiveFreezeThreshold;
+        public float EffectiveHeatThreshold => EnsureComponent(ref thermal).EffectiveHeatThreshold;
+        public float ComputeAmbientTemperature() => EnsureComponent(ref thermal).ComputeAmbientTemperature();
 
         // ===== Permadeath façade =====
 
         public bool permadeathEnabled
         {
-            get => permadeath != null && permadeath.permadeathEnabled;
-            set { if (permadeath != null) permadeath.permadeathEnabled = value; }
+            get => EnsureComponent(ref permadeath).permadeathEnabled;
+            set => EnsureComponent(ref permadeath).permadeathEnabled = value;
         }
         public float deathReloadDelay
         {
-            get => permadeath != null ? permadeath.deathReloadDelay : 0f;
-            set { if (permadeath != null) permadeath.deathReloadDelay = value; }
+            get => EnsureComponent(ref permadeath).deathReloadDelay;
+            set => EnsureComponent(ref permadeath).deathReloadDelay = value;
         }
 
         /// <summary>Permadeath sequence façade. Forwards to <see cref="PermadeathHandler.Execute"/>.</summary>
         public void ExecutePermadeath()
         {
-            if (permadeath != null) permadeath.Execute();
+            EnsureComponent(ref permadeath).Execute();
         }
 
-        // ===== Weather / darkness ticks (small enough to keep on PlayerStats) =====
+        // ===== Weather / darkness ticks =====
 
         void UpdateWeatherEffects(float dt)
         {
@@ -445,12 +554,12 @@ namespace WildernessCultivation.Player
             switch (timeManager.currentWeather)
             {
                 case Weather.Rain:
-                    Thirst = Mathf.Min(maxThirst, Thirst + rainThirstRefillPerSec * dt);
+                    thirst.RefillFromRain(dt);
                     break;
                 case Weather.Storm:
-                    Thirst = Mathf.Min(maxThirst, Thirst + rainThirstRefillPerSec * dt);
+                    thirst.RefillFromRain(dt);
                     if (timeManager.isNight)
-                        Sanity = Mathf.Max(0f, Sanity - stormSanityPenaltyPerSec * dt);
+                        sanity.ApplyStormPenalty(dt);
                     break;
             }
         }
@@ -460,7 +569,7 @@ namespace WildernessCultivation.Player
             if (timeManager == null || !timeManager.isNight) return;
             if (LightSource.AnyLightAt(transform.position)) return;
             // Đêm + ngoài tất cả nguồn sáng → "deep dark"
-            Sanity = Mathf.Max(0f, Sanity - darknessSanityPenaltyPerSec * dt);
+            sanity.ApplyDarknessPenalty(dt);
         }
 
         // ===== Death =====

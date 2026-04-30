@@ -87,7 +87,7 @@ Tests vẫn compile-pass nhưng KHÔNG execute trong CI. Để gate thật, user
 
 - `Scripts/Core/` — `GameManager`, `TimeManager`, `SaveLoadController`, `SaveSystem`
 - `Scripts/Player/` — `PlayerController`, `PlayerStats` (façade), action components (Dodge/Sleep/Fishing/…)
-- `Scripts/Player/Stats/` — `WetnessComponent`, `ThermalComponent`, `PermadeathHandler` (subsystem extracts từ R1; PlayerStats tự auto-add trong Awake)
+- `Scripts/Player/Stats/` — R1 subsystem components: `HealthComponent`, `HungerComponent`, `ThirstComponent`, `SanityComponent`, `ManaComponent`, `ShieldComponent`, `InvulnerabilityComponent`, `WetnessComponent`, `ThermalComponent`, `PermadeathHandler`. PlayerStats tự auto-add trong Awake (+ lazy-add trên property access để EditMode test không cần Boot). Component pure (no external deps) → NPC humanoid R5 reuse trực tiếp.
 - `Scripts/Cultivation/` — `RealmSystem`, `SpiritRoot`, công pháp, breakthrough
 - `Scripts/Inventory/` — `Inventory`, `InventorySlot`
 - `Scripts/Crafting/` — `CraftingSystem`, `RecipeSO`, `CraftStationMarker`
