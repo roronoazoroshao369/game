@@ -27,7 +27,7 @@ Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
 3. **Inventory broken items invariant.** `CountOf` + `TryConsume` SKIP slot có `IsBroken==true`.
    Recipe không được consume món đã hỏng (player muốn sửa qua Workbench).
 4. **Workbench atomic repair.** Pre-check material → repair → consume material. KHÔNG consume trước.
-5. **Save round-trip per-slot.** `SaveLoadController.RestoreInventory` phải snapshot count mỗi slot
+5. **Save round-trip per-slot.** `Inventory.RestoreState` (R6 ISaveable) phải snapshot count mỗi slot
    trước `Add()` để định vị slot vừa được Add (perishable/durable không stack). Đừng scan-from-zero
    sẽ ghi đè freshness/durability slot trước.
 6. **Unity meta files commit chung với asset.** Nếu thêm file `.cs`/`.asset` mới, MUST commit `.meta`
@@ -39,6 +39,12 @@ Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
    Subscriber **PHẢI** subscribe trong `OnEnable` + unsubscribe trong `OnDisable`.
    Test PHẢI gọi `GameEvents.ClearAllSubscribers()` trong `SetUp`/`TearDown` để tránh leak.
    Damage / hit feedback giữ ở `CombatEvents` (concern khác — tần suất cao).
+8. **Save qua `ISaveable` dispatcher** (R6). `SaveLoadController` chỉ enumerate `SaveRegistry` rồi
+   gọi `CaptureState` / `RestoreState` trên từng system. Mỗi system tự own slice của mình
+   (PlayerStats=vitals, RealmSystem=tier/xp, Inventory=slots, TimeManager=time, WorldGenerator=seed).
+   Post-restore cross-system ordering (ReapplySpiritRootMaxHP → ReapplyAccumulatedBonuses → clamp HP)
+   qua `SaveRegistry.RegisterFixup(owner, order, action)`. Register OnEnable / Unregister OnDisable.
+   Test PHẢI gọi `SaveRegistry.ClearAll()` trong `SetUp`/`TearDown` (tương tự rule 7).
 
 ## Code conventions
 
@@ -85,7 +91,7 @@ Tests vẫn compile-pass nhưng KHÔNG execute trong CI. Để gate thật, user
 
 ## File layout — biết đặt code vào đâu
 
-- `Scripts/Core/` — `GameManager`, `TimeManager`, `SaveLoadController`, `SaveSystem`
+- `Scripts/Core/` — `GameManager`, `TimeManager`, `SaveLoadController` (R6 dispatcher), `SaveSystem`, `ISaveable` + `SaveRegistry`
 - `Scripts/Player/` — `PlayerController`, `PlayerStats` (façade), action components (Dodge/Sleep/Fishing/…)
 - `Scripts/Player/Stats/` — R1 subsystem components: `HealthComponent`, `HungerComponent`, `ThirstComponent`, `SanityComponent`, `ManaComponent`, `ShieldComponent`, `InvulnerabilityComponent`, `WetnessComponent`, `ThermalComponent`, `PermadeathHandler`. PlayerStats tự auto-add trong Awake (+ lazy-add trên property access để EditMode test không cần Boot). Component pure (no external deps) → NPC humanoid R5 reuse trực tiếp.
 - `Scripts/Cultivation/` — `RealmSystem`, `SpiritRoot`, công pháp, breakthrough

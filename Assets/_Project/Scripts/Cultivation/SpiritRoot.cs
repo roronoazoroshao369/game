@@ -17,6 +17,9 @@ namespace WildernessCultivation.Cultivation
         public SpiritRootSO[] candidatePool;
         public bool rollOnStart = true;
 
+        [Tooltip("Pool linh căn để resolve theo tên khi load. R6: move từ SaveLoadController.spiritRootCatalog.")]
+        public SpiritRootSO[] spiritRootCatalog;
+
         public SpiritRootSO Current => current;
 
         void Awake()
@@ -35,6 +38,30 @@ namespace WildernessCultivation.Cultivation
         }
 
         void OnDestroy() => ServiceLocator.Unregister<SpiritRoot>(this);
+
+        void OnEnable()
+        {
+            // R6: fixup order 20 — chạy sau RealmSystem.RestoreState(10) đã có
+            // data.player.spiritRoot name; trước PlayerStats.ReapplySpiritRootMaxHP (30).
+            SaveRegistry.RegisterFixup(this, 20, data =>
+            {
+                if (data?.player == null || string.IsNullOrEmpty(data.player.spiritRoot)) return;
+                if (spiritRootCatalog == null) return;
+                foreach (var so in spiritRootCatalog)
+                {
+                    if (so != null && so.name == data.player.spiritRoot)
+                    {
+                        SetSpiritRoot(so);
+                        return;
+                    }
+                }
+            });
+        }
+
+        void OnDisable()
+        {
+            SaveRegistry.UnregisterFixupsFor(this);
+        }
 
         public void SetSpiritRoot(SpiritRootSO root)
         {

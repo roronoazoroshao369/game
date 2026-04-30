@@ -11,8 +11,31 @@ namespace WildernessCultivation.Cultivation
     /// Mỗi tầng yêu cầu 1 lượng XP nhất định + đột phá thành công (tỉ lệ).
     /// Lên tầng → buff maxHP, maxMana, dame.
     /// </summary>
-    public class RealmSystem : MonoBehaviour, MagicTreasureSO.RealmSystemHook
+    public class RealmSystem : MonoBehaviour, MagicTreasureSO.RealmSystemHook, ISaveable
     {
+        // ===== R6 ISaveable =====
+        public string SaveKey => "Player/Realm";
+        public int Order => 10; // Sớm — PlayerStats(30) + Inventory(60) chưa dùng tier/spiritRoot trực tiếp trong RestoreState của chúng.
+
+        public void CaptureState(SaveData data)
+        {
+            if (data == null) return;
+            data.player ??= new PlayerSaveData();
+            data.player.realmTier = currentTier;
+            data.player.cultivationXp = currentXp;
+            data.player.spiritRoot = (spiritRootHolder != null && spiritRootHolder.Current != null)
+                ? spiritRootHolder.Current.name
+                : SpiritRoot;
+        }
+
+        public void RestoreState(SaveData data)
+        {
+            if (data?.player == null) return;
+            currentTier = data.player.realmTier;
+            currentXp = data.player.cultivationXp;
+            if (!string.IsNullOrEmpty(data.player.spiritRoot)) SpiritRoot = data.player.spiritRoot;
+        }
+
         [Serializable]
         public struct RealmDefinition
         {
@@ -72,6 +95,21 @@ namespace WildernessCultivation.Cultivation
         }
 
         void OnDestroy() => ServiceLocator.Unregister<RealmSystem>(this);
+
+        void OnEnable()
+        {
+            SaveRegistry.RegisterSaveable(this);
+            // Fixup 50: cộng hpBonus/manaBonus/damageBonus tích luỹ tier 1..currentTier.
+            // Chạy sau PlayerStats.ReapplySpiritRootMaxHP (fixup 30) — maxHP đã reset về
+            // base*spiritMul — trước PlayerStats.ClampHPMana (fixup 60).
+            SaveRegistry.RegisterFixup(this, 50, _ => ReapplyAccumulatedBonuses());
+        }
+
+        void OnDisable()
+        {
+            SaveRegistry.UnregisterSaveable(this);
+            SaveRegistry.UnregisterFixupsFor(this);
+        }
 
         public RealmDefinition Current => realms[Mathf.Clamp(currentTier, 0, realms.Length - 1)];
         public bool HasNext => currentTier + 1 < realms.Length;

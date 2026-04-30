@@ -36,6 +36,7 @@ namespace WildernessCultivation.Tests.EditMode
         public void Setup()
         {
             SaveSystem.Delete();
+            SaveRegistry.ClearAll();
 
             playerGo = new GameObject("Player");
             stats = playerGo.AddComponent<PlayerStats>();
@@ -44,7 +45,8 @@ namespace WildernessCultivation.Tests.EditMode
 
             // EditMode does not fire Awake/OnEnable on AddComponent — manually
             // boot so PlayerStats wires sibling refs, RealmSystem builds default
-            // realms, and Inventory populates its slots list.
+            // realms, Inventory populates its slots list, và R6 ISaveable register
+            // với SaveRegistry qua OnEnable.
             TestHelpers.Boot(stats, realm, inv);
 
             db = ScriptableObject.CreateInstance<ItemDatabase>();
@@ -66,6 +68,7 @@ namespace WildernessCultivation.Tests.EditMode
         public void Teardown()
         {
             SaveSystem.Delete();
+            SaveRegistry.ClearAll();
             if (playerGo != null) UnityEngine.Object.DestroyImmediate(playerGo);
             if (db != null) UnityEngine.Object.DestroyImmediate(db);
             if (itemPlain != null) UnityEngine.Object.DestroyImmediate(itemPlain);

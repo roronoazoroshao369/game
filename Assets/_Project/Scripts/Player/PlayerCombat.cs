@@ -50,6 +50,18 @@ namespace WildernessCultivation.Player
 
         void OnDestroy() => ServiceLocator.Unregister<PlayerCombat>(this);
 
+        void OnEnable()
+        {
+            // R6: fixup order 40 — reset melee damage về base trước RealmSystem
+            // ReapplyAccumulatedBonuses (50) stack tier bonus.
+            SaveRegistry.RegisterFixup(this, 40, _ => ResetMeleeDamageToBase());
+        }
+
+        void OnDisable()
+        {
+            SaveRegistry.UnregisterFixupsFor(this);
+        }
+
         /// <summary>Reset meleeDamage về giá trị gốc (Awake-time). Gọi từ SaveLoadController
         /// trước <see cref="WildernessCultivation.Cultivation.RealmSystem.ReapplyAccumulatedBonuses"/>
         /// để tránh stack double khi LoadAndApply chạy nhiều lần trong cùng scene.</summary>

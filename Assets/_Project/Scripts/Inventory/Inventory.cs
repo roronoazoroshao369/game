@@ -24,15 +24,92 @@ namespace WildernessCultivation.Items
     /// <summary>
     /// Inventory cố định N slot. Stack theo maxStack của item. Hỗ trợ Add / Remove / TryConsume.
     /// </summary>
-    public class Inventory : MonoBehaviour
+    public class Inventory : MonoBehaviour, ISaveable
     {
         [Header("Config")]
         public int slotCount = 16;
+
+        [Tooltip("ItemDatabase để resolve ItemSO khi load save. R6: move từ SaveLoadController.itemDatabase " +
+            "để Inventory tự implement ISaveable.RestoreState (dispatcher pattern).")]
+        public ItemDatabase itemDatabase;
 
         [SerializeField] List<InventorySlot> slots = new();
 
         public event Action OnInventoryChanged;
         public IReadOnlyList<InventorySlot> Slots => slots;
+
+        // ===== R6 ISaveable =====
+
+        public string SaveKey => "Player/Inventory";
+        public int Order => 60; // Sau PlayerStats (30). Không cần fixup.
+
+        public void CaptureState(SaveData data)
+        {
+            if (data == null) return;
+            data.inventory ??= new List<InventorySlotData>();
+            data.inventory.Clear();
+            foreach (var s in slots)
+            {
+                if (s.IsEmpty) continue;
+                data.inventory.Add(new InventorySlotData
+                {
+                    itemId = s.item.itemId,
+                    count = s.count,
+                    freshRemaining = s.IsPerishable ? s.freshRemaining : -1f,
+                    durability = s.IsDurable ? s.durability : -1f,
+                });
+            }
+        }
+
+        public void RestoreState(SaveData data)
+        {
+            if (data == null || data.inventory == null) return;
+            if (itemDatabase == null)
+            {
+                Debug.LogWarning("[Save] ItemDatabase chưa được gán → không thể restore inventory.");
+                return;
+            }
+
+            // Xóa toàn bộ slot rồi nạp lại
+            for (int i = 0; i < slots.Count; i++)
+                TryConsumeSlot(i, slots[i].count);
+
+            // Snapshot count per slot trước mỗi Add để định vị slot vừa được Add ghi vào
+            // (perishable/durable không stack → mỗi entry tạo 1 slot mới). Regression
+            // test: SaveLoadControllerTests.RoundTrip_MultiplePerishableStacks_PreservePerSlotFreshness.
+            int slotCount = slots.Count;
+            var preCounts = new int[slotCount];
+
+            foreach (var s in data.inventory)
+            {
+                if (string.IsNullOrEmpty(s.itemId) || s.count <= 0) continue;
+                var item = itemDatabase.GetById(s.itemId);
+                if (item == null)
+                {
+                    Debug.LogWarning($"[Save] ItemDatabase không có itemId='{s.itemId}', bỏ qua.");
+                    continue;
+                }
+
+                for (int i = 0; i < slotCount; i++) preCounts[i] = slots[i].count;
+                int leftover = Add(item, s.count);
+                if (leftover > 0)
+                    Debug.LogWarning($"[Save] Inventory đầy khi restore {s.itemId}, {leftover} item bị mất.");
+
+                if (s.freshRemaining >= 0f || s.durability >= 0f)
+                {
+                    for (int i = 0; i < slotCount; i++)
+                    {
+                        var slot = slots[i];
+                        if (slot.item == item && slot.count > preCounts[i])
+                        {
+                            if (s.freshRemaining >= 0f && slot.IsPerishable) slot.freshRemaining = s.freshRemaining;
+                            if (s.durability >= 0f && slot.IsDurable) slot.durability = s.durability;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>Tổng khối lượng inventory (sum item.weight * count). Dùng cho encumbrance.</summary>
         public float TotalWeight
@@ -53,6 +130,16 @@ namespace WildernessCultivation.Items
         }
 
         void OnDestroy() => ServiceLocator.Unregister<Inventory>(this);
+
+        void OnEnable()
+        {
+            SaveRegistry.RegisterSaveable(this);
+        }
+
+        void OnDisable()
+        {
+            SaveRegistry.UnregisterSaveable(this);
+        }
 
         /// <summary>Thêm item; trả về số lượng KHÔNG add được (=0 nếu đầy đủ).</summary>
         public int Add(ItemSO item, int count)

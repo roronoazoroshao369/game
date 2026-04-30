@@ -28,10 +28,16 @@ namespace WildernessCultivation.Player
     /// chưa có — test chỉ cần <c>go.AddComponent&lt;PlayerStats&gt;()</c> mà không cần wiring.
     /// Field initializer trên mỗi component cung cấp default values giống PlayerStats cũ.
     /// </summary>
-    public class PlayerStats : CharacterBase
+    public class PlayerStats : CharacterBase, ISaveable
     {
         public event Action OnDeath;
         public event Action OnStatsChanged;
+
+        // ===== ISaveable =====
+
+        /// <summary>R6 ISaveable: order 30 — sau RealmSystem(10)+SpiritRoot(20), trước Inventory(60).</summary>
+        public string SaveKey => "Player/Vitals";
+        public int Order => 30;
 
         // ===== Subsystem components (auto-added in Awake + lazy on property access) =====
 
@@ -98,6 +104,60 @@ namespace WildernessCultivation.Player
         {
             if (playerInventory != null) playerInventory.OnInventoryChanged -= BridgeInventoryToGameEvents;
             ServiceLocator.Unregister<PlayerStats>(this);
+        }
+
+        void OnEnable()
+        {
+            // R6: register với SaveRegistry. Cross-system fixup cần chạy SAU khi
+            // SpiritRoot.SetSpiritRoot (order 20) áp catalog + trước RealmSystem
+            // ReapplyAccumulatedBonuses (50) add tier bonus + cuối cùng clamp HP/Mana (60).
+            SaveRegistry.RegisterSaveable(this);
+            SaveRegistry.RegisterFixup(this, 30, _ => ReapplySpiritRootMaxHP());
+            SaveRegistry.RegisterFixup(this, 60, data =>
+            {
+                if (data?.player == null) return;
+                HP = Mathf.Min(data.player.hp, maxHP);
+                Mana = Mathf.Min(data.player.mana, maxMana);
+            });
+        }
+
+        void OnDisable()
+        {
+            SaveRegistry.UnregisterSaveable(this);
+            SaveRegistry.UnregisterFixupsFor(this);
+        }
+
+        public void CaptureState(SaveData data)
+        {
+            if (data == null) return;
+            data.player ??= new PlayerSaveData();
+            data.player.position = transform.position;
+            data.player.hp = HP;
+            data.player.hunger = Hunger;
+            data.player.thirst = Thirst;
+            data.player.sanity = Sanity;
+            data.player.mana = Mana;
+            data.player.bodyTemp = BodyTemp;
+            data.player.isAwakened = IsAwakened;
+            data.player.phamFailStreak = phamFailStreak;
+            data.player.wetness = Wetness;
+        }
+
+        public void RestoreState(SaveData data)
+        {
+            if (data?.player == null) return;
+            transform.position = data.player.position;
+            // HP/Mana KHÔNG clamp ở đây — clamp phase chạy sau RealmSystem.ReapplyAccumulatedBonuses
+            // (fixup order 60) khi maxHP/maxMana đã có đủ spirit root scale + tier bonus.
+            HP = data.player.hp;
+            Hunger = data.player.hunger;
+            Thirst = data.player.thirst;
+            Sanity = data.player.sanity;
+            Mana = data.player.mana;
+            BodyTemp = data.player.bodyTemp <= 0f ? 50f : data.player.bodyTemp;
+            IsAwakened = data.player.isAwakened;
+            phamFailStreak = data.player.phamFailStreak;
+            Wetness = Mathf.Clamp(data.player.wetness, 0f, maxWetness);
         }
 
         void BridgeInventoryToGameEvents() => GameEvents.RaisePlayerInventoryChanged();
