@@ -32,6 +32,13 @@ Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
    sẽ ghi đè freshness/durability slot trước.
 6. **Unity meta files commit chung với asset.** Nếu thêm file `.cs`/`.asset` mới, MUST commit `.meta`
    tương ứng (Unity tự sinh khi mở Editor).
+7. **Domain events qua `GameEvents` static hub** (R4). UI / audio / quest / achievement subscribe
+   `GameEvents.OnPlayerDied`, `OnRealmAdvanced`, `OnPlayerStatsChanged`, `OnWeatherChanged`, …
+   thay vì giữ ref tới `PlayerStats` / `RealmSystem` / `TimeManager`. Publisher fire qua
+   `GameEvents.RaiseXxx(...)` (không bao giờ `OnXxx?.Invoke()` trực tiếp ngoài hub).
+   Subscriber **PHẢI** subscribe trong `OnEnable` + unsubscribe trong `OnDisable`.
+   Test PHẢI gọi `GameEvents.ClearAllSubscribers()` trong `SetUp`/`TearDown` để tránh leak.
+   Damage / hit feedback giữ ở `CombatEvents` (concern khác — tần suất cao).
 
 ## Code conventions
 

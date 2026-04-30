@@ -66,8 +66,16 @@ namespace WildernessCultivation.Core
                 Debug.Log($"[Time] Sang mùa {currentSeason}.");
             }
 
-            if (isNight && !wasNight) OnNightStart?.Invoke();
-            else if (!isNight && wasNight) OnDayStart?.Invoke();
+            if (isNight && !wasNight)
+            {
+                OnNightStart?.Invoke();
+                GameEvents.RaiseNightStarted();
+            }
+            else if (!isNight && wasNight)
+            {
+                OnDayStart?.Invoke();
+                GameEvents.RaiseDayStarted();
+            }
             wasNight = isNight;
 
             if (globalLight != null) globalLight.SetIntensity01(GetLightIntensity());
@@ -94,6 +102,7 @@ namespace WildernessCultivation.Core
             {
                 currentWeather = next;
                 OnWeatherChanged?.Invoke(currentWeather);
+                GameEvents.RaiseWeatherChanged(currentWeather);
                 Debug.Log($"[Time] Thời tiết hôm nay: {currentWeather}.");
             }
         }

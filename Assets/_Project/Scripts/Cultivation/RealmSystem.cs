@@ -112,12 +112,14 @@ namespace WildernessCultivation.Cultivation
             tempBreakthroughBonus = 0f;
             tempBreakthroughEndsAt = 0f;
             OnBreakthroughAttempted?.Invoke(success);
+            Core.GameEvents.RaiseBreakthroughAttempted(success);
 
             if (success)
             {
                 currentTier++;
                 ApplyBonuses(nextRealm);
                 OnRealmAdvanced?.Invoke(currentTier);
+                Core.GameEvents.RaiseRealmAdvanced(currentTier);
                 Debug.Log($"[Realm] Đột phá thành công lên {nextRealm.name}!");
             }
             else
