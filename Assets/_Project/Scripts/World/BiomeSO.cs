@@ -21,14 +21,16 @@ namespace WildernessCultivation.World
         public GameObject groundPrefab;
         [Tooltip("Tile asset cho Tilemap-based ground rendering. Ưu tiên hơn groundPrefab khi WorldGenerator.groundTilemap != null. Render hiệu quả hơn nhiều ở map lớn (1 SpriteRenderer batch thay vì N×M GameObjects).")]
         public TileBase groundTile;
+        [Tooltip("Tile variants để phá vỡ pattern lặp khi map lớn. Khi != null & length > 0, WorldGenerator pick deterministic per cell (hash x,y,seed) — overrides groundTile. Empty → fallback groundTile.")]
+        public TileBase[] groundTileVariants;
 
-        [Header("Resource prefabs")]
+        [Header("Resource prefabs (legacy 4-slot)")]
         public GameObject treePrefab;
         public GameObject rockPrefab;
         public GameObject grassBushPrefab;
         public GameObject waterSpringPrefab;
 
-        [Header("Density [0..1]")]
+        [Header("Density [0..1] (legacy 4-slot)")]
         [Range(0f, 1f)] public float treeDensity = 0.10f;
         [Range(0f, 1f)] public float rockDensity = 0.04f;
         [Range(0f, 1f)] public float grassDensity = 0.20f;
@@ -58,6 +60,8 @@ namespace WildernessCultivation.World
         /// Plant / linh thảo / mineral phụ — spawn theo từng tile với density riêng.
         /// Mỗi tile lăn 1 lần qua list, gặp prefab match density thì spawn (tối đa 1 / tile).
         /// Dùng cho linh mushroom, berry bush, cactus, death lily, mineral ore …
+        /// Optional Perlin band [perlinMin, perlinMax] để giới hạn vùng spawn (vd ore vein chỉ
+        /// xuất hiện ở đỉnh núi: perlinMin=0.8, perlinMax=1.0). Default [0,1] = no constraint.
         /// </summary>
         [Header("Extra resource nodes (plants, minerals)")]
         public ExtraNode[] extraNodes;
@@ -67,6 +71,29 @@ namespace WildernessCultivation.World
         {
             public GameObject prefab;
             [Range(0f, 1f)] public float density;
+            [Tooltip("Perlin band lower bound (0..1). Default 0 = no constraint.")]
+            [Range(0f, 1f)] public float perlinMin;
+            [Tooltip("Perlin band upper bound (0..1). Default 0 (treated as 1) = no constraint.")]
+            [Range(0f, 1f)] public float perlinMax;
+        }
+
+        /// <summary>
+        /// Decoration objects — chỉ visual / ambient, không phải resource (không có Interact / harvest).
+        /// VD: hoa cỏ dại, nấm phát sáng, xương khô, chum đất vỡ, đèn lồng cũ. Pass riêng sau resource pass:
+        /// chỉ spawn nếu tile chưa có resource (nodecoration overlap resource node).
+        /// </summary>
+        [Header("Decorations (visual only, không phải resource)")]
+        public DecorationEntry[] decorations;
+
+        [System.Serializable]
+        public struct DecorationEntry
+        {
+            public GameObject prefab;
+            [Range(0f, 1f)] public float density;
+            [Tooltip("Perlin band lower bound (0..1). Default 0 = no constraint.")]
+            [Range(0f, 1f)] public float perlinMin;
+            [Tooltip("Perlin band upper bound (0..1). Default 0 (treated as 1) = no constraint.")]
+            [Range(0f, 1f)] public float perlinMax;
         }
     }
 }

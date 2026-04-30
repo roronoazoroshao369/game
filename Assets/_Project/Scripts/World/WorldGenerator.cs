@@ -209,7 +209,7 @@ namespace WildernessCultivation.World
                     float n = Mathf.PerlinNoise((x + seed) * ResourceNoiseScale, (y + seed) * ResourceNoiseScale);
                     BiomeSO biome = useBiomes ? PickBiomeFor(x, y) : null;
 
-                    TileBase tile = biome != null ? biome.groundTile : legacyGroundTile;
+                    TileBase tile = PickGroundTile(biome, x, y);
                     if (groundTilemap != null && tile != null)
                     {
                         groundTilemap.SetTile(new Vector3Int(x, y, 0), tile);
@@ -242,20 +242,71 @@ namespace WildernessCultivation.World
                     { Spawn(grass, x, y); spawned = true; }
 
                     // Extra nodes (linh thảo / mineral) — pass riêng, có thể overlap nếu
-                    // tile chưa lấp. Tối đa 1 extra/tile để tránh dày đặc.
+                    // tile chưa lấp. Tối đa 1 extra/tile để tránh dày đặc. Tôn trọng Perlin
+                    // band khi configured (mặc định 0..0 = no constraint).
                     if (!spawned && biome != null && biome.extraNodes != null)
                     {
                         foreach (var en in biome.extraNodes)
                         {
                             if (en.prefab == null || en.density <= 0f) continue;
+                            if (!InPerlinBand(n, en.perlinMin, en.perlinMax)) continue;
                             if (Random.value < en.density)
                             {
                                 Spawn(en.prefab, x, y);
+                                spawned = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Decoration pass — visual only, chỉ spawn khi tile chưa có resource.
+                    // Decoration không phải resource (không có Interact / harvest), không
+                    // kế thừa block tile resource — đứng trên ground bình thường.
+                    if (!spawned && biome != null && biome.decorations != null)
+                    {
+                        foreach (var d in biome.decorations)
+                        {
+                            if (d.prefab == null || d.density <= 0f) continue;
+                            if (!InPerlinBand(n, d.perlinMin, d.perlinMax)) continue;
+                            if (Random.value < d.density)
+                            {
+                                Spawn(d.prefab, x, y);
                                 break;
                             }
                         }
                     }
                 }
+        }
+
+        /// <summary>
+        /// Pick ground tile cho cell (x,y). Ưu tiên biome.groundTileVariants nếu có (deterministic
+        /// hash) → biome.groundTile → legacyGroundTile. Variant pick stable across regenerate cùng seed.
+        /// </summary>
+        public TileBase PickGroundTile(BiomeSO biome, int x, int y)
+        {
+            if (biome != null && biome.groundTileVariants != null && biome.groundTileVariants.Length > 0)
+            {
+                // Deterministic hash pick — same (seed, x, y) always returns same variant.
+                int h = unchecked(seed * 73856093 ^ x * 19349663 ^ y * 83492791);
+                if (h < 0) h = -h;
+                int idx = h % biome.groundTileVariants.Length;
+                var picked = biome.groundTileVariants[idx];
+                if (picked != null) return picked;
+                // Variant slot null → fallback groundTile (don't crash on partial config).
+            }
+            return biome != null ? biome.groundTile : legacyGroundTile;
+        }
+
+        /// <summary>
+        /// True nếu Perlin value n nằm trong band [min,max]. Mặc định min=max=0 → no constraint
+        /// (treat as 0..1). max=0 cũng được coi là no upper bound (giữ backward compat với
+        /// ExtraNode cũ chưa set perlinMin/Max).
+        /// </summary>
+        public static bool InPerlinBand(float n, float min, float max)
+        {
+            if (min <= 0f && max <= 0f) return true;          // unset → no constraint
+            if (max <= min) return n >= min;                  // upper unset → only lower bound
+            return n >= min && n <= max;
         }
 
         void Spawn(GameObject prefab, int x, int y)
