@@ -1,35 +1,40 @@
-# GPT-4o image (DALL-E 3 / "Image 2.0") workflow
+# GPT image 2.0 (`gpt-image-1`) workflow
 
-> Adapted workflow khi dùng GPT-4o image thay Leonardo. Trade-offs documented dưới.
+> Adapted workflow khi dùng GPT image 2.0 (model `gpt-image-1` mới nhất, ra cuối 2025) thay Leonardo. Trade-offs documented dưới.
+>
+> ⚠️ **Khác `dall-e-3` cũ**: GPT image 2.0 mạnh hơn nhiều ở instruction following, palette adherence (hex codes), tileability hint, native transparent background, và 4-variation per request.
 
 ## Khi nào dùng GPT vs Leonardo
 
-| Asset type | Leonardo | GPT-4o | Recommend |
+| Asset type | Leonardo | GPT image 2.0 | Recommend |
 |---|---|---|---|
 | Hero image / illustration | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **GPT** (style + chi tiết tốt hơn) |
-| Item icon (128×128) | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Tie — chọn theo cost |
-| Mob/character sprite | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Tie |
-| NPC sprite | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Tie |
-| Decoration (flower, bone…) | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Tie |
-| **Tile texture seamless** | ⭐⭐⭐⭐⭐ | ⭐⭐ | **Leonardo** nếu được; **GPT + retouch** nếu phải |
-| UI panel / button | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **GPT** (chữ + clean line tốt hơn) |
-| VFX particle frame | ⭐⭐⭐⭐ | ⭐⭐⭐ | **Leonardo** |
+| Item icon (128×128) | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **GPT** (transparent BG native) |
+| Mob/character sprite | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **GPT** (transparent BG native) |
+| NPC sprite | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **GPT** |
+| Decoration (flower, bone…) | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **GPT** |
+| **Tile texture seamless** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | **GPT** OK (gần seamless ~80-90%, retouch 1-2 phút) |
+| UI panel / button | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **GPT** (text + clean line tốt nhất) |
+| VFX particle frame | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Tie |
 
-## Trade-offs khi dùng GPT-4o cho asset pipeline
+## Trade-offs khi dùng GPT image 2.0 cho asset pipeline
 
 ### Tốt hơn Leonardo
 
 - Hiểu prompt phức tạp + Asian aesthetic chi tiết hơn (training data lớn hơn)
 - Render text, tablet/scroll calligraphy đẹp hơn
 - Composition hero scene cinematic hơn
+- **Native transparent background** (PNG alpha) — perfect cho item icon / mob sprite / decoration không cần Magic Eraser sau
+- **Palette adherence chính xác** — paste `#4a6741` GPT render đúng màu hex (DALL-E 3 hay shift sang lân cận)
+- **4 variation / request** (như Leonardo)
 - Đã trả $20/tháng → no extra cost
 
 ### Tệ hơn Leonardo
 
-- ❌ KHÔNG có "Tile" / "Tileable" mode → tile sẽ có seam line ở 4 cạnh, phải retouch thủ công
+- ⚠️ KHÔNG có "Tile" / "Tileable" toggle native — tile gần seamless ~80-90% nhưng cần Photopea retouch 1-2 phút (vs 0 phút Leonardo)
 - ❌ KHÔNG có Element/LoRA training → mỗi prompt phải paste full style anchor (~15 dòng) để giữ consistency
-- ❌ KHÔNG có Image Guidance (upload reference) — chỉ có DALL-E 2 hay GPT-4o variation, không stylize
-- ⚠️ Style drift cao hơn giữa các generation (GPT có chút random hơn LoRA-locked)
+- ❌ KHÔNG có Image Guidance upload reference (Leonardo có Style Reference)
+- ⚠️ Style drift nhẹ giữa các generation (GPT có chút random hơn LoRA-locked) — vẫn acceptable
 - ⚠️ Output format mặc định 1024×1024 PNG hoặc 1024×1792 (portrait) / 1792×1024 (landscape) — cần downscale
 
 ## Workflow tổng (adapted cho GPT)
@@ -40,22 +45,24 @@ Vì không train Element được, hero image chỉ dùng làm **reference visua
 
 Save về `Documentation/assets/hero_*.png` (không bundle vào APK).
 
-### Step 2 — Tile generation (cần extra retouch)
+### Step 2 — Tile generation (Photopea retouch ngắn)
 
 Generate 12 tile theo `prompts/tileset_gpt.txt` (file mới — adapted cho GPT, có rule seamless mạnh hơn):
 
 ```
-Bạn → ChatGPT (GPT-4o, có image generation):
+Bạn → ChatGPT (GPT image 2.0):
 [Paste prompt từ tileset_gpt.txt]
 
-GPT → 1 ảnh PNG 1024×1024 (DALL-E 3, không có 4-variation như Leonardo)
+GPT → 4 ảnh PNG variation 1024×1024
 ```
 
-⚠️ **GPT-4o image chỉ generate 1 ảnh / request** (DALL-E 3 default). Muốn 4 variation phải request 4 lần.
+→ Pick 1-2 best variation per prompt. Verify seamless trong Photopea (Step 4).
 
-### Step 3 — Seam fix với Photopea (BẮT BUỘC cho tile)
+→ ~30% tile sẽ seamless luôn (skip Step 3). ~70% tile cần Photopea retouch 1-2 phút.
 
-GPT cho tile gần seamless ~70% — vẫn có seam line nhẹ ở 4 cạnh khi tile lặp. Fix:
+### Step 3 — Seam fix với Photopea (CHỈ KHI cần)
+
+GPT image 2.0 cho tile gần seamless ~80-90%. Verify trước (Step 4); nếu seam visible thì fix:
 
 1. Mở https://photopea.com (free, web-based, không cần install)
 2. File → Open → tile PNG vừa download
@@ -87,26 +94,26 @@ Theo workflow PR #76:
 
 ## Cost & timeline
 
-| | Leonardo | GPT-4o |
+| | Leonardo | GPT image 2.0 |
 |---|---|---|
 | Subscription | $10/tháng (Apprentice) | $20/tháng (Plus, đã trả) |
-| Time per tile (gen) | ~30s × 4 var = 2 phút | ~30s × 4 = 2 phút |
-| Time per tile (retouch seam) | 0 phút (tile native) | **~5 phút Photopea** |
-| Total per tile | ~2 phút | ~7 phút |
-| **12 tiles total** | ~24 phút | **~84 phút (1.5 giờ)** |
+| Time per tile (gen) | ~30s × 4 var = 2 phút | ~30s × 4 var = 2 phút |
+| Time per tile (retouch seam) | 0 phút (tile native) | **~1-2 phút Photopea** (chỉ ~70% tile cần) |
+| Total per tile | ~2 phút | ~3-4 phút |
+| **12 tiles total** | ~24 phút | **~36-48 phút** |
 | 6 hero (no retouch) | ~12 phút | ~12 phút |
-| **Grand total Phase 1+2** | ~36 phút | ~96 phút |
+| **Grand total Phase 1+2** | ~36 phút | ~48-60 phút |
 
-→ GPT mất gấp ~3× thời gian cho tile. Hero không thay đổi.
+→ GPT image 2.0 chỉ chậm hơn ~30-60% cho tile (vs DALL-E 3 cũ chậm 3×). Hero không thay đổi.
+
+→ Cho phần còn lại của asset pack (icon, mob, decoration, NPC, UI), GPT thực ra **nhanh hơn** Leonardo nhờ native transparent BG (skip Magic Eraser step).
 
 ## Recommendations
 
-1. **Dùng GPT cho hero / icon / character / NPC / decoration / UI** (90% asset pack) — quality tốt hơn, không cần retouch.
-2. **Cho tile** — chấp nhận retouch 5 phút/tile (12 × 5 = 1 giờ), hoặc:
-   - Switch lại Leonardo SAU khi fix lỗi
-   - Hoặc Midjourney `--tile` flag ($10/tháng)
-   - Hoặc hand-paint tile trong Photopea (dùng palette từ ART_STYLE.md §2)
+1. **Dùng GPT image 2.0 cho TẤT CẢ asset** — Leonardo không còn cần thiết. Tile nhanh hơn nhiều so với DALL-E 3 cũ; icon/sprite/decoration thậm chí tiện hơn Leonardo nhờ transparent BG native.
+2. **Có thể huỷ Leonardo subscription** — tiết kiệm $10/tháng. GPT Plus $20 đủ cho cả pipeline.
 3. **Hero image vừa tạo** ("Mystical glade with a lone wanderer"): giữ lại, dùng làm visual reference khi prompt tile + decoration để mắt bạn đối chiếu style nhất quán.
+4. **Future asset prompts (PR sau)**: mob/icon/decoration/NPC/UI — sẽ viết tận dụng transparent BG + 4-variation feature, không cần adapter file riêng cho Leonardo.
 
 ## File index (GPT-adapted prompts)
 
