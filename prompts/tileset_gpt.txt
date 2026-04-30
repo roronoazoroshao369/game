@@ -1,13 +1,13 @@
-# Ground tile prompts adapted cho GPT-4o image (DALL-E 3, "Image 2.0")
+# Ground tile prompts adapted cho GPT image 2.0 (model `gpt-image-1`, OpenAI 2025)
 #
 # Khác với tileset.txt (Leonardo):
 # - Inline FULL style anchor mỗi prompt (compensate thiếu Element training)
 # - Rule seamless tileability mạnh hơn nhiều (GPT cần hint dày)
-# - Bonus: Sau generate PHẢI retouch seam trong Photopea (xem gpt_workflow.md Step 3)
+# - Sau generate có thể cần retouch seam trong Photopea (~70% tile, xem gpt_workflow.md Step 3)
 #
-# Settings ChatGPT: gửi vào GPT-4o (default model có image gen).
-# Output: 1 ảnh PNG 1024×1024 / request. Muốn 4 variation → request 4 lần.
-# Sau download: Photopea Offset 512×512 → fix seam → downscale 1024→64 → save.
+# Settings ChatGPT: gửi vào GPT-4o (model có gpt-image-1 image gen tích hợp).
+# Output: 1 ảnh PNG 1024×1024 / request (ChatGPT consumer UI). Muốn 4 variation → regen 4 lần.
+# Sau download: verify seamless (Photopea pattern fill) → fix seam nếu cần → downscale 1024→64.
 
 # ============================================================
 # FOREST — Rừng Linh Mộc (Perlin 0.0-0.4)
