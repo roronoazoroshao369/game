@@ -129,7 +129,7 @@ Chi tiết đầy đủ xem [`ARCHITECTURE.md`](ARCHITECTURE.md) §1. Tóm tắt
 - `Scripts/Combat/` — `IDamageable`, `Projectile`, `CombatEvents`
 - `Scripts/World/` — `WorldGenerator`, `BiomeSO`, `ResourceNode`, `Workbench`, `Campfire`, weather, `VendorNPC` + `TradeOffer` (R5), `CompanionNPC` + `States/CompanionStates` (R5)
 - `Scripts/UI/`, `Scripts/Audio/`, `Scripts/Camera/`, `Scripts/Vfx/` — presentation layer
-- `Editor/` — `BootstrapWizard`, SO generators
+- `Editor/` — `BootstrapWizard`, `BiomeTileImporter` (auto-wire `Art/Tiles/{biomeId}/*.png` → `BiomeSO.groundTileVariants[]`), SO generators
 
 ## Skills — procedures sẵn
 

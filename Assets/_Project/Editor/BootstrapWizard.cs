@@ -1307,13 +1307,21 @@ namespace WildernessCultivation.EditorTools
             var defaultGroundTile = CreateGroundTile("ground_default", sprites["ground"]);
             wg.legacyGroundTile = defaultGroundTile;
 
-            // Per-biome prefabs (BiomeSO chứa từng prefab riêng).
+            // Per-biome prefabs (BiomeSO chứa từng prefab riêng). Nếu có sprite thật ở
+            // Assets/_Project/Art/Tiles/{biomeId}/ → BiomeTileImporter wire vào groundTileVariants[],
+            // WorldGenerator.PickGroundTile() sẽ pick variant deterministic per cell. Empty folder
+            // → giữ placeholder groundTile fallback.
             foreach (var b in biomes)
             {
                 b.treePrefab = prefabs.Tree;
                 b.rockPrefab = prefabs.Rock;
                 b.waterSpringPrefab = prefabs.WaterSpring;
                 b.groundTile = defaultGroundTile;
+                var realVariants = BiomeTileImporter.ImportBiomeTiles(b.biomeId);
+                if (realVariants.Length > 0)
+                {
+                    BiomeTileImporter.WireVariantsToBiome(b, realVariants);
+                }
                 b.extraNodes = BuildExtraNodesFor(b.biomeId, prefabs);
                 EditorUtility.SetDirty(b);
             }
