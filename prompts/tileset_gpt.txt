@@ -1,0 +1,335 @@
+# Ground tile prompts adapted cho GPT-4o image (DALL-E 3, "Image 2.0")
+#
+# Khác với tileset.txt (Leonardo):
+# - Inline FULL style anchor mỗi prompt (compensate thiếu Element training)
+# - Rule seamless tileability mạnh hơn nhiều (GPT cần hint dày)
+# - Bonus: Sau generate PHẢI retouch seam trong Photopea (xem gpt_workflow.md Step 3)
+#
+# Settings ChatGPT: gửi vào GPT-4o (default model có image gen).
+# Output: 1 ảnh PNG 1024×1024 / request. Muốn 4 variation → request 4 lần.
+# Sau download: Photopea Offset 512×512 → fix seam → downscale 1024→64 → save.
+
+# ============================================================
+# FOREST — Rừng Linh Mộc (Perlin 0.0-0.4)
+# Palette: deep moss #4a6741, sage #6b8e62, mint #a8c69b, bark brown #b89968,
+# dry leaf #8a6f47.
+# ============================================================
+
+=== tile_forest_grass_01 — Basic Grass (Variant A) ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly digital illustration with visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic, NOT pixel art,
+NOT photo-realistic, NOT anime style.
+
+Subject: lush forest grass with small white and yellow wildflowers,
+scattered fallen brown leaves, vibrant living green ground.
+
+Palette (use these hex codes ONLY): deep moss green #4a6741 base shadow,
+sage green #6b8e62 mid-tone, mint green highlight #a8c69b for grass tips,
+dry leaf brown #8a6f47 patches, small white #ffffff and yellow #ffd966
+flower dots. No other colors.
+
+CRITICAL TILEABILITY REQUIREMENTS:
+- Image must seamlessly tile in a 2x2 grid placement
+- Pattern at LEFT edge MUST match pattern at RIGHT edge (horizontal continuity)
+- Pattern at TOP edge MUST match pattern at BOTTOM edge (vertical continuity)
+- NO visible borders, NO frame, NO centerpiece composition
+- Even distribution of detail across entire image (no focal point)
+- Avoid placing any complete object near edges (objects should either span
+  edge wrapping or stay fully in interior)
+- Brush strokes orientation random/natural, not converging to center
+
+CRITICAL VIEW ANGLE:
+- Straight top-down 90 degrees view (looking directly down at ground)
+- NOT 30 degree perspective angle
+- NO foreshortening, NO depth, NO horizon
+- NO isometric projection
+
+Composition: 1024x1024 ground texture only, no characters, no creatures,
+no objects above ground level (small flowers and leaves lying flat on
+ground only), no UI elements, no text, no watermark, no signature,
+no border, no grid lines.
+
+Lighting: even soft ambient light, no harsh directional shadow,
+no drop shadow on transparent ground.
+
+
+=== tile_forest_grass_02 — Grass with Fallen Leaves ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly digital illustration with visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic, NOT pixel art,
+NOT photo-realistic, NOT anime.
+
+Subject: forest floor mostly grass with scattered fallen autumn leaves
+in browns and ambers, small twigs, hint of moss patches, weathered
+woodland feel.
+
+Palette (use these ONLY): deep moss #4a6741 base, sage green #6b8e62,
+mint #a8c69b sparse, dry leaf brown #8a6f47 dominant for leaves,
+bark brown #b89968 for twigs, lantern gold #d4a64a sparse for autumn
+yellow accent. No other colors.
+
+CRITICAL TILEABILITY: image must seamlessly tile 2x2 grid, LEFT edge
+matches RIGHT, TOP matches BOTTOM, no border, no centerpiece, even
+detail distribution.
+
+VIEW: straight top-down 90 degrees, NO perspective, NO 30 degree angle,
+NO isometric.
+
+Composition: 1024x1024 ground only, no characters, no objects above
+ground, no text, no watermark.
+
+
+=== tile_forest_grass_03 — Moss and Dirt Patches ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly with visible brush strokes, soft cel-shading,
+asian cultivation aesthetic, NOT pixel, NOT photo, NOT anime.
+
+Subject: forest floor with significant moss patches mixed with bare earth
+dirt patches, small pebbles, smooth transition from grass to dirt, old
+woodland trail feel.
+
+Palette (ONLY these): deep moss #4a6741, sage green #6b8e62 reduced,
+dry leaf #8a6f47 dominant for dirt patches, bark brown #b89968 for darker
+dirt, mint highlight #a8c69b for vibrant moss spots, dark gray #1a1a1a
+sparse small stones.
+
+CRITICAL TILEABILITY: 2x2 seamless grid required, LEFT-RIGHT continuity,
+TOP-BOTTOM continuity, no border, no centerpiece, even distribution.
+
+VIEW: straight top-down 90 degrees ONLY, no perspective, no 30 degree.
+
+Composition: 1024x1024, ground only, no characters, no objects.
+
+
+=== tile_forest_grass_04 — Dense Grass with Spirit Glow ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly with visible brush strokes, soft cel-shading,
+asian cultivation aesthetic, NOT pixel, NOT photo, NOT anime.
+
+Subject: dense thick forest grass with subtle qi spirit glow, small
+bioluminescent fungus dots emitting soft blue light (very subtle low
+saturation glow), mystical living forest floor at dusk feel.
+
+Palette (ONLY these): deep moss #4a6741, sage green #6b8e62 mid, mint
+#a8c69b highlight, spirit qi blue #a8d8ff subtle fungus glow accents
+(low saturation, NOT bright bloom), dry leaf #8a6f47 minimal, bone cream
+#e8d5a6 for fungus stem.
+
+CRITICAL TILEABILITY: 2x2 seamless required, LEFT-RIGHT and TOP-BOTTOM
+continuity, no border, no centerpiece, even distribution of fungus dots
+spread across image (NOT clustered).
+
+VIEW: straight top-down 90 degrees, no perspective.
+
+Composition: 1024x1024, ground + small fungus only (max 30 pixels each),
+no characters, no large objects, no text.
+
+Lighting: dim mystical ambient, subtle glow halo on fungus only, no harsh
+bloom, no drop shadow.
+
+
+# ============================================================
+# STONE HIGHLANDS — Đá Sơn Cao Nguyên (Perlin 0.4-0.65)
+# Palette: slate gray #7a7c80, highlight #a3a5a8, shadow #5a5d63,
+# dry moss #8a9b8c, bone white #c2c4ba, mineral blue #4d6b8c.
+# ============================================================
+
+=== tile_highlands_stone_01 — Clean Slate Stone ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly with visible brush strokes, soft cel-shading,
+asian wuxia mountain plateau aesthetic, NOT pixel, NOT photo, NOT anime.
+
+Subject: weathered slate gray stone ground, smooth large stone slab
+surface with hairline cracks, very minimal moss, austere mountain plateau,
+NO warm tones.
+
+Palette (ONLY these COOL tones): slate gray #7a7c80 base, highlight stone
+#a3a5a8 raised ridges, shadow stone #5a5d63 deep cracks, dry moss #8a9b8c
+minimal accent, bone white #c2c4ba sparse highlight specks.
+
+CRITICAL TILEABILITY: 2x2 seamless grid, LEFT-RIGHT and TOP-BOTTOM match,
+no border, no centerpiece, even crack distribution.
+
+VIEW: straight top-down 90 degrees ONLY.
+
+Composition: 1024x1024 ground only, no characters, no objects.
+
+Lighting: cool ambient, even, no warm color, no drop shadow.
+
+
+=== tile_highlands_stone_02 — Cracked Stone with Moss ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly, soft cel-shading, asian mountain shrine
+aesthetic, NOT pixel, NOT photo.
+
+Subject: weathered cracked stone with significant dry moss patches filling
+the cracks, broken stone joint feel, ancient pavement of abandoned shrine.
+
+Palette (ONLY these): slate gray #7a7c80 base, highlight #a3a5a8, shadow
+#5a5d63 deep cracks, dry moss #8a9b8c dominant moss filler, mint #a8c69b
+moss highlight, bone white #c2c4ba stone highlight.
+
+CRITICAL TILEABILITY: 2x2 seamless, LEFT-RIGHT TOP-BOTTOM match, no border.
+
+VIEW: straight top-down 90 degrees.
+
+Composition: 1024x1024 ground only, no characters, no objects, no text.
+
+
+=== tile_highlands_stone_03 — Stone with Bone Fragments ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly, soft cel-shading, asian wuxia abandoned
+battleground aesthetic, NOT pixel, NOT photo.
+
+Subject: gray stone ground with scattered SMALL bleached bone fragments
+and shards lying flat (NOT full skull, NOT skeleton, max ~80 pixels each),
+few yellow grass tufts pushing through cracks, eerie feel.
+
+Palette (ONLY these): slate gray #7a7c80, highlight #a3a5a8, shadow #5a5d63
+cracks, bone white #c2c4ba dominant for bone shards, dry moss #8a9b8c for
+small grass tufts, dirt deep brown #6b5d40 minimal crack dust.
+
+CRITICAL TILEABILITY: 2x2 seamless, LEFT-RIGHT TOP-BOTTOM match, no border,
+bone shards distributed evenly NOT clustered.
+
+VIEW: straight top-down 90 degrees, bones lying FLAT on ground (not
+standing).
+
+Composition: 1024x1024 ground only, NO full skull, NO skeleton, NO
+characters, NO creatures.
+
+
+=== tile_highlands_stone_04 — Stone with Mineral Vein ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly, soft cel-shading, asian fantasy ore deposit
+aesthetic, NOT pixel, NOT photo.
+
+Subject: gray stone ground with thin glowing mineral blue vein running
+diagonally across image, occasional small mineral crystal cluster lying
+flat in cracks (max ~60 pixels each).
+
+Palette (ONLY these): slate gray #7a7c80, highlight #a3a5a8, shadow #5a5d63,
+mineral blue #4d6b8c dominant for vein and crystals, spirit qi blue
+#a8d8ff for crystal highlight (subtle glow NOT bloom), bone white #c2c4ba
+sparse stone highlight, dry moss #8a9b8c minimal.
+
+CRITICAL TILEABILITY: 2x2 seamless, vein continuous when tiled (entry
+edge matches exit edge), no border, no centerpiece.
+
+VIEW: straight top-down 90 degrees, crystals lying FLAT.
+
+Composition: 1024x1024 ground only, no characters, no large objects.
+
+Lighting: cool ambient, subtle vein glow only, no harsh bloom.
+
+
+# ============================================================
+# DESERT — Hoang Mạc Tử Khí (Perlin 0.65-1.0)
+# Palette: sand #c4a574, sand highlight #dec594, dirt shadow #8b7355,
+# dirt deep #6b5d40, death qi purple #9b6b8b, bone bleached #d4d4d4.
+# ============================================================
+
+=== tile_desert_sand_01 — Smooth Sand ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly with visible brush strokes, soft cel-shading,
+asian desert aesthetic, NOT pixel, NOT photo, NOT anime.
+
+Subject: smooth golden desert sand with subtle wind ripple lines, clean
+dune surface, hot sun-baked feel, NO purple, NO green.
+
+Palette (ONLY these WARM tones): sand base #c4a574 dominant, sand highlight
+#dec594 ripple tops, dirt shadow #8b7355 ripple bottoms, dirt deep #6b5d40
+minimal for deep crack. NO other colors.
+
+CRITICAL TILEABILITY: 2x2 seamless, LEFT-RIGHT TOP-BOTTOM match, no border,
+no centerpiece, ripple lines should flow continuously when tiled.
+
+VIEW: straight top-down 90 degrees ONLY, NO 30 degree angle, NO perspective.
+
+Composition: 1024x1024 ground only, NO characters, NO objects, NO text.
+
+Lighting: warm even sunlight ambient, no drop shadow.
+
+
+=== tile_desert_sand_02 — Sand with Heavy Ripples ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly, soft cel-shading, asian desert post-storm
+aesthetic, NOT pixel, NOT photo.
+
+Subject: desert sand with HEAVY wind-carved ripple pattern (deep parallel
+grooves running across image), strong texture variation, dynamic dune
+surface just after sandstorm, NO purple, NO green.
+
+Palette (ONLY these): sand base #c4a574, sand highlight #dec594 ridge tops,
+dirt shadow #8b7355 ripple troughs, dirt deep #6b5d40 deep grooves.
+
+CRITICAL TILEABILITY: 2x2 seamless, ripple lines continuous when tiled
+(parallel groove must align edge-to-edge), no border.
+
+VIEW: straight top-down 90 degrees.
+
+Composition: 1024x1024 ground only, no characters, no objects.
+
+Lighting: warm sunlight, high contrast between ridge highlight and trough
+shadow.
+
+
+=== tile_desert_sand_03 — Sand with Bone Fragments ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly, soft cel-shading, asian desert graveyard
+aesthetic, NOT pixel, NOT photo.
+
+Subject: golden desert sand with scattered SMALL sun-bleached bone
+fragments and shards lying flat (NOT full skull, NOT skeleton, max ~80
+pixels each), occasional faint old animal track imprint, hint of dried
+out dead grass tuft.
+
+Palette (ONLY these): sand #c4a574, sand highlight #dec594, dirt shadow
+#8b7355, dirt deep #6b5d40, bone bleached #d4d4d4 dominant for bone
+shards, cactus green #6b8559 minimal dried grass accent.
+
+CRITICAL TILEABILITY: 2x2 seamless, bones distributed evenly NOT clustered,
+LEFT-RIGHT TOP-BOTTOM match, no border.
+
+VIEW: straight top-down 90 degrees, bones lying FLAT.
+
+Composition: 1024x1024 ground only, NO full skull, NO skeleton, NO
+characters, NO creatures, NO purple.
+
+
+=== tile_desert_sand_04 — Deep Desert with Death Qi Cracks ===
+
+Generate a seamless tileable ground texture for a 2D top-down survival game.
+Style: hand-painted painterly, soft cel-shading, asian wuxia tử khí (death
+qi) endgame zone aesthetic, NOT pixel, NOT photo.
+
+Subject: cracked dry desert sand with darker dried earth showing through
+cracks, faint purple death qi haze emanating from cracks (subtle glow
+NOT harsh bloom), deep desert tomb area feel for endgame zone.
+
+Palette (ONLY these): sand #c4a574, sand highlight #dec594 reduced (less
+sun-lit), dirt shadow #8b7355, dirt deep #6b5d40 dominant for crack network,
+death qi purple #9b6b8b for crack haze (low saturation), bone bleached
+#d4d4d4 minimal, ink black #1a1a1a deep crack core.
+
+CRITICAL TILEABILITY: 2x2 seamless, crack network continuous when tiled
+(crack lines should connect edge-to-edge forming web pattern), no border.
+
+VIEW: straight top-down 90 degrees, no perspective, no 30 degree.
+
+Composition: 1024x1024 ground only, no characters, no large objects.
+
+Lighting: dim purple-tinted ambient (deep desert mood), subtle crack glow,
+no harsh bloom, no drop shadow.
