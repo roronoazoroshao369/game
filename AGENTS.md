@@ -60,11 +60,13 @@ Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
 10. **NPC humanoid qua composition** (R5 follow-up). NPC mới (vendor / companion / quest giver /
     villager) inherit `CharacterBase` + auto-add pure stat component từ R1 (`HealthComponent`,
     `HungerComponent`, `InvulnerabilityComponent`…) theo role — KHÔNG kéo `PlayerStats` façade
-    (tránh kéo Wetness/Thermal/Sanity không cần). Vendor exemplar: `VendorNPC` — `CharacterBase` +
-    `IInteractable` + `ISaveable` + 2 component auto-add + barter trade API
-    (`TryExecuteTrade` atomic check-then-mutate + rollback on inventory full). Event hub fire
-    `GameEvents.OnVendorOpened` / `OnTradeCompleted` (arg `object` — subscriber cast tránh
-    circular namespace). Xem `.agents/skills/add-npc/`.
+    (tránh kéo Wetness/Thermal/Sanity không cần). Event hub fire qua `GameEvents.OnXxx` với
+    arg `object` (subscriber cast — tránh circular namespace). Exemplar:
+    - `VendorNPC` — stationary, barter, `TryExecuteTrade` atomic + rollback on full inventory.
+    - `CompanionNPC` — follow player FSM (R7) ở `Scripts/World/States/CompanionStates.cs`
+      (Idle / Follow / Dead) + hunger decay via `TickSurvival` → starvation damage qua
+      `HealthComponent.TickStarvation`. Interact toggle Follow ↔ Stay mode.
+    Xem `.agents/skills/add-npc/`.
 
 ## Code conventions
 
@@ -123,7 +125,7 @@ Chi tiết đầy đủ xem [`ARCHITECTURE.md`](ARCHITECTURE.md) §1. Tóm tắt
 - `Scripts/Mobs/` — `MobBase`, `WolfAI` (FSM), `RabbitAI` (FSM), `FoxSpiritAI` / `SnakeAI` / `BossMobAI` (legacy)
 - `Scripts/Mobs/States/` — R7 FSM state classes per mob
 - `Scripts/Combat/` — `IDamageable`, `Projectile`, `CombatEvents`
-- `Scripts/World/` — `WorldGenerator`, `BiomeSO`, `ResourceNode`, `Workbench`, `Campfire`, weather, `VendorNPC` (R5), `TradeOffer`
+- `Scripts/World/` — `WorldGenerator`, `BiomeSO`, `ResourceNode`, `Workbench`, `Campfire`, weather, `VendorNPC` + `TradeOffer` (R5), `CompanionNPC` + `States/CompanionStates` (R5)
 - `Scripts/UI/`, `Scripts/Audio/`, `Scripts/Camera/`, `Scripts/Vfx/` — presentation layer
 - `Editor/` — `BootstrapWizard`, SO generators
 
