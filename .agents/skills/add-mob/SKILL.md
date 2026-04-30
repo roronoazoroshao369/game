@@ -11,21 +11,11 @@ Mục tiêu: thêm 1 loại quái mới (vd: Bear / SpiderQueen / Cultist) theo 
    - Compute `dist = Vector2.Distance(target.position, transform.position)`
    - Nếu `dist > attackRange` → `MoveTowards(target.position)`
    - Nếu `dist <= attackRange` + `Time.time >= attackReadyAt` → attack
-4. **CRITICAL: PlayerStats fallback.** Pattern bắt buộc cho mọi mob đánh player:
+4. **Damage qua IDamageable.** `PlayerStats` IMPLEMENT `IDamageable` (R2 refactor) — KHÔNG cần fallback `GetComponent<PlayerStats>()` nữa:
    ```csharp
    var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
-   if (dmg != null)
-   {
-       dmg.TakeDamage(damage, gameObject);
-   }
-   else
-   {
-       // PlayerStats KHÔNG implement IDamageable; fallback giống BossMobAI/WolfAI.
-       var ps = target.GetComponent<PlayerStats>() ?? target.GetComponentInParent<PlayerStats>();
-       ps?.TakeDamage(damage);
-   }
+   if (dmg != null) dmg.TakeDamage(damage, gameObject);
    ```
-   **KHÔNG** chỉ dùng `dmg?.TakeDamage(...)` — sẽ no-op khi target là player.
 5. Register vào `BootstrapWizard` để spawn vào default scene (optional).
 6. Viết PlayMode test (xem `add-play-mode-test`):
    - Aggro within range → `target != null`
@@ -42,8 +32,7 @@ Mục tiêu: thêm 1 loại quái mới (vd: Bear / SpiderQueen / Cultist) theo 
 
 ## Pitfalls
 
-- **Quên fallback** → mob "đứng đó đánh không khí", player không mất HP. **Đây là production bug
-  thật đã xảy ra với WolfAI + FoxSpiritAI ban đầu** (PR #24).
+- **Trước R2** mob phải có fallback `GetComponent<PlayerStats>()` vì PlayerStats không implement IDamageable — PR #24 từng fix bug "mob đánh không khí". Sau R2 đã hết: mọi target damageable (mob/player/resource) đều qua một interface.
 - **`playerMask` mặc định `0`** → `Physics2D.OverlapCircle` không match gì. Phải set qua wizard hoặc
   inspector về layer "Player".
 - **`drops` null** → `MobBase.Die` `foreach (var d in drops)` NPE. Init `drops = Array.Empty<>()`.

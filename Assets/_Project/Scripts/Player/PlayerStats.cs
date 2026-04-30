@@ -15,7 +15,7 @@ namespace WildernessCultivation.Player
     /// 5 chỉ số sinh tồn cốt lõi: HP, Đói, Khát, SAN (tinh thần), Linh Khí (mana).
     /// Tự decay theo thời gian; HP chảy máu nếu đói/khát = 0.
     /// </summary>
-    public class PlayerStats : MonoBehaviour
+    public class PlayerStats : MonoBehaviour, IDamageable
     {
         [Header("Max values")]
         public float maxHP = 100f;
@@ -254,6 +254,14 @@ namespace WildernessCultivation.Player
             if (statusManager != null) dmg *= statusManager.IncomingDamageMultiplier;
             TakeDamageRaw(dmg);
         }
+
+        /// <summary>
+        /// IDamageable entry — mob/projectile/env gọi qua interface, đỡ phải fallback
+        /// <c>GetComponent&lt;PlayerStats&gt;()?.TakeDamage(...)</c>. Giữ nguyên i-frame +
+        /// status modifier như overload <see cref="TakeDamage(float)"/>; <paramref name="source"/>
+        /// hiện chưa dùng nội bộ (reserved cho threat/aggro/log sau này).
+        /// </summary>
+        public void TakeDamage(float amount, GameObject source) => TakeDamage(amount);
 
         /// <summary>Nhận dame KHÔNG nhân IncomingDamageMultiplier (dùng cho tick status để tránh tự khuếch đại).</summary>
         public void TakeDamageRaw(float dmg)

@@ -78,16 +78,7 @@ namespace WildernessCultivation.Mobs
                 {
                     attackReadyAt = Time.time + attackCooldown;
                     var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
-                    if (dmg != null)
-                    {
-                        dmg.TakeDamage(damage, gameObject);
-                    }
-                    else
-                    {
-                        // Player KHÔNG implement IDamageable; fallback giống BossMobAI/WolfAI.
-                        var ps = target.GetComponent<PlayerStats>() ?? target.GetComponentInParent<PlayerStats>();
-                        ps?.TakeDamage(damage);
-                    }
+                    if (dmg != null) dmg.TakeDamage(damage, gameObject);
                 }
             }
         }

@@ -160,10 +160,7 @@ namespace WildernessCultivation.Mobs
         {
             if (target == null) return;
             var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
-            if (dmg != null) { dmg.TakeDamage(amount, gameObject); return; }
-            // Player không implement IDamageable — fallback PlayerStats.TakeDamage.
-            var ps = target.GetComponent<PlayerStats>() ?? target.GetComponentInParent<PlayerStats>();
-            ps?.TakeDamage(amount);
+            if (dmg != null) dmg.TakeDamage(amount, gameObject);
         }
     }
 }

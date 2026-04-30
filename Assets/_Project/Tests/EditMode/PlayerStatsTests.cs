@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using WildernessCultivation.Combat;
 using WildernessCultivation.Player;
 
 namespace WildernessCultivation.Tests.EditMode
@@ -79,6 +80,31 @@ namespace WildernessCultivation.Tests.EditMode
             stats.TakeDamageRaw(30f);
             // TakeDamageRaw không check IsInvulnerable — chỉ check IsDead
             Assert.AreEqual(70f, stats.HP, 0.01f, "TakeDamageRaw không bị i-frames chặn (dùng cho status tick)");
+        }
+
+        // ===== IDamageable contract (R2) =====
+
+        [Test]
+        public void ImplementsIDamageable()
+        {
+            Assert.IsInstanceOf<IDamageable>(stats, "PlayerStats phải implement IDamageable (R2 refactor — bỏ fallback ở 6 mob AI).");
+        }
+
+        [Test]
+        public void TakeDamage_ViaIDamageable_ReducesHP()
+        {
+            IDamageable dmg = stats;
+            dmg.TakeDamage(25f, go);
+            Assert.AreEqual(75f, stats.HP, 0.01f);
+        }
+
+        [Test]
+        public void TakeDamage_ViaIDamageable_RespectsInvulnerability()
+        {
+            stats.SetInvulnerable(10f);
+            IDamageable dmg = stats;
+            dmg.TakeDamage(50f, go);
+            Assert.AreEqual(100f, stats.HP, 0.01f, "interface entry phải đi qua i-frame guard giống overload TakeDamage(float).");
         }
 
         // ===== Shield =====
