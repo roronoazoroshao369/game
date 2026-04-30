@@ -150,16 +150,7 @@ namespace WildernessCultivation.Mobs
             attackReadyAt = Time.time + attackCooldown;
 
             var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
-            if (dmg != null)
-            {
-                dmg.TakeDamage(damage, gameObject);
-            }
-            else
-            {
-                // Player implement TakeDamage trên PlayerStats nhưng không qua IDamageable — fallback
-                var ps = target.GetComponent<PlayerStats>() ?? target.GetComponentInParent<PlayerStats>();
-                ps?.TakeDamage(damage);
-            }
+            if (dmg != null) dmg.TakeDamage(damage, gameObject);
 
             // On-hit status: vd boss có Bleeding nanh → áp Bleeding khi đập trúng.
             if (onHitStatusEffect != null)

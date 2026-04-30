@@ -18,13 +18,12 @@ Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
 
 1. **Namespaces theo folder.** `Scripts/Mobs/WolfAI.cs` → `namespace WildernessCultivation.Mobs`.
    File mới phải dùng `using` đúng namespace, KHÔNG flatten.
-2. **`PlayerStats` KHÔNG implement `IDamageable`.** Mob attack player phải có fallback:
+2. **`PlayerStats` IMPLEMENT `IDamageable`.** Mob/projectile/env damage player qua interface — KHÔNG cần fallback `GetComponent<PlayerStats>()`:
    ```csharp
    var dmg = target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
    if (dmg != null) dmg.TakeDamage(damage, gameObject);
-   else target.GetComponent<PlayerStats>()?.TakeDamage(damage);
    ```
-   Pattern này phải có trong mọi mob mới (xem `BossMobAI.cs`, `WolfAI.cs`, `FoxSpiritAI.cs`).
+   `PlayerStats.TakeDamage(float, GameObject)` overload nội bộ gọi lại `TakeDamage(float)` (giữ i-frame + status modifier). `source` reserved cho threat/aggro/log sau này. Xem `BossMobAI.cs`, `WolfAI.cs`, `FoxSpiritAI.cs` cho pattern hiện hành.
 3. **Inventory broken items invariant.** `CountOf` + `TryConsume` SKIP slot có `IsBroken==true`.
    Recipe không được consume món đã hỏng (player muốn sửa qua Workbench).
 4. **Workbench atomic repair.** Pre-check material → repair → consume material. KHÔNG consume trước.
