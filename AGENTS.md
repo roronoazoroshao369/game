@@ -9,7 +9,8 @@
 > 3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — module map, pattern inventory, data flow, save pipeline
 > 4. [`REFACTOR_HISTORY.md`](REFACTOR_HISTORY.md) — R1..R7 timeline (pattern từ đâu tới)
 > 5. [`Documentation/WORLD_MAP_DESIGN.md`](Documentation/WORLD_MAP_DESIGN.md) — 3 biome chi tiết + asset checklist
-> 6. [`.agents/skills/README.md`](.agents/skills/README.md) — procedures "làm X như thế nào"
+> 6. [`Documentation/ART_STYLE.md`](Documentation/ART_STYLE.md) — style lock + palette + Leonardo workflow
+> 7. [`.agents/skills/README.md`](.agents/skills/README.md) — procedures "làm X như thế nào"
 
 ## Project overview
 
