@@ -46,6 +46,8 @@ namespace WildernessCultivation.Tests.EditMode
         public void Setup()
         {
             SaveSystem.Delete();
+            // R6: reset registry để test không nhiễm ISaveable từ test trước.
+            SaveRegistry.ClearAll();
 
             playerGo = new GameObject("Player");
             stats = playerGo.AddComponent<PlayerStats>();
@@ -53,7 +55,8 @@ namespace WildernessCultivation.Tests.EditMode
             inv = playerGo.AddComponent<Inventory>();
             // EditMode does NOT auto-fire MonoBehaviour.Awake — invoke
             // manually so PlayerStats caches base maxHP, RealmSystem caches
-            // sibling refs and default realms, and Inventory populates slots.
+            // sibling refs and default realms, Inventory populates slots,
+            // AND each component registers với SaveRegistry qua OnEnable.
             TestHelpers.Boot(stats, realm, inv);
 
             db = ScriptableObject.CreateInstance<ItemDatabase>();
@@ -70,6 +73,7 @@ namespace WildernessCultivation.Tests.EditMode
         public void Teardown()
         {
             SaveSystem.Delete();
+            SaveRegistry.ClearAll();
             if (playerGo != null) Object.DestroyImmediate(playerGo);
             if (db != null) Object.DestroyImmediate(db);
         }

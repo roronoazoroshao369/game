@@ -6,14 +6,47 @@ namespace WildernessCultivation.Core
     /// Quản lý chu kỳ ngày-đêm. 1 ngày in-game = dayLengthSeconds giây thực.
     /// Buổi đêm: linh khí đậm hơn (multiplier), quái nguy hiểm hơn.
     /// </summary>
-    public class TimeManager : MonoBehaviour
+    public class TimeManager : MonoBehaviour, ISaveable
     {
+        // ===== R6 ISaveable =====
+        public string SaveKey => "World/Time";
+        public int Order => 5; // Sớm (cùng WorldGenerator=0) — không depend gì khác.
+
+        public void CaptureState(SaveData data)
+        {
+            if (data == null) return;
+            data.world ??= new WorldSaveData();
+            data.world.timeOfDay01 = currentTime01;
+            data.world.daysSurvived = daysSurvived;
+            data.world.seasonIndex = (int)currentSeason;
+            data.world.weatherIndex = (int)currentWeather;
+        }
+
+        public void RestoreState(SaveData data)
+        {
+            if (data?.world == null) return;
+            currentTime01 = data.world.timeOfDay01;
+            daysSurvived = data.world.daysSurvived;
+            currentSeason = (Season)Mathf.Clamp(data.world.seasonIndex, 0, 3);
+            currentWeather = (Weather)Mathf.Clamp(data.world.weatherIndex, 0, 2);
+        }
+
         void Awake()
         {
             ServiceLocator.Register<TimeManager>(this);
         }
 
         void OnDestroy() => ServiceLocator.Unregister<TimeManager>(this);
+
+        void OnEnable()
+        {
+            SaveRegistry.RegisterSaveable(this);
+        }
+
+        void OnDisable()
+        {
+            SaveRegistry.UnregisterSaveable(this);
+        }
 
         [Header("Cycle")]
         [Tooltip("Một ngày = bao nhiêu giây thực. Mặc định 8 phút.")]

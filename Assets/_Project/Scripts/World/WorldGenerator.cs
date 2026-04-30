@@ -16,8 +16,25 @@ namespace WildernessCultivation.World
     /// Player có thể query <see cref="BiomeAt(Vector3)"/> để lấy biome hiện tại (dùng cho ambient SAN damage,
     /// spirit energy multiplier, …).
     /// </summary>
-    public class WorldGenerator : MonoBehaviour
+    public class WorldGenerator : MonoBehaviour, ISaveable
     {
+        // ===== R6 ISaveable =====
+        public string SaveKey => "World/Seed";
+        public int Order => 0; // Seed trước tất cả — TimeManager (5) cũng không depend seed.
+
+        public void CaptureState(SaveData data)
+        {
+            if (data == null) return;
+            data.world ??= new WorldSaveData();
+            data.world.seed = seed;
+        }
+
+        public void RestoreState(SaveData data)
+        {
+            if (data?.world == null) return;
+            if (data.world.seed != 0) seed = data.world.seed;
+        }
+
         [Header("World")]
         public int seed = 12345;
         public Vector2Int size = new(100, 100);
@@ -76,6 +93,16 @@ namespace WildernessCultivation.World
         {
             ServiceLocator.Unregister<WorldGenerator>(this);
             if (Instance == this) Instance = null;
+        }
+
+        void OnEnable()
+        {
+            SaveRegistry.RegisterSaveable(this);
+        }
+
+        void OnDisable()
+        {
+            SaveRegistry.UnregisterSaveable(this);
         }
 
         void Start()
