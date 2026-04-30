@@ -79,7 +79,8 @@ Tests vẫn compile-pass nhưng KHÔNG execute trong CI. Để gate thật, user
 ## File layout — biết đặt code vào đâu
 
 - `Scripts/Core/` — `GameManager`, `TimeManager`, `SaveLoadController`, `SaveSystem`
-- `Scripts/Player/` — `PlayerController`, `PlayerStats`, action components (Dodge/Sleep/Fishing/…)
+- `Scripts/Player/` — `PlayerController`, `PlayerStats` (façade), action components (Dodge/Sleep/Fishing/…)
+- `Scripts/Player/Stats/` — `WetnessComponent`, `ThermalComponent`, `PermadeathHandler` (subsystem extracts từ R1; PlayerStats tự auto-add trong Awake)
 - `Scripts/Cultivation/` — `RealmSystem`, `SpiritRoot`, công pháp, breakthrough
 - `Scripts/Inventory/` — `Inventory`, `InventorySlot`
 - `Scripts/Crafting/` — `CraftingSystem`, `RecipeSO`, `CraftStationMarker`
