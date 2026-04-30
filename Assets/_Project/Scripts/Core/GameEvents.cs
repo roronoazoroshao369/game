@@ -107,6 +107,12 @@ namespace WildernessCultivation.Core
         public static void RaiseVendorOpened(object vendor) => OnVendorOpened?.Invoke(vendor);
         public static void RaiseTradeCompleted(object vendor, int offerIndex) => OnTradeCompleted?.Invoke(vendor, offerIndex);
 
+        /// <summary>Companion chuyển mode Follow ↔ Stay. Arg = CompanionNPC.
+        /// Subscribed by HUD (pet portrait), quest ("escort companion to X"), audio bark.</summary>
+        public static event Action<object> OnCompanionModeChanged;
+
+        public static void RaiseCompanionModeChanged(object companion) => OnCompanionModeChanged?.Invoke(companion);
+
         // ===== Test helper =====
 
         /// <summary>Reset toàn bộ subscriber. PHẢI gọi trong test SetUp/TearDown để tránh
@@ -125,6 +131,7 @@ namespace WildernessCultivation.Core
             OnWeatherChanged = null;
             OnVendorOpened = null;
             OnTradeCompleted = null;
+            OnCompanionModeChanged = null;
         }
     }
 }

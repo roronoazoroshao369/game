@@ -58,6 +58,8 @@ namespace WildernessCultivation.Core
         // default null / empty list cho save cũ (không có field này) — VendorNPC.RestoreState
         // early-return khi null.
         public List<VendorSaveData> vendors = new();
+        // R5 follow-up: per-companion state (position + hp + hunger + mode).
+        public List<CompanionSaveData> companions = new();
     }
 
     [Serializable]
@@ -98,5 +100,15 @@ namespace WildernessCultivation.Core
     {
         public string vendorId;
         public List<int> stocks = new();
+    }
+
+    [Serializable]
+    public class CompanionSaveData
+    {
+        public string companionId;
+        public Vector3 position;
+        public float hp;
+        public float hunger;
+        public int mode; // CompanionMode enum
     }
 }
