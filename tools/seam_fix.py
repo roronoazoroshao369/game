@@ -52,9 +52,12 @@ def main():
     result = np.clip(arr_hv, 0, 255).astype(np.uint8)
     out = Image.fromarray(result, mode="RGBA")
 
-    # 3-step Lanczos downscale src -> 256 -> 128 -> final_size to preserve detail.
+    # Multi-step Lanczos downscale (intermediate 256/128 only if larger than
+    # final_size) to preserve detail vs single-step. Common path:
+    # 1024 -> 256 -> 128 -> 64.
     if final_size > 0:
-        for target in (256, 128, final_size):
+        steps = [s for s in (256, 128) if s > final_size] + [final_size]
+        for target in steps:
             if out.width > target:
                 out = out.resize((target, target), Image.LANCZOS)
 
