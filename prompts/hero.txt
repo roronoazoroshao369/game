@@ -1,0 +1,161 @@
+# Hero image prompts (6 scenes)
+# Generate trước khi train Element. Mỗi prompt sinh 4 variation, pick best 4 ảnh tổng = 24 PNG → train Leonardo Element `wilderness_cultivation_painterly_v1`.
+# Paste vào Leonardo Phoenix model, aspect 1:1, size 1024×1024, Prompt Magic ON, no Element (chưa có).
+# Negative prompt chung: xem prompts/README.md.
+
+=== Hero 01: Forest Dawn ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down perspective angled 30 degrees,
+asian wuxia cultivation fantasy aesthetic, atmospheric ambient lighting,
+limited color palette with strong color identity per region,
+clean readable silhouette, 1.5 to 2 pixel mid-tone outline.
+
+Subject: ancient mystical forest at dawn, towering old trees with thick
+moss-covered trunks, glowing qi mist drifting between trunks,
+a lone cultivator wearing white robe standing in center clearing
+looking up at the canopy, sunbeams piercing through leaves creating
+god rays, scattered fallen leaves and small wildflowers on grass floor.
+
+Palette: deep moss #4a6741 base shadow, sage green #6b8e62 mid-tone,
+mint highlight #a8c69b, bark brown #b89968, dry leaf #8a6f47,
+spirit qi blue #a8d8ff for mist, bone cream #e8d5a6 for cultivator robe,
+gold accent #d4a64a for lantern hanging on tree.
+
+Technical: square 1024x1024 painterly key art, top-down 30 degree view
+showing forest floor and partial canopy, atmospheric perspective with
+distance fade, single hero composition with cultivator as focal point,
+visible brush strokes on bark and grass, soft cel shadows under trees,
+no drop shadow on transparent background.
+
+
+=== Hero 02: Forest Spirit Pool ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down perspective angled 30 degrees,
+asian wuxia cultivation fantasy aesthetic, atmospheric ambient lighting,
+limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline.
+
+Subject: hidden glade in deep forest containing a sacred spirit pool,
+clear water surface reflecting glowing qi runes, lotus leaves floating,
+old red paper lantern hanging from a low branch, a stone altar with
+incense burning at the pool edge, cultivator meditating cross-legged
+on a flat rock beside the water, surrounded by glowing fireflies and
+qi particles rising from the pool.
+
+Palette: deep moss #4a6741 base, sage green #6b8e62 mid, mint #a8c69b,
+spirit qi blue #a8d8ff dominant for water and mist,
+sky qi mid #6fb5e0 for highlights, bone cream #e8d5a6 for stone altar,
+cinnabar red #8b3a3a for lantern, gold #d4a64a for rune accent.
+
+Technical: square 1024x1024, top-down 30 degree, hero composition
+with pool as central focal element, painterly water surface with
+visible brush strokes for ripples, glowing particle effects,
+single composition only, atmospheric mist softens edges.
+
+
+=== Hero 03: Stone Highlands Cloud Sea ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down perspective angled 30 degrees,
+asian wuxia cultivation fantasy aesthetic, atmospheric ambient lighting,
+limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline.
+
+Subject: high mountain cliff at dawn overlooking a vast cloud sea,
+ancient stone shrine with weathered tiled roof on the cliff edge,
+a lone gnarled pine tree growing sideways out of the rock,
+distant peaks rising through the clouds, narrow stone path with
+moss patches winding to the shrine, faint snow on highest peaks.
+
+Palette: slate gray #7a7c80 base for stone, highlight stone #a3a5a8,
+shadow stone #5a5d63, dry moss #8a9b8c on rocks, bone white #c2c4ba
+for cloud highlights, mineral blue #4d6b8c for sky and distant haze,
+cinnabar red #8b3a3a accent for shrine doors, bone cream #e8d5a6
+for old paper talismans on shrine walls.
+
+Technical: square 1024x1024, top-down 30 degree showing cliff edge
+in foreground and cloud sea below, atmospheric perspective with
+heavy distance fade, painterly cloud brush strokes,
+single composition with shrine as focal point, soft ambient cool light.
+
+
+=== Hero 04: Stone Highlands Shrine Ruin ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down perspective angled 30 degrees,
+asian wuxia cultivation fantasy aesthetic, atmospheric ambient lighting,
+limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline.
+
+Subject: abandoned ancient altar on a stone plateau, cracked stele
+with faded carved characters, broken pillars half-fallen, scattered
+old bones around the altar, a single white spirit ribbon caught on
+a cracked pillar fluttering in wind, dry yellow grass tufts pushing
+through stone cracks, distant fog rolling across plateau.
+
+Palette: slate gray #7a7c80, highlight stone #a3a5a8, shadow #5a5d63,
+bone white #c2c4ba dominant for fallen bones and stele, dry moss
+#8a9b8c minimal accent, highland flower purple #8a6ba1 for small
+wildflower in foreground, ink black #1a1a1a for cracks and outline.
+
+Technical: square 1024x1024, top-down 30 degree, hero composition
+with altar as central element, weathered painterly textures with
+heavy brush stroke detail on stone surfaces, atmospheric fog softens
+background, single ruin composition only.
+
+
+=== Hero 05: Desert Dusk ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down perspective angled 30 degrees,
+asian wuxia cultivation fantasy aesthetic, atmospheric ambient lighting,
+limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline.
+
+Subject: endless rolling sand dunes under a setting sun, deep orange
+and purple sky, a lone cultivator walking with traveler staff and
+small backpack across the dunes, long shadow trailing behind,
+ancient sun-bleached bone fragments half buried in sand,
+a single cactus silhouette in middle distance, faint death qi haze
+on the horizon.
+
+Palette: sand base #c4a574 dominant, sand highlight #dec594 sun-lit
+ridges, dirt shadow #8b7355, dirt deep #6b5d40 for footprint cracks,
+death qi purple #9b6b8b for distant horizon haze, bone bleached
+#d4d4d4 for skull fragments, cinnabar red #8b3a3a sky tint at sun.
+
+Technical: square 1024x1024, top-down 30 degree showing dune
+foreground and distant horizon, atmospheric perspective with strong
+distance fade, painterly sand brush strokes following dune curvature,
+single composition with cultivator as focal silhouette,
+warm golden hour lighting with cool purple shadow tones.
+
+
+=== Hero 06: Desert Tomb (Night) ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down perspective angled 30 degrees,
+asian wuxia cultivation fantasy aesthetic, atmospheric ambient lighting,
+limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline.
+
+Subject: ancient broken tomb in the deep desert under purple moonlit
+sky, a cracked dark stone stele with eroded characters, large skull
+of a forgotten beast half-buried in sand, glowing purple death qi
+mist rising from the ground, a single dark purple Death Lily flower
+in bloom emitting soft glow, scattered bones in the foreground,
+distant dunes barely visible in moonlight.
+
+Palette: sand base #c4a574 darkened by night, dirt shadow #8b7355
+deeper, death qi purple #9b6b8b dominant for mist and lily glow,
+bone bleached #d4d4d4 for stele and bones, ink black #1a1a1a for
+deep shadows, faint mineral blue #4d6b8c for moonlight rim,
+cactus green #6b8559 minimal background accent.
+
+Technical: square 1024x1024, top-down 30 degree, hero composition
+with tomb stele as central focal point, atmospheric purple moonlight
+with strong rim lighting on stone edges, painterly mist with visible
+brush strokes, glowing flower as secondary focal point,
+single composition only.

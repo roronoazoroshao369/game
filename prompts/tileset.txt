@@ -1,0 +1,338 @@
+# Ground tile prompts (12 prompt: 3 biome × 4 variants)
+# Sinh sau khi đã train Element `wilderness_cultivation_painterly_v1`.
+# Settings: Phoenix model, aspect 1:1, size 1024×1024, 4 image/generation,
+# Element strength 0.7, Prompt Magic ON.
+# Sau generate: pick 1-2 best, downscale 1024 → 64 trong Photopea (3-step: 1024→256→128→64).
+# VERIFY SEAMLESS: paste 4× tile thành 2×2 grid → check edge có blend không.
+
+# ============================================================
+# FOREST — Rừng Linh Mộc (Perlin 0.0-0.4)
+# Palette: deep moss #4a6741, sage #6b8e62, mint #a8c69b, bark brown #b89968,
+# dry leaf #8a6f47, mushroom red #a14040, lantern gold #d4a64a.
+# ============================================================
+
+=== tile_forest_grass_01 — Basic Grass (Variant A) ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground,
+asian wuxia cultivation fantasy aesthetic ground texture.
+
+Subject: lush forest grass with small wildflowers, scattered fallen
+leaves, vibrant living green ground.
+
+Palette: deep moss #4a6741 base, sage green #6b8e62 mid, mint
+highlight #a8c69b for grass tips, dry leaf #8a6f47 patches,
+small white and yellow flower dots, no other accent colors.
+
+Technical: 1024x1024 seamless tileable ground texture, edges must
+blend perfectly when tiled left-to-right and top-to-bottom (check
+edge continuity), single ground plane no objects above ground level
+no characters no creatures, brush stroke direction follows blade-of-
+grass vertical, soft cel-shading with subtle shadow gradient,
+no drop shadow, no hard tile boundary lines, top-down 90 degree view
+looking straight down (NOT 30 degree for tiles), even lighting.
+
+Negative: no objects, no characters, no creatures, no border, no
+grid lines, no text, no watermark, no signature, no drop shadow,
+no pixel art, no photo-realistic, no 3D rendering, no anime style,
+no smooth airbrush gradient, no hard tile edge, no perspective
+foreshortening, no isometric, no 30 degree angle.
+
+
+=== tile_forest_grass_02 — Grass with Fallen Leaves ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: forest floor mostly grass with scattered fallen autumn leaves
+in browns and ambers, small twigs, hint of moss patches,
+weathered woodland floor.
+
+Palette: deep moss #4a6741 base, sage green #6b8e62, mint #a8c69b
+sparse, dry leaf #8a6f47 dominant for leaves, bark brown #b89968 for
+twigs, lantern gold #d4a64a sparse for autumn yellow leaf accent.
+
+Technical: 1024x1024 seamless tileable ground texture, edges must
+blend perfectly tiling, single ground plane no objects above ground,
+brush strokes following leaf vein direction, soft cel-shading,
+no drop shadow, top-down 90 degree view straight down, even lighting.
+
+Negative: no objects above ground, no characters, no border, no grid
+lines, no text, no watermark, no drop shadow, no pixel art, no
+photo-realistic, no anime, no airbrush gradient, no perspective,
+no isometric, no 30 degree angle.
+
+
+=== tile_forest_grass_03 — Moss and Dirt Patches ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: forest floor with significant moss patches mixed with bare
+earth dirt patches, small pebbles, soft transition from grass to dirt,
+old woodland trail feel.
+
+Palette: deep moss #4a6741, sage green #6b8e62 reduced, dry leaf
+#8a6f47 dominant for dirt patch, bark brown #b89968 for darker dirt,
+mint highlight #a8c69b for vibrant moss, ink black #1a1a1a sparse
+small stones.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no objects above ground, painterly
+moss texture with raised brush strokes, dirt area smoother brush,
+soft cel-shading, no drop shadow, top-down 90 degree view straight
+down, even lighting.
+
+Negative: no objects above ground, no characters, no border, no grid
+lines, no text, no watermark, no drop shadow, no pixel art, no
+photo-realistic, no anime, no airbrush gradient, no perspective,
+no isometric, no 30 degree angle.
+
+
+=== tile_forest_grass_04 — Dense Grass with Spirit Glow ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: dense thick forest grass with subtle qi spirit glow,
+small bioluminescent fungus dots emitting soft blue light,
+mystical living forest floor at dusk feel.
+
+Palette: deep moss #4a6741, sage green #6b8e62 mid, mint #a8c69b
+highlight, spirit qi blue #a8d8ff small fungus glow accents (very
+subtle, low saturation), dry leaf #8a6f47 minimal, bone cream
+#e8d5a6 for fungus stem accent.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no large objects above ground (small
+fungus okay max 30 pixels each), painterly dense grass with vertical
+brush strokes, soft glow halo on fungus dots, soft cel-shading,
+no drop shadow, top-down 90 degree view straight down, dim mystical
+ambient.
+
+Negative: no large objects, no characters, no border, no grid lines,
+no text, no watermark, no drop shadow, no pixel art, no photo-
+realistic, no anime, no harsh airbrush gradient, no perspective,
+no isometric, no 30 degree angle, no obvious bright bloom (keep glow
+subtle).
+
+
+# ============================================================
+# STONE HIGHLANDS — Đá Sơn Cao Nguyên (Perlin 0.4-0.65)
+# Palette: slate gray #7a7c80, highlight #a3a5a8, shadow #5a5d63,
+# dry moss #8a9b8c, bone white #c2c4ba, mineral blue #4d6b8c,
+# flower purple #8a6ba1.
+# ============================================================
+
+=== tile_highlands_stone_01 — Clean Slate Stone ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: weathered slate gray stone ground, smooth large stone slab
+surface with hairline cracks, very minimal moss, austere mountain
+plateau feel.
+
+Palette: slate gray #7a7c80 base, highlight stone #a3a5a8 for raised
+ridges, shadow stone #5a5d63 for cracks, dry moss #8a9b8c minimal
+accent, bone white #c2c4ba sparse for highlight specks.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no objects above ground, painterly
+stone with horizontal brush strokes following crack direction, soft
+cel-shading, no drop shadow, top-down 90 degree view straight down,
+cool ambient light, slate texture rough but flat.
+
+Negative: no objects above ground, no characters, no border, no grid
+lines, no text, no watermark, no drop shadow, no pixel art, no
+photo-realistic, no anime, no airbrush gradient, no perspective,
+no isometric, no 30 degree angle, no warm color.
+
+
+=== tile_highlands_stone_02 — Cracked Stone with Moss ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: weathered cracked stone with significant dry moss patches
+filling the cracks, broken stone joint feel, ancient pavement of
+abandoned shrine.
+
+Palette: slate gray #7a7c80 base, highlight #a3a5a8, shadow stone
+#5a5d63 deep cracks, dry moss #8a9b8c dominant moss, mint highlight
+#a8c69b only as moss top accent (transferable to highlands feel),
+bone white #c2c4ba for stone highlight.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no objects above ground, painterly
+stone with crack pattern, raised brush strokes for moss, soft cel-
+shading, no drop shadow, top-down 90 degree view straight down,
+cool ambient light.
+
+Negative: no objects above ground, no characters, no border, no grid
+lines, no text, no watermark, no drop shadow, no pixel art, no
+photo-realistic, no anime, no airbrush gradient, no perspective,
+no isometric, no 30 degree angle.
+
+
+=== tile_highlands_stone_03 — Stone with Bone Fragments ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: gray stone ground with scattered small bleached bone
+fragments and shards (max ~80 pixels each), few yellow grass tufts
+pushing through stone cracks, eerie abandoned battleground feel.
+
+Palette: slate gray #7a7c80, highlight #a3a5a8, shadow #5a5d63 cracks,
+bone white #c2c4ba dominant for bone shards, dry moss #8a9b8c for
+small grass tufts, dirt deep #6b5d40 minimal for crack dust.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane bone shards lying flat NOT standing,
+painterly stone, soft cel-shading on bone, no drop shadow, top-down
+90 degree view straight down, cool ambient light, bones small
+distributed not clustered.
+
+Negative: no large objects, no full skull, no skeleton, no characters,
+no creatures, no border, no grid lines, no text, no watermark, no
+drop shadow, no pixel art, no photo-realistic, no anime, no airbrush
+gradient, no perspective, no isometric, no 30 degree angle.
+
+
+=== tile_highlands_stone_04 — Stone with Mineral Vein ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: gray stone ground with thin glowing mineral blue vein
+running diagonally, occasional small mineral crystal cluster (max
+~60 pixels), highlands ore deposit feel for endgame.
+
+Palette: slate gray #7a7c80, highlight #a3a5a8, shadow #5a5d63,
+mineral blue #4d6b8c dominant for vein and crystals, spirit qi
+blue #a8d8ff for crystal highlight, bone white #c2c4ba sparse stone
+highlight, dry moss #8a9b8c minimal.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no large objects above ground, mineral
+crystals very small lying flat in cracks, painterly stone with
+crystalline brush detail, subtle glow on vein and crystals, soft
+cel-shading, no drop shadow, top-down 90 degree view straight down,
+cool ambient.
+
+Negative: no large objects, no characters, no border, no grid lines,
+no text, no watermark, no drop shadow, no pixel art, no photo-
+realistic, no anime, no harsh bloom on crystals, no perspective,
+no isometric, no 30 degree angle.
+
+
+# ============================================================
+# DESERT — Hoang Mạc Tử Khí (Perlin 0.65-1.0)
+# Palette: sand #c4a574, sand highlight #dec594, dirt shadow #8b7355,
+# dirt deep #6b5d40, death qi purple #9b6b8b, bone bleached #d4d4d4,
+# cactus green #6b8559.
+# ============================================================
+
+=== tile_desert_sand_01 — Smooth Sand ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: smooth golden desert sand with subtle wind ripple lines,
+clean dune surface, hot sun-baked feel.
+
+Palette: sand base #c4a574 dominant, sand highlight #dec594 ripple
+top, dirt shadow #8b7355 ripple bottom, dirt deep #6b5d40 minimal
+for deep crack, no other accent.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no objects above ground, painterly
+sand with horizontal wavy brush strokes for ripples, soft cel-
+shading, warm even sunlight ambient, no drop shadow, top-down 90
+degree view straight down.
+
+Negative: no objects above ground, no characters, no border, no grid
+lines, no text, no watermark, no drop shadow, no pixel art, no
+photo-realistic, no anime, no airbrush gradient, no perspective,
+no isometric, no 30 degree angle, no purple, no green.
+
+
+=== tile_desert_sand_02 — Sand with Heavy Ripples ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: desert sand with heavy wind-carved ripple pattern (deep
+parallel grooves), strong texture variation, dynamic dune surface
+just after sandstorm.
+
+Palette: sand base #c4a574, sand highlight #dec594 ridge tops, dirt
+shadow #8b7355 ripple troughs, dirt deep #6b5d40 deep grooves,
+no other accent.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no objects above ground, painterly
+sand with strong directional brush strokes following ripple parallel
+lines, high tonal contrast between ridge highlight and trough shadow,
+soft cel-shading, no drop shadow, top-down 90 degree view straight
+down, warm sunlight.
+
+Negative: no objects above ground, no characters, no border, no grid
+lines, no text, no watermark, no drop shadow, no pixel art, no
+photo-realistic, no anime, no airbrush gradient, no perspective,
+no isometric, no 30 degree angle, no purple, no green.
+
+
+=== tile_desert_sand_03 — Sand with Bone Fragments ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: golden desert sand with scattered small sun-bleached bone
+fragments and shards (max ~80 pixels each), occasional faint old
+animal track, hint of dried out dead grass tuft, eerie graveyard
+desert feel.
+
+Palette: sand #c4a574, sand highlight #dec594, dirt shadow #8b7355,
+dirt deep #6b5d40, bone bleached #d4d4d4 dominant for bone shards,
+cactus green #6b8559 minimal dried grass accent.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane bone shards lying flat NOT standing,
+painterly sand with subtle wind ripple, bones distributed not
+clustered, soft cel-shading on bone, no drop shadow, top-down 90
+degree view straight down, harsh dry sunlight.
+
+Negative: no large objects, no full skull, no skeleton, no characters,
+no creatures, no border, no grid lines, no text, no watermark, no
+drop shadow, no pixel art, no photo-realistic, no anime, no airbrush
+gradient, no perspective, no isometric, no 30 degree angle, no purple,
+no abundant green.
+
+
+=== tile_desert_sand_04 — Deep Desert with Death Qi Cracks ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, top-down view straight down looking at ground.
+
+Subject: cracked dry desert sand with darker dried earth showing
+through cracks, faint purple death qi haze emanating from cracks,
+deep desert tomb area feel for endgame zone.
+
+Palette: sand #c4a574, sand highlight #dec594 minimal (less sun-lit),
+dirt shadow #8b7355, dirt deep #6b5d40 dominant for cracks, death
+qi purple #9b6b8b accent for crack haze (subtle, low saturation),
+bone bleached #d4d4d4 minimal, ink black #1a1a1a deep crack core.
+
+Technical: 1024x1024 seamless tileable ground texture, edges blend
+perfectly, single ground plane no objects above ground, painterly
+cracked sand with web-like crack pattern, subtle purple haze rising
+from cracks (soft glow not harsh bloom), soft cel-shading, no drop
+shadow, top-down 90 degree view straight down, dim purple-tinted
+ambient (deep desert).
+
+Negative: no objects above ground, no characters, no border, no grid
+lines, no text, no watermark, no drop shadow, no pixel art, no
+photo-realistic, no anime, no airbrush gradient, no perspective,
+no isometric, no 30 degree angle, no harsh purple bloom, no green.
