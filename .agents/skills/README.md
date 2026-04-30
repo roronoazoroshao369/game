@@ -13,6 +13,7 @@
 | [`add-edit-mode-test/`](add-edit-mode-test/SKILL.md) | Thêm test pure logic (không Physics2D, không coroutine) | — |
 | [`add-play-mode-test/`](add-play-mode-test/SKILL.md) | Thêm test cần `Time.deltaTime`, Physics2D, coroutine | — |
 | [`add-mob/`](add-mob/SKILL.md) | Thêm quái mới — FSM (R7, khuyến nghị) hoặc legacy Update | `IDamageable`, `StateMachine<T>`, `CharacterBase` |
+| [`add-npc/`](add-npc/SKILL.md) | Thêm NPC humanoid (vendor/companion/quest giver) reuse R1 stat components | `CharacterBase`, `IInteractable`, `ISaveable`, R1 components |
 | [`add-recipe/`](add-recipe/SKILL.md) | Thêm RecipeSO + ingredient + craft station | `RecipeSO`, `IStationGate` |
 | [`save-load-pattern/`](save-load-pattern/SKILL.md) | Thêm field vào save/load không break legacy | `ISaveable` (R6), `SaveRegistry` |
 | [`bootstrap-scene/`](bootstrap-scene/SKILL.md) | Sinh demo scene playable từ Editor wizard | `BootstrapWizard` |
@@ -29,6 +30,7 @@
 | `add-ui-panel` | Thêm UI panel subscribe `GameEvents` | `Scripts/UI/` |
 | `refactor-mob-to-fsm` | Convert mob legacy (Fox/Snake/Bat/…) sang FSM | MobBase + States/ |
 | `add-technique` | Thêm công pháp mới (TechniqueSO subclass) | `Scripts/Cultivation/` |
+| `add-companion-npc` | Companion NPC (AI follow + combat assist) — sau khi PR B2 merge | `Scripts/World/CompanionNPC.cs` + `StateMachine<T>` |
 
 ## Workflow khi add feature mới
 

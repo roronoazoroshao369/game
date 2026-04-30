@@ -57,6 +57,14 @@ Unity **6 LTS (6000.4.4f1)**, target **Android (IL2CPP, ARM64)**.
    Exemplar: `WolfAI` (chase/attack) + `RabbitAI` (wander/flee). State class ở `Scripts/Mobs/States/`,
    singleton `IState<T>` per state (no alloc per frame), state mutable sống trên mob context.
    Transition safe trong OnEnter/OnTick/OnExit (queue + apply sau tick). Xem `.agents/skills/add-mob/`.
+10. **NPC humanoid qua composition** (R5 follow-up). NPC mới (vendor / companion / quest giver /
+    villager) inherit `CharacterBase` + auto-add pure stat component từ R1 (`HealthComponent`,
+    `HungerComponent`, `InvulnerabilityComponent`…) theo role — KHÔNG kéo `PlayerStats` façade
+    (tránh kéo Wetness/Thermal/Sanity không cần). Vendor exemplar: `VendorNPC` — `CharacterBase` +
+    `IInteractable` + `ISaveable` + 2 component auto-add + barter trade API
+    (`TryExecuteTrade` atomic check-then-mutate + rollback on inventory full). Event hub fire
+    `GameEvents.OnVendorOpened` / `OnTradeCompleted` (arg `object` — subscriber cast tránh
+    circular namespace). Xem `.agents/skills/add-npc/`.
 
 ## Code conventions
 
@@ -115,7 +123,7 @@ Chi tiết đầy đủ xem [`ARCHITECTURE.md`](ARCHITECTURE.md) §1. Tóm tắt
 - `Scripts/Mobs/` — `MobBase`, `WolfAI` (FSM), `RabbitAI` (FSM), `FoxSpiritAI` / `SnakeAI` / `BossMobAI` (legacy)
 - `Scripts/Mobs/States/` — R7 FSM state classes per mob
 - `Scripts/Combat/` — `IDamageable`, `Projectile`, `CombatEvents`
-- `Scripts/World/` — `WorldGenerator`, `BiomeSO`, `ResourceNode`, `Workbench`, `Campfire`, weather
+- `Scripts/World/` — `WorldGenerator`, `BiomeSO`, `ResourceNode`, `Workbench`, `Campfire`, weather, `VendorNPC` (R5), `TradeOffer`
 - `Scripts/UI/`, `Scripts/Audio/`, `Scripts/Camera/`, `Scripts/Vfx/` — presentation layer
 - `Editor/` — `BootstrapWizard`, SO generators
 
@@ -123,7 +131,7 @@ Chi tiết đầy đủ xem [`ARCHITECTURE.md`](ARCHITECTURE.md) §1. Tóm tắt
 
 Xem [`.agents/skills/README.md`](.agents/skills/README.md) cho index đầy đủ.
 
-Skills hiện có: `add-edit-mode-test`, `add-play-mode-test`, `add-mob`, `add-recipe`, `save-load-pattern`, `bootstrap-scene`, `lint-locally`.
+Skills hiện có: `add-edit-mode-test`, `add-play-mode-test`, `add-mob`, `add-npc` (R5), `add-recipe`, `save-load-pattern`, `bootstrap-scene`, `lint-locally`.
 
 ## DO
 
