@@ -72,7 +72,7 @@ namespace WildernessCultivation.World
         HungerComponent hunger;
         InvulnerabilityComponent invuln;
 
-        internal readonly StateMachine<CompanionNPC> Fsm = new();
+        public readonly StateMachine<CompanionNPC> Fsm = new();
 
         // ===== CharacterBase =====
         public override float CurrentHP => health != null ? health.HP : 0f;
