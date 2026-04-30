@@ -7,7 +7,7 @@ using WildernessCultivation.World;
 namespace WildernessCultivation.Mobs
 {
     [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
-    public abstract class MobBase : MonoBehaviour, IDamageable
+    public abstract class MobBase : CharacterBase
     {
         [Header("Identity")]
         public string mobName = "Quái";
@@ -15,6 +15,13 @@ namespace WildernessCultivation.Mobs
         [Header("Stats")]
         public float maxHP = 20f;
         public float HP = 20f;
+
+        // R5 CharacterBase polymorphic view — read-only, delegate tới field gốc.
+        // Subclass logic damage / die không đổi (TakeDamage override bên dưới giữ nguyên
+        // FlashHit + drop loot + xp reward + aggro on hit).
+        public override float CurrentHP => HP;
+        public override float CurrentMaxHP => maxHP;
+        public override bool IsDead => HP <= 0f;
         public float moveSpeed = 1.5f;
         public float damage = 5f;
         public float attackCooldown = 1f;
@@ -103,7 +110,7 @@ namespace WildernessCultivation.Mobs
             return tick;
         }
 
-        public virtual void TakeDamage(float amount, GameObject source)
+        public override void TakeDamage(float amount, GameObject source)
         {
             // Nếu source là Projectile → resolve về Owner cho aggro/loot, không lấy projectile gameObject.
             GameObject resolvedSource = source;
