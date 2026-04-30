@@ -93,6 +93,20 @@ namespace WildernessCultivation.Core
         public static void RaiseNightStarted() => OnNightStarted?.Invoke();
         public static void RaiseWeatherChanged(Weather weather) => OnWeatherChanged?.Invoke(weather);
 
+        // ===== NPC humanoid (R5 follow-up) =====
+
+        /// <summary>Player tương tác với vendor — UI mở trade panel. Arg là VendorNPC;
+        /// subscriber cast về <c>WildernessCultivation.World.VendorNPC</c> khi cần
+        /// (tránh circular namespace reference, event dùng <see cref="object"/>).</summary>
+        public static event Action<object> OnVendorOpened;
+
+        /// <summary>Trade hoàn thành — arg1 = VendorNPC, arg2 = offerIndex.
+        /// Subscribed by quest ("mua 3 ItemX từ vendor Y"), audio (coin sfx), achievement.</summary>
+        public static event Action<object, int> OnTradeCompleted;
+
+        public static void RaiseVendorOpened(object vendor) => OnVendorOpened?.Invoke(vendor);
+        public static void RaiseTradeCompleted(object vendor, int offerIndex) => OnTradeCompleted?.Invoke(vendor, offerIndex);
+
         // ===== Test helper =====
 
         /// <summary>Reset toàn bộ subscriber. PHẢI gọi trong test SetUp/TearDown để tránh
@@ -109,6 +123,8 @@ namespace WildernessCultivation.Core
             OnDayStarted = null;
             OnNightStarted = null;
             OnWeatherChanged = null;
+            OnVendorOpened = null;
+            OnTradeCompleted = null;
         }
     }
 }

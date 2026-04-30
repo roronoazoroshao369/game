@@ -54,6 +54,10 @@ namespace WildernessCultivation.Core
         public PlayerSaveData player;
         public WorldSaveData world;
         public List<InventorySlotData> inventory = new();
+        // R5 follow-up: per-vendor persistent stock. Backward-compat: JsonUtility sẽ
+        // default null / empty list cho save cũ (không có field này) — VendorNPC.RestoreState
+        // early-return khi null.
+        public List<VendorSaveData> vendors = new();
     }
 
     [Serializable]
@@ -87,5 +91,12 @@ namespace WildernessCultivation.Core
         public int count;
         public float freshRemaining = -1f;
         public float durability = -1f;
+    }
+
+    [Serializable]
+    public class VendorSaveData
+    {
+        public string vendorId;
+        public List<int> stocks = new();
     }
 }
