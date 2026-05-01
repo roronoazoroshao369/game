@@ -42,11 +42,23 @@ art, transparent background, isolated single object, no shadow, no ground,
 clean silhouette, 256x512 px"
 ```
 
-Per part. Example for player:
-- "Side view, neutral standing pose, anime cultivation hero head with
-  short black hair, profile facing right, transparent background..."
-- "Side view, neutral standing pose, robe-clad torso (no head, no limbs),
-  white martial arts robe with embroidery, transparent background..."
+Per part. Examples:
+
+**Player** (cultivation hero, bipedal):
+- head: "Side view, neutral, anime cultivation hero head with short black hair, profile facing right, transparent background..."
+- torso: "Side view, neutral, white martial arts robe torso (no head, no limbs), embroidery details, transparent background..."
+- arms/legs: "Side view, neutral, white robe sleeve straight down, transparent background..."
+
+**Wolf** (quadruped, dark fur). Folder `wolf/`. Tunings: 4.5Hz step, 32° arm swing, 28° leg, tail 16°.
+- head: "Side view, neutral, fierce gray wolf head facing right, snarling fangs, yellow eyes, transparent background..."
+- torso: "Side view, neutral, gray wolf body (no head, no limbs, no tail), shaggy fur, transparent background..."
+- legs: "Side view, neutral, gray wolf foreleg/hindleg straight down, dark fur, transparent background..."
+- tail: "Side view, neutral, gray wolf tail straight horizontal, bushy, transparent background..."
+
+**FoxSpirit** (lithe, supernatural). Folder `fox_spirit/`. Tunings: 5.5Hz step, 35° arm, 26° leg, tail 24° + 2.2Hz (active sway).
+- head: "Side view, neutral, white nine-tailed fox spirit head facing right, glowing blue eyes, ethereal aura, transparent background..."
+- torso: "Side view, neutral, white fox spirit body (no head, no limbs, no tail), ethereal smoke wisps, transparent background..."
+- tail: "Side view, neutral, white fox spirit tail with mystical glow, transparent background..."
 
 ## Pipeline (auto)
 
