@@ -98,6 +98,81 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.AreEqual(1f, PuppetAnimController.ComputeSpeedRatio(5f, 0f), 0.0001f);
         }
 
+        // ---------- ComputeFlapAngle (Phase 3 — wing flap) ----------
+
+        [Test]
+        public void FlapAngle_AtZero_Zero()
+        {
+            // sin(0) = 0 → wing ở neutral pose tại t=0.
+            Assert.AreEqual(0f, PuppetAnimController.ComputeFlapAngle(0f, 6f, 50f), 0.0001f);
+        }
+
+        [Test]
+        public void FlapAngle_AtQuarterPeriod_Peak()
+        {
+            // sin(π/2) = 1 → max amplitude. Quarter period of 6Hz = 1/(4·6) = 0.04167s.
+            float quarterPeriod = 1f / (4f * 6f);
+            Assert.AreEqual(50f, PuppetAnimController.ComputeFlapAngle(quarterPeriod, 6f, 50f), 0.001f);
+        }
+
+        [Test]
+        public void FlapAngle_AtHalfPeriod_ZeroAgain()
+        {
+            // sin(π) = 0 → wing crosses neutral going down.
+            float halfPeriod = 1f / (2f * 6f);
+            Assert.AreEqual(0f, PuppetAnimController.ComputeFlapAngle(halfPeriod, 6f, 50f), 0.001f);
+        }
+
+        [Test]
+        public void FlapAngle_AtThreeQuarterPeriod_NegPeak()
+        {
+            // sin(3π/2) = -1 → wing at full down stroke (flapped down peak).
+            float threeQuarterPeriod = 3f / (4f * 6f);
+            Assert.AreEqual(-50f, PuppetAnimController.ComputeFlapAngle(threeQuarterPeriod, 6f, 50f), 0.001f);
+        }
+
+        [Test]
+        public void FlapAngle_RangeBoundedByAmplitude()
+        {
+            // Sample many times across multiple periods → all must stay in [-maxDeg, +maxDeg].
+            float maxDeg = 50f;
+            float freq = 6f;
+            for (int i = 0; i < 200; i++)
+            {
+                float t = i * 0.0125f; // 2.5 seconds total = 15 full periods
+                float a = PuppetAnimController.ComputeFlapAngle(t, freq, maxDeg);
+                Assert.LessOrEqual(Mathf.Abs(a), maxDeg + 0.0001f, $"t={t}");
+            }
+        }
+
+        [Test]
+        public void FlapAngle_ZeroFrequency_DefensiveZero()
+        {
+            // Defensive: freq=0 → wing standstill (avoid sin(0·t)=0 anyway, but explicit guard).
+            Assert.AreEqual(0f, PuppetAnimController.ComputeFlapAngle(1.5f, 0f, 50f), 0.0001f);
+        }
+
+        [Test]
+        public void FlapAngle_NegativeFrequency_DefensiveZero()
+        {
+            // Defensive: invalid input → wing standstill thay vì reverse-spinning.
+            Assert.AreEqual(0f, PuppetAnimController.ComputeFlapAngle(1.5f, -2f, 50f), 0.0001f);
+        }
+
+        [Test]
+        public void FlapAngle_PeriodicityHolds()
+        {
+            // Invariant: f(t) == f(t + 1/freq) cho mọi t (1 full period repeats).
+            float freq = 6f, maxDeg = 50f;
+            float[] testTimes = { 0.013f, 0.087f, 0.21f, 0.55f, 1.27f };
+            foreach (var t in testTimes)
+            {
+                float a0 = PuppetAnimController.ComputeFlapAngle(t, freq, maxDeg);
+                float a1 = PuppetAnimController.ComputeFlapAngle(t + 1f / freq, freq, maxDeg);
+                Assert.AreEqual(a0, a1, 0.001f, $"t={t} period mismatch");
+            }
+        }
+
         // ---------- CharacterArtSpec.TryParseRole ----------
 
         [Test]
@@ -110,6 +185,30 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.AreEqual(CharacterArtSpec.PuppetRole.LegLeft, CharacterArtSpec.TryParseRole("leg_left"));
             Assert.AreEqual(CharacterArtSpec.PuppetRole.LegRight, CharacterArtSpec.TryParseRole("leg_right"));
             Assert.AreEqual(CharacterArtSpec.PuppetRole.Tail, CharacterArtSpec.TryParseRole("tail"));
+        }
+
+        // ---------- Phase 3: WingLeft / WingRight (flying mob — Crow / Bat) ----------
+
+        [Test]
+        public void TryParseRole_WingFilenames_Recognized()
+        {
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.WingLeft, CharacterArtSpec.TryParseRole("wing_left"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.WingRight, CharacterArtSpec.TryParseRole("wing_right"));
+        }
+
+        [Test]
+        public void TryParseRole_WingFilenames_CaseInsensitive()
+        {
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.WingLeft, CharacterArtSpec.TryParseRole("Wing_Left"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.WingRight, CharacterArtSpec.TryParseRole("WING_RIGHT"));
+        }
+
+        [Test]
+        public void IsRequiredForPuppet_Wings_AreOptional()
+        {
+            // Wing chỉ cần cho flying mob (Crow / Bat) — không phải required cho puppet build.
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.WingLeft));
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.WingRight));
         }
 
         [Test]

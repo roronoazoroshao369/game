@@ -31,6 +31,10 @@ namespace WildernessCultivation.Core
         public const string FilenameForearmRight = "forearm_right";
         public const string FilenameShinLeft = "shin_left";
         public const string FilenameShinRight = "shin_right";
+        // Phase 3 wing rig (Crow / Bat). Wing pivots quanh shoulder giống arm nhưng có flap math
+        // riêng (always-on, amplitude lớn 45-60°, frequency independent of walk speed).
+        public const string FilenameWingLeft = "wing_left";
+        public const string FilenameWingRight = "wing_right";
 
         // Direction subfolder names (lowercase, single char). Importer match
         // case-insensitive — user có thể dùng "E"/"e"/"East" tùy thích.
@@ -55,6 +59,11 @@ namespace WildernessCultivation.Core
             ForearmLeft = 9,  // PR K: child of ArmLeft, sortingOrder above arm
             ForearmRight = 10, // PR K: child of ArmRight
             Head = 6,
+            // Phase 3: wing rig cho flying mob (Crow / Bat). Pivot quanh shoulder giống arm
+            // (root child) nhưng có flap math riêng — luôn-on khi mob bay, amplitude lớn,
+            // frequency độc lập walkFrequency.
+            WingLeft = 11,
+            WingRight = 12,
             Unknown = -1
         }
 
@@ -94,6 +103,8 @@ namespace WildernessCultivation.Core
             if (lower == FilenameForearmRight) return PuppetRole.ForearmRight;
             if (lower == FilenameShinLeft) return PuppetRole.ShinLeft;
             if (lower == FilenameShinRight) return PuppetRole.ShinRight;
+            if (lower == FilenameWingLeft) return PuppetRole.WingLeft;
+            if (lower == FilenameWingRight) return PuppetRole.WingRight;
             return PuppetRole.Unknown;
         }
 

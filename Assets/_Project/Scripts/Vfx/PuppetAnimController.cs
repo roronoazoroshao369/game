@@ -44,6 +44,10 @@ namespace WildernessCultivation.Vfx
         public Transform shinLeft;
         [Tooltip("PR K — Shin child of legRight (knee bend khi crouch + walk back-swing).")]
         public Transform shinRight;
+        [Tooltip("Phase 3 — Wing left transform (Crow / Bat). Optional, null skip flap.")]
+        public Transform wingLeft;
+        [Tooltip("Phase 3 — Wing right transform (Crow / Bat). Optional, null skip flap.")]
+        public Transform wingRight;
         [Tooltip("Rigidbody2D đọc velocity. Auto-assign nếu null.")]
         public Rigidbody2D body;
 
@@ -93,6 +97,16 @@ namespace WildernessCultivation.Vfx
         [Tooltip("Tail sway max degrees.")]
         public float tailSwayDeg = 12f;
 
+        [Header("Wing flap (Phase 3 — Crow / Bat)")]
+        [Tooltip("Flap tần số (Hz). Crow ~6, Bat ~7.5. Independent of walkFrequency — " +
+                 "flying mob vỗ cánh cả khi idle (hovering) và khi di chuyển.")]
+        public float flapFrequency = 6f;
+        [Tooltip("Max wing rotation (°). 45-60 = cánh xoải loại với amplitude (vs arm 25-40).")]
+        public float wingFlapAmplitudeDeg = 50f;
+        [Tooltip("True → wing flap không bị walkFrequency gating (always-on cho flying mob). " +
+                 "False → chỉ flap khi moving (bộ truyện nhân vật).")]
+        public bool flapAlwaysOn = true;
+
         [Header("Multi-direction sprites (PR J — L3+)")]
         [Tooltip("Sprite arrays indexed by PuppetDirection enum value (0=E, 1=N, 2=S, 3=W). " +
                  "Null entries → fallback East sprite. West dirty render bằng East + flipX. " +
@@ -110,12 +124,16 @@ namespace WildernessCultivation.Vfx
         public Sprite[] forearmRightSpritesByDir;
         public Sprite[] shinLeftSpritesByDir;
         public Sprite[] shinRightSpritesByDir;
+        [Tooltip("Phase 3 — Wing sprite arrays (multi-dir). Null entries → wing part missing, skip render.")]
+        public Sprite[] wingLeftSpritesByDir;
+        public Sprite[] wingRightSpritesByDir;
         [Tooltip("Hysteresis (degrees) cho direction snap — tránh flicker khi velocity gần biên E↔N / E↔S.")]
         public float directionHysteresisDeg = 8f;
 
         // Cached base local rotations / positions (init from inspector / scene-time pose).
         Quaternion baseArmLeftRot, baseArmRightRot, baseLegLeftRot, baseLegRightRot, baseTailRot;
         Quaternion baseForearmLeftRot, baseForearmRightRot, baseShinLeftRot, baseShinRightRot;
+        Quaternion baseWingLeftRot, baseWingRightRot;
         Vector3 baseTorsoPos, baseHeadPos;
         Vector3 baseSpriteRootScale;
 
@@ -123,6 +141,7 @@ namespace WildernessCultivation.Vfx
         SpriteRenderer headRenderer, torsoRenderer, armLeftRenderer, armRightRenderer,
             legLeftRenderer, legRightRenderer, tailRenderer;
         SpriteRenderer forearmLeftRenderer, forearmRightRenderer, shinLeftRenderer, shinRightRenderer;
+        SpriteRenderer wingLeftRenderer, wingRightRenderer;
 
         CharacterArtSpec.PuppetDirection currentDir = CharacterArtSpec.PuppetDirection.East;
 
@@ -152,6 +171,8 @@ namespace WildernessCultivation.Vfx
             if (forearmRight != null) baseForearmRightRot = forearmRight.localRotation;
             if (shinLeft != null) baseShinLeftRot = shinLeft.localRotation;
             if (shinRight != null) baseShinRightRot = shinRight.localRotation;
+            if (wingLeft != null) baseWingLeftRot = wingLeft.localRotation;
+            if (wingRight != null) baseWingRightRot = wingRight.localRotation;
             if (torso != null) baseTorsoPos = torso.localPosition;
             if (head != null) baseHeadPos = head.localPosition;
             if (spriteRoot != null) baseSpriteRootScale = spriteRoot.localScale;
@@ -170,6 +191,8 @@ namespace WildernessCultivation.Vfx
             if (forearmRight != null) forearmRightRenderer = forearmRight.GetComponent<SpriteRenderer>();
             if (shinLeft != null) shinLeftRenderer = shinLeft.GetComponent<SpriteRenderer>();
             if (shinRight != null) shinRightRenderer = shinRight.GetComponent<SpriteRenderer>();
+            if (wingLeft != null) wingLeftRenderer = wingLeft.GetComponent<SpriteRenderer>();
+            if (wingRight != null) wingRightRenderer = wingRight.GetComponent<SpriteRenderer>();
         }
 
         /// <summary>
@@ -188,7 +211,9 @@ namespace WildernessCultivation.Vfx
                 || ArrayHasNonEastEntry(forearmLeftSpritesByDir)
                 || ArrayHasNonEastEntry(forearmRightSpritesByDir)
                 || ArrayHasNonEastEntry(shinLeftSpritesByDir)
-                || ArrayHasNonEastEntry(shinRightSpritesByDir);
+                || ArrayHasNonEastEntry(shinRightSpritesByDir)
+                || ArrayHasNonEastEntry(wingLeftSpritesByDir)
+                || ArrayHasNonEastEntry(wingRightSpritesByDir);
         }
 
         static bool ArrayHasNonEastEntry(Sprite[] arr)
@@ -330,6 +355,25 @@ namespace WildernessCultivation.Vfx
                 tail.localRotation = baseTailRot * Quaternion.Euler(0f, 0f, tailSin * tailSwayDeg);
             }
 
+            // Wing flap (Phase 3 — Crow / Bat). Independent of walkFrequency: when
+            // flapAlwaysOn, wings flap continuously (flying mob hovers + cruises). Else
+            // gated by moving (walking creature with optional wings). Left + right wings
+            // flap in-phase (both up + both down together — vs arm opposite-phase swing).
+            bool flapping = (wingLeft != null || wingRight != null) && (flapAlwaysOn || moving);
+            if (flapping)
+            {
+                float flapAngle = ComputeFlapAngle(t, flapFrequency, wingFlapAmplitudeDeg);
+                if (wingLeft != null)
+                    wingLeft.localRotation = baseWingLeftRot * Quaternion.Euler(0f, 0f, flapAngle);
+                if (wingRight != null)
+                    wingRight.localRotation = baseWingRightRot * Quaternion.Euler(0f, 0f, -flapAngle);
+            }
+            else
+            {
+                if (wingLeft != null) wingLeft.localRotation = baseWingLeftRot;
+                if (wingRight != null) wingRight.localRotation = baseWingRightRot;
+            }
+
             // Lunge: snap arms forward then return.
             if (lungeStartTime >= 0f)
             {
@@ -389,6 +433,8 @@ namespace WildernessCultivation.Vfx
             ApplySpriteFromArray(forearmRightRenderer, forearmRightSpritesByDir, idx);
             ApplySpriteFromArray(shinLeftRenderer, shinLeftSpritesByDir, idx);
             ApplySpriteFromArray(shinRightRenderer, shinRightSpritesByDir, idx);
+            ApplySpriteFromArray(wingLeftRenderer, wingLeftSpritesByDir, idx);
+            ApplySpriteFromArray(wingRightRenderer, wingRightSpritesByDir, idx);
         }
 
         static void ApplySpriteFromArray(SpriteRenderer renderer, Sprite[] arr, int idx)
@@ -483,6 +529,20 @@ namespace WildernessCultivation.Vfx
         {
             float clamped = Mathf.Clamp01(u);
             return Mathf.Sin(Mathf.PI * clamped) * maxDeg;
+        }
+
+        /// <summary>
+        /// Wing flap angle (Phase 3 — Crow / Bat). Pure sin oscillation at <paramref name="frequency"/>
+        /// Hz with amplitude <paramref name="maxDeg"/>. Independent of walk speed — flying mob
+        /// flap liên tục cả khi idle (hovering) và khi cruise. Caller mirrors sign cho left/right
+        /// wing để 2 cánh flap cùng phase (xoãi xuống cùng → đẩy lên).
+        ///
+        /// Range: [-maxDeg, +maxDeg]. Returns 0 nếu frequency &lt;= 0 (defensive — wing standstill).
+        /// </summary>
+        public static float ComputeFlapAngle(float time, float frequency, float maxDeg)
+        {
+            if (frequency <= 0f) return 0f;
+            return Mathf.Sin(time * 2f * Mathf.PI * frequency) * maxDeg;
         }
     }
 }
