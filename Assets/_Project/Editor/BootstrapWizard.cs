@@ -725,6 +725,20 @@ namespace WildernessCultivation.EditorTools
             return go.transform;
         }
 
+        /// <summary>
+        /// PR M — wrap placeholder sprite set thành <see cref="CharacterArtImporter.CharacterSpriteSet"/>
+        /// (East-only, isMultiDirectional=false). Caller dùng giống real puppetSet → puppet path
+        /// luôn active. Skeleton demo motion runs ngay không cần real art.
+        /// </summary>
+        static CharacterArtImporter.CharacterSpriteSet BuildPlaceholderSpriteSet(
+            string characterId, bool includeTail)
+        {
+            var east = PuppetPlaceholderGenerator.EnsureSpriteSet(characterId, includeTail);
+            var set = new CharacterArtImporter.CharacterSpriteSet { isMultiDirectional = false };
+            set.spritesByDir[CharacterArtSpec.PuppetDirection.East] = east;
+            return set;
+        }
+
         // PR J — L3+ multi-direction wire.
         // Khi user gen folder layout E/N/S/ → CharacterSpriteSet.isMultiDirectional=true.
         // Populate per-role sprite arrays trên PuppetAnimController để runtime swap khi đổi
@@ -953,15 +967,14 @@ namespace WildernessCultivation.EditorTools
             var go = new GameObject("Player");
             go.tag = "Player";
 
-            // Puppet path: nếu user đã drop body-part PNGs vào Art/Characters/player/ →
-            // build child sprite hierarchy thay vì single sprite. Fallback single-sprite
-            // (placeholder color hoặc legacy player.png) khi puppet PNG chưa có.
+            // Puppet path always — drops user's real PNG khi có ở Art/Characters/player/,
+            // else PR M placeholder skeleton (13 colored rectangles). Demo motion runs ngay.
             // PuppetAnimController tự handle flip qua spriteRoot.localScale → KHÔNG set
             // pc.spriteRenderer (PlayerController.flipX skip via null guard) tránh double-flip.
             // PR J: dual layout support — flat (legacy) hoặc E/N/S subfolder (multi-dir).
-            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("player", placeholderHeightPx: 32);
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("player", placeholderHeightPx: 32)
+                ?? BuildPlaceholderSpriteSet("player", includeTail: false);
             SpriteRenderer sr = null;
-            if (puppetSet != null)
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 5,
                     out var spriteRoot, out var torsoT, out var headT,
@@ -985,12 +998,6 @@ namespace WildernessCultivation.EditorTools
                 puppet.armSwingDeg = 28f;
                 puppet.legSwingDeg = 18f;
                 WirePuppetMultiDirSprites(puppet, puppetSet);
-            }
-            else
-            {
-                sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = sprites["player"];
-                sr.sortingOrder = 5;
             }
 
             var rb = go.AddComponent<Rigidbody2D>();
@@ -1118,10 +1125,10 @@ namespace WildernessCultivation.EditorTools
             // Tunings: faster step (4.5Hz), aggressive leg swing (28°) cho quadruped silhouette,
             // tail sway 16° (mid range — wolf tail cứng hơn fox).
             // PR J multi-dir support: flat folder (legacy) → East-only; E/N/S subfolders → full multi-dir.
-            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("wolf", placeholderHeightPx: 32);
-            var puppetSprites = puppetSet?.EastSprites;
+            // PR M: no real PNG → placeholder 13-joint skeleton (motion demo runs ngay).
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("wolf", placeholderHeightPx: 32)
+                ?? BuildPlaceholderSpriteSet("wolf", includeTail: true);
             SpriteRenderer sr = null;
-            if (puppetSet != null)
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
@@ -1147,12 +1154,6 @@ namespace WildernessCultivation.EditorTools
                 puppet.referenceSpeed = 2.5f;
                 WirePuppetMultiDirSprites(puppet, puppetSet);
             }
-            else
-            {
-                sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = sprite;
-                sr.sortingOrder = 3;
-            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -1172,10 +1173,8 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.95f, scaleY: 0.35f);
             AttachMobHitFx(go, knockbackImpulse: 2.5f);
-            // MobAnimController bị skip khi puppet active — IMobAnim resolution lấy
-            // PuppetAnimController (đã add ở trên) qua GetComponent<IMobAnim>.
-            if (puppetSprites == null)
-                AttachMobAnim(go, walkBobFreq: 4.5f, maxTiltDeg: 5f);
+            // PR M: PuppetAnimController always active (placeholder skeleton fallback). MobAnimController
+            // legacy path retired — IMobAnim resolution picks PuppetAnimController qua GetComponent.
             return SaveAsPrefab(go, $"{PrefabsDir}/Wolf.prefab");
         }
 
@@ -1185,10 +1184,10 @@ namespace WildernessCultivation.EditorTools
             // Puppet path: Art/Characters/fox_spirit/ tunings nhanh hơn Wolf — fox spirit
             // nimble: 5.5Hz step, longer arm swing 35°, tail sway 24° (fox tail vẫy mạnh).
             // PR J multi-dir support: flat folder (legacy) → East-only; E/N/S subfolders → full multi-dir.
-            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("fox_spirit", placeholderHeightPx: 32);
-            var puppetSprites = puppetSet?.EastSprites;
+            // PR M: no real PNG → placeholder skeleton (motion demo runs ngay).
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("fox_spirit", placeholderHeightPx: 32)
+                ?? BuildPlaceholderSpriteSet("fox_spirit", includeTail: true);
             SpriteRenderer sr = null;
-            if (puppetSet != null)
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
@@ -1215,12 +1214,6 @@ namespace WildernessCultivation.EditorTools
                 puppet.referenceSpeed = 2.6f;
                 WirePuppetMultiDirSprites(puppet, puppetSet);
             }
-            else
-            {
-                sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = sprite;
-                sr.sortingOrder = 3;
-            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -1240,8 +1233,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.85f, scaleY: 0.32f);
             AttachMobHitFx(go, knockbackImpulse: 2.0f);
-            if (puppetSprites == null)
-                AttachMobAnim(go, walkBobFreq: 5.5f, maxTiltDeg: 6f);
+            // PR M: PuppetAnimController always active.
             return SaveAsPrefab(go, $"{PrefabsDir}/FoxSpirit.prefab");
         }
 
