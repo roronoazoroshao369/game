@@ -35,6 +35,8 @@ namespace WildernessCultivation.Core
         public const string BoarId = "boar";
         public const string DeerSpiritId = "deer_spirit";
         public const string BossId = "boss";
+        // Phase 3 flying mob — wings + reduced anatomy. CrowId Phase 3 PR #113.
+        public const string CrowId = "crow";
 
         /// <summary>
         /// Default palette per character ID. Unknown id → fallback "neutral" gray. Distinct
@@ -119,6 +121,20 @@ namespace WildernessCultivation.Core
                         shin = new Color(0.08f, 0.04f, 0.06f),
                         tail = new Color(0.55f, 0.10f, 0.14f),
                         wing = new Color(0.30f, 0.30f, 0.32f),
+                    };
+                case CrowId:
+                    // Crow — glossy black corvid. Wing đậm hơn skin/tunic (slick feather sheen).
+                    // skin = beak/feet (charcoal gray), tunic = body plumage (deeper black),
+                    // wing = primary flight feathers (jet black với hint xanh đêm để đọc rõ
+                    // dark amplitude vs torso). Tail short stub (stub flick — same as torso).
+                    return new Palette
+                    {
+                        skin = new Color(0.18f, 0.18f, 0.20f),
+                        tunic = new Color(0.10f, 0.10f, 0.12f),
+                        trousers = new Color(0.10f, 0.10f, 0.12f),
+                        shin = new Color(0.06f, 0.06f, 0.08f),
+                        tail = new Color(0.10f, 0.10f, 0.12f),
+                        wing = new Color(0.08f, 0.09f, 0.14f),
                     };
                 default:
                     return new Palette
