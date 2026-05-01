@@ -90,9 +90,9 @@ namespace WildernessCultivation.Tests.EditMode
                 {
                     var picked = wg.BiomeAt(new Vector3(x + 0.1f, y + 0.1f, 0f));
                     Assert.IsNotNull(picked, $"Biome at ({x},{y}) phải != null");
-                    // Recompute Perlin same way WorldGenerator does:
-                    float v = Mathf.PerlinNoise((x + wg.seed * 0.7f) * wg.biomeNoiseScale,
-                                                 (y - wg.seed * 0.7f) * wg.biomeNoiseScale);
+                    // Source-of-truth: cùng public helper WorldGenerator dùng để PickBiomeFor.
+                    // Tách helper tránh test lặp lại implementation chi tiết của domain warp.
+                    float v = wg.BiomeNoiseValue(x, y);
                     bool inRange = v >= picked.selectionRange.x && v <= picked.selectionRange.y;
                     // Edge case: Perlin có thể trả vượt 1.0 chút — fallback biome[0] hợp lệ.
                     if (!inRange) Assert.AreSame(forest, picked,
