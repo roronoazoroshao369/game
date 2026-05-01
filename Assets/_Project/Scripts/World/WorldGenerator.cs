@@ -29,6 +29,7 @@ namespace WildernessCultivation.World
             data.world ??= new WorldSaveData();
             data.world.seed = seed;
             data.world.harvestedCells = new List<Vector2Int>(harvestedCells);
+            data.world.harvestedGrassCells = new List<Vector2Int>(harvestedGrassCells);
         }
 
         public void RestoreState(SaveData data)
@@ -38,8 +39,11 @@ namespace WildernessCultivation.World
             harvestedCells.Clear();
             if (data.world.harvestedCells != null)
                 foreach (var c in data.world.harvestedCells) harvestedCells.Add(c);
+            harvestedGrassCells.Clear();
+            if (data.world.harvestedGrassCells != null)
+                foreach (var c in data.world.harvestedGrassCells) harvestedGrassCells.Add(c);
             // ChunkManager chưa biết harvested set đã thay đổi → force rebuild để chunks
-            // active re-spawn (skip cells trong harvestedCells).
+            // active re-spawn (skip cells trong harvestedCells / harvestedGrassCells).
             if (chunkManager != null) chunkManager.Rebuild();
         }
 
@@ -47,6 +51,11 @@ namespace WildernessCultivation.World
         // GenerateCellAt skip resource spawn ở cells này → walk far / chunk unload &
         // reload vẫn gone. Save persist qua WorldSaveData.harvestedCells.
         readonly HashSet<Vector2Int> harvestedCells = new();
+
+        // Set cells có grass-tile decoration đã bị eat (rabbit eat grass / player pick).
+        // Tách riêng harvestedCells để không block resource spawn (tree/rock vẫn được
+        // spawn ở cell có grass tile bị ăn). Save persist.
+        readonly HashSet<Vector2Int> harvestedGrassCells = new();
 
         /// <summary>
         /// Mark cell (worldX, worldY) là đã harvest. Gọi từ ResourceNode.Harvest()
@@ -63,11 +72,29 @@ namespace WildernessCultivation.World
             return harvestedCells.Contains(new Vector2Int(worldX, worldY));
         }
 
+        /// <summary>Mark grass-tile cell đã eat. Idempotent.</summary>
+        public void MarkGrassHarvested(int worldX, int worldY)
+        {
+            harvestedGrassCells.Add(new Vector2Int(worldX, worldY));
+        }
+
+        /// <summary>True nếu grass-tile ở cell này đã bị eat (skip respawn).</summary>
+        public bool IsGrassHarvested(int worldX, int worldY)
+        {
+            return harvestedGrassCells.Contains(new Vector2Int(worldX, worldY));
+        }
+
         /// <summary>Test/debug helper: clear toàn bộ harvested set (vd resetting world).</summary>
         public void ClearHarvestedCells() => harvestedCells.Clear();
 
+        /// <summary>Test/debug helper: clear toàn bộ grass harvested set.</summary>
+        public void ClearHarvestedGrassCells() => harvestedGrassCells.Clear();
+
         /// <summary>Read-only diagnostics. Production code dùng IsHarvested().</summary>
         public int HarvestedCount => harvestedCells.Count;
+
+        /// <summary>Read-only diagnostics cho grass harvest count.</summary>
+        public int HarvestedGrassCount => harvestedGrassCells.Count;
 
         [Header("World")]
         public int seed = 12345;
@@ -89,6 +116,14 @@ namespace WildernessCultivation.World
         public Tilemap groundTilemap;
         [Tooltip("Tile asset fallback cho Tilemap khi 'biomes' rỗng (chế độ legacy single-biome).")]
         public TileBase legacyGroundTile;
+
+        [Header("Grass-tile decoration (rabbit ăn được — persistent harvest)")]
+        [Tooltip("Prefab grass-tile (small green decoration GO + GrassTile component). Null → skip pass.")]
+        public GameObject grassTilePrefab;
+        [Tooltip("Density grass-tile / cell (sau khi resource pass đã spawn xong). 0.15 = ~15% cells trên grassland.")]
+        [Range(0f, 1f)] public float grassTileDensity = 0.15f;
+        [Tooltip("Perlin band cho grass tile spawn. (0.30, 0.70) = grassland — tránh water (<0.15) + forest (>0.60 đã có tree).")]
+        public Vector2 grassTilePerlinBand = new(0.30f, 0.70f);
 
         [Header("Legacy single-biome fallback (chỉ dùng khi 'biomes' rỗng)")]
         public GameObject groundPrefab;
@@ -365,6 +400,20 @@ namespace WildernessCultivation.World
                         }
                     }
                 }
+
+                // Grass-tile pass — small green decoration mob (rabbit) ăn được. Tách khỏi
+                // resource pass: spawn ở grassland Perlin band, KHÔNG block bởi harvestedCells
+                // (chỉ block bởi harvestedGrassCells riêng). Nếu đã có resource ở cell → skip
+                // (tránh sprite overlap).
+                if (!spawned && grassTilePrefab != null
+                    && !harvestedGrassCells.Contains(new Vector2Int(worldX, worldY))
+                    && InPerlinBand(n, grassTilePerlinBand.x, grassTilePerlinBand.y)
+                    && Random.value < grassTileDensity)
+                {
+                    var go = SpawnInto(grassTilePrefab, worldX, worldY, parent);
+                    var gt = go != null ? go.GetComponent<GrassTile>() : null;
+                    if (gt != null) gt.cellCoord = new Vector2Int(worldX, worldY);
+                }
             }
             finally
             {
@@ -410,16 +459,16 @@ namespace WildernessCultivation.World
             return new Vector2Int(cx, cy);
         }
 
-        void SpawnInto(GameObject prefab, int x, int y, Transform parent)
+        GameObject SpawnInto(GameObject prefab, int x, int y, Transform parent)
         {
             // tránh spawn ngay trung tâm (chỗ player) — chỉ áp dụng khi center trong canonical range.
             Vector2 mid = new(size.x * 0.5f, size.y * 0.5f);
             int wrappedX = wrapWorld ? WrapCoord(x, size.x) : x;
             int wrappedY = wrapWorld ? WrapCoord(y, size.y) : y;
             Vector2 wp = new(wrappedX + 0.5f, wrappedY + 0.5f);
-            if (Vector2.Distance(wp, mid) < 4f) return;
+            if (Vector2.Distance(wp, mid) < 4f) return null;
 
-            Instantiate(prefab, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, parent);
+            return Instantiate(prefab, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, parent);
         }
 
         /// <summary>
