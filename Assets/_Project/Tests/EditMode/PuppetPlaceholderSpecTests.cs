@@ -59,6 +59,89 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.ShinRight));
         }
 
+        // ---------- Phase 3: WingLeft / WingRight (Crow / Bat) ----------
+
+        [Test]
+        public void DefaultRoles_NoWings_DefaultBehavior()
+        {
+            // Default overload (1 arg) phải KHÔNG include wings — backward compat cho Wolf/Fox/etc.
+            var roles = new HashSet<CharacterArtSpec.PuppetRole>(
+                PuppetPlaceholderSpec.DefaultRoles(includeTail: true));
+            Assert.IsFalse(roles.Contains(CharacterArtSpec.PuppetRole.WingLeft));
+            Assert.IsFalse(roles.Contains(CharacterArtSpec.PuppetRole.WingRight));
+        }
+
+        [Test]
+        public void DefaultRoles_WithWings_AddsWingPair()
+        {
+            // includeWings=true → +2 roles (WingLeft + WingRight). Combined với includeTail=true
+            // = 13 roles total (Crow / Bat full quadruped + tail + 2 wings).
+            var roles = new HashSet<CharacterArtSpec.PuppetRole>(
+                PuppetPlaceholderSpec.DefaultRoles(includeTail: true, includeWings: true));
+            Assert.AreEqual(13, roles.Count);
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.WingLeft));
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.WingRight));
+        }
+
+        [Test]
+        public void DefaultRoles_WithWingsNoTail_HasTwelveRoles()
+        {
+            // Bipedal flying mob (no tail) hypothetical — count = 10 humanoid + 2 wings = 12.
+            var roles = new HashSet<CharacterArtSpec.PuppetRole>(
+                PuppetPlaceholderSpec.DefaultRoles(includeTail: false, includeWings: true));
+            Assert.AreEqual(12, roles.Count);
+            Assert.IsFalse(roles.Contains(CharacterArtSpec.PuppetRole.Tail));
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.WingLeft));
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.WingRight));
+        }
+
+        [Test]
+        public void RectFor_Wings_PositiveAndWiderThanTall()
+        {
+            // Wing silhouette = wide span > thin chord (xoãi rộng cho amplitude 50° đọc rõ).
+            foreach (var role in new[]
+            {
+                CharacterArtSpec.PuppetRole.WingLeft,
+                CharacterArtSpec.PuppetRole.WingRight,
+            })
+            {
+                var (w, h) = PuppetPlaceholderSpec.RectFor(role);
+                Assert.Greater(w, 0, $"{role} width");
+                Assert.Greater(h, 0, $"{role} height");
+                Assert.Greater(w, h, $"{role} expected wider than tall");
+            }
+        }
+
+        [Test]
+        public void ColorFor_Wings_ReturnsWingColor()
+        {
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.PlayerId);
+            Assert.AreEqual(p.wing, PuppetPlaceholderSpec.ColorFor(CharacterArtSpec.PuppetRole.WingLeft, p));
+            Assert.AreEqual(p.wing, PuppetPlaceholderSpec.ColorFor(CharacterArtSpec.PuppetRole.WingRight, p));
+        }
+
+        [Test]
+        public void PaletteFor_AllKnownIds_HaveWingAlphaOne()
+        {
+            // Phase 3 wing field: tất cả palette PHẢI populate wing color (alpha=1) — kể cả non-flying
+            // characters (default fallback gray). Tránh transparent placeholder render khi Crow/Bat
+            // dùng PaletteFor (Phase 3 prefab + #113 sẽ thêm CrowId/BatId palette).
+            foreach (var id in new[]
+            {
+                PuppetPlaceholderSpec.PlayerId,
+                PuppetPlaceholderSpec.WolfId,
+                PuppetPlaceholderSpec.FoxSpiritId,
+                PuppetPlaceholderSpec.RabbitId,
+                PuppetPlaceholderSpec.BoarId,
+                PuppetPlaceholderSpec.DeerSpiritId,
+                PuppetPlaceholderSpec.BossId,
+            })
+            {
+                var p = PuppetPlaceholderSpec.PaletteFor(id);
+                Assert.AreEqual(1f, p.wing.a, $"{id} wing alpha");
+            }
+        }
+
         // ---------- Palette ----------
 
         [Test]

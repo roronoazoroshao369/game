@@ -25,6 +25,7 @@ namespace WildernessCultivation.Core
             public Color trousers; // leg
             public Color shin;     // shin (darker than trousers)
             public Color tail;     // tail (mob only)
+            public Color wing;     // wing (flying mob only — Phase 3)
         }
 
         public const string PlayerId = "player";
@@ -51,6 +52,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.22f, 0.30f, 0.52f),
                         shin = new Color(0.16f, 0.20f, 0.36f),
                         tail = new Color(0.55f, 0.40f, 0.30f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
                 case WolfId:
                     return new Palette
@@ -60,6 +62,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.30f, 0.30f, 0.32f),
                         shin = new Color(0.20f, 0.20f, 0.22f),
                         tail = new Color(0.45f, 0.40f, 0.35f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
                 case FoxSpiritId:
                     return new Palette
@@ -69,6 +72,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.65f, 0.32f, 0.15f),
                         shin = new Color(0.40f, 0.20f, 0.10f),
                         tail = new Color(0.92f, 0.55f, 0.25f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
                 case RabbitId:
                     return new Palette
@@ -78,6 +82,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.55f, 0.42f, 0.30f),
                         shin = new Color(0.36f, 0.28f, 0.20f),
                         tail = new Color(0.95f, 0.92f, 0.85f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
                 case BoarId:
                     // Wild boar — bristly dark brown coarse fur, ivory tusks (hero), heavy mob.
@@ -88,6 +93,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.22f, 0.16f, 0.12f),
                         shin = new Color(0.14f, 0.10f, 0.08f),
                         tail = new Color(0.18f, 0.14f, 0.10f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
                 case DeerSpiritId:
                     // Spirit deer — cream fawn fur with subtle warm tones, white tail flick, antler
@@ -99,6 +105,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.55f, 0.45f, 0.30f),
                         shin = new Color(0.38f, 0.30f, 0.20f),
                         tail = new Color(0.96f, 0.93f, 0.86f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
                 case BossId:
                     // Boss Hắc Vương — humanoid villain overlord. Black robe with crimson trim
@@ -111,6 +118,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.12f, 0.06f, 0.10f),
                         shin = new Color(0.08f, 0.04f, 0.06f),
                         tail = new Color(0.55f, 0.10f, 0.14f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
                 default:
                     return new Palette
@@ -120,6 +128,7 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.35f, 0.35f, 0.40f),
                         shin = new Color(0.20f, 0.20f, 0.25f),
                         tail = new Color(0.60f, 0.50f, 0.40f),
+                        wing = new Color(0.30f, 0.30f, 0.32f),
                     };
             }
         }
@@ -143,6 +152,10 @@ namespace WildernessCultivation.Core
                 case CharacterArtSpec.PuppetRole.ShinLeft:
                 case CharacterArtSpec.PuppetRole.ShinRight: return (16, 44);
                 case CharacterArtSpec.PuppetRole.Tail: return (50, 18);
+                // Phase 3 wings: wide span (54 px) + medium-thin chord (28 px). Rotates quanh
+                // shoulder pivot — amplitude 50° cần silhouette đủ dài để đọc được motion.
+                case CharacterArtSpec.PuppetRole.WingLeft:
+                case CharacterArtSpec.PuppetRole.WingRight: return (54, 28);
                 default: return (32, 32);
             }
         }
@@ -166,16 +179,29 @@ namespace WildernessCultivation.Core
                 case CharacterArtSpec.PuppetRole.ShinLeft:
                 case CharacterArtSpec.PuppetRole.ShinRight: return palette.shin;
                 case CharacterArtSpec.PuppetRole.Tail: return palette.tail;
+                case CharacterArtSpec.PuppetRole.WingLeft:
+                case CharacterArtSpec.PuppetRole.WingRight: return palette.wing;
                 default: return Color.magenta; // unknown → loud
             }
         }
 
         /// <summary>
-        /// Roles to generate cho character. Defaults = full 13-joint set. Caller có thể skip
-        /// Tail nếu character không có tail (Player). Forearm/shin always-on để showcase L2
-        /// elbow/knee bend trong demo.
+        /// Roles to generate cho character. Defaults = full 10-joint humanoid set. Caller có thể
+        /// skip Tail nếu character không có tail (Player) và opt-in Wings cho flying mob
+        /// (Crow / Bat — Phase 3). Forearm/shin always-on để showcase L2 elbow/knee bend trong demo.
         /// </summary>
         public static IEnumerable<CharacterArtSpec.PuppetRole> DefaultRoles(bool includeTail)
+        {
+            return DefaultRoles(includeTail, includeWings: false);
+        }
+
+        /// <summary>
+        /// Phase 3 overload — opt-in wing roles cho flying mob. <paramref name="includeWings"/>=true
+        /// adds <see cref="CharacterArtSpec.PuppetRole.WingLeft"/> + <see cref="CharacterArtSpec.PuppetRole.WingRight"/>.
+        /// Crow / Bat keep full quadruped joints (head/torso/arms/legs/tail) plus wings
+        /// to maintain consistent 6 PNG flat / 18 PNG multi-dir count với Wolf/Fox quadruped tier.
+        /// </summary>
+        public static IEnumerable<CharacterArtSpec.PuppetRole> DefaultRoles(bool includeTail, bool includeWings)
         {
             yield return CharacterArtSpec.PuppetRole.Head;
             yield return CharacterArtSpec.PuppetRole.Torso;
@@ -188,6 +214,11 @@ namespace WildernessCultivation.Core
             yield return CharacterArtSpec.PuppetRole.ShinLeft;
             yield return CharacterArtSpec.PuppetRole.ShinRight;
             if (includeTail) yield return CharacterArtSpec.PuppetRole.Tail;
+            if (includeWings)
+            {
+                yield return CharacterArtSpec.PuppetRole.WingLeft;
+                yield return CharacterArtSpec.PuppetRole.WingRight;
+            }
         }
     }
 }
