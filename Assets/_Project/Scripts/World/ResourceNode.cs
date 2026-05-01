@@ -67,6 +67,17 @@ namespace WildernessCultivation.World
 
             ApplyHarvestSideEffects(source);
 
+            // Mark cell harvested → chunk reload skip respawn (PR #3c persistence). Pos
+            // floor về cell coord vì spawn dùng (x+0.5, y+0.5). Chỉ mark khi
+            // WorldGenerator instance available (test fixture có thể không có).
+            var wg = WorldGenerator.Instance;
+            if (wg != null)
+            {
+                int cx = Mathf.FloorToInt(transform.position.x);
+                int cy = Mathf.FloorToInt(transform.position.y);
+                wg.MarkHarvested(cx, cy);
+            }
+
             if (onDestroyVfx != null) Destroy(Instantiate(onDestroyVfx, transform.position, Quaternion.identity), 1f);
             Destroy(gameObject);
         }

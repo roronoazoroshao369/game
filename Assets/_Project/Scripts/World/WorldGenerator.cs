@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using WildernessCultivation.Core;
@@ -27,13 +28,46 @@ namespace WildernessCultivation.World
             if (data == null) return;
             data.world ??= new WorldSaveData();
             data.world.seed = seed;
+            data.world.harvestedCells = new List<Vector2Int>(harvestedCells);
         }
 
         public void RestoreState(SaveData data)
         {
             if (data?.world == null) return;
             if (data.world.seed != 0) seed = data.world.seed;
+            harvestedCells.Clear();
+            if (data.world.harvestedCells != null)
+                foreach (var c in data.world.harvestedCells) harvestedCells.Add(c);
+            // ChunkManager chưa biết harvested set đã thay đổi → force rebuild để chunks
+            // active re-spawn (skip cells trong harvestedCells).
+            if (chunkManager != null) chunkManager.Rebuild();
         }
+
+        // Set cells player đã harvest (tree chopped / rock mined / herb picked).
+        // GenerateCellAt skip resource spawn ở cells này → walk far / chunk unload &
+        // reload vẫn gone. Save persist qua WorldSaveData.harvestedCells.
+        readonly HashSet<Vector2Int> harvestedCells = new();
+
+        /// <summary>
+        /// Mark cell (worldX, worldY) là đã harvest. Gọi từ ResourceNode.Harvest()
+        /// trước Destroy(gameObject). Idempotent (HashSet skip duplicate).
+        /// </summary>
+        public void MarkHarvested(int worldX, int worldY)
+        {
+            harvestedCells.Add(new Vector2Int(worldX, worldY));
+        }
+
+        /// <summary>True nếu cell đã được harvest và không nên spawn resource.</summary>
+        public bool IsHarvested(int worldX, int worldY)
+        {
+            return harvestedCells.Contains(new Vector2Int(worldX, worldY));
+        }
+
+        /// <summary>Test/debug helper: clear toàn bộ harvested set (vd resetting world).</summary>
+        public void ClearHarvestedCells() => harvestedCells.Clear();
+
+        /// <summary>Read-only diagnostics. Production code dùng IsHarvested().</summary>
+        public int HarvestedCount => harvestedCells.Count;
 
         [Header("World")]
         public int seed = 12345;
@@ -280,20 +314,27 @@ namespace WildernessCultivation.World
                 float dGrass = biome != null ? biome.grassDensity : grassDensity;
                 float dWater = biome != null ? biome.waterDensity : waterDensity;
 
+                // Cell đã harvest (chop tree / mine rock …) → skip cả resource lẫn extra
+                // node, nhưng tile + decoration vẫn render bình thường (ground + cosmetic).
+                bool harvested = harvestedCells.Contains(new Vector2Int(worldX, worldY));
+
                 bool spawned = false;
-                if (water != null && n < 0.15f && Random.value < dWater)
-                { SpawnInto(water, worldX, worldY, parent); spawned = true; }
-                else if (tree != null && n > 0.6f && Random.value < dTree)
-                { SpawnInto(tree, worldX, worldY, parent); spawned = true; }
-                else if (rock != null && n < 0.25f && Random.value < dRock)
-                { SpawnInto(rock, worldX, worldY, parent); spawned = true; }
-                else if (grass != null && Random.value < dGrass)
-                { SpawnInto(grass, worldX, worldY, parent); spawned = true; }
+                if (!harvested)
+                {
+                    if (water != null && n < 0.15f && Random.value < dWater)
+                    { SpawnInto(water, worldX, worldY, parent); spawned = true; }
+                    else if (tree != null && n > 0.6f && Random.value < dTree)
+                    { SpawnInto(tree, worldX, worldY, parent); spawned = true; }
+                    else if (rock != null && n < 0.25f && Random.value < dRock)
+                    { SpawnInto(rock, worldX, worldY, parent); spawned = true; }
+                    else if (grass != null && Random.value < dGrass)
+                    { SpawnInto(grass, worldX, worldY, parent); spawned = true; }
+                }
 
                 // Extra nodes (linh thảo / mineral) — pass riêng, có thể overlap nếu
                 // tile chưa lấp. Tối đa 1 extra/tile để tránh dày đặc. Tôn trọng Perlin
                 // band khi configured (mặc định 0..0 = no constraint).
-                if (!spawned && biome != null && biome.extraNodes != null)
+                if (!spawned && !harvested && biome != null && biome.extraNodes != null)
                 {
                     foreach (var en in biome.extraNodes)
                     {

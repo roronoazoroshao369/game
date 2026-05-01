@@ -84,6 +84,10 @@ namespace WildernessCultivation.Core
         public int daysSurvived;
         public int seasonIndex;        // 0=Spring..3=Winter
         public int weatherIndex;       // 0=Clear, 1=Rain, 2=Storm
+        // Cells player đã harvest (chop tree / mine rock / pick herb …). GenerateCellAt
+        // skip resource spawn ở các cell này → walk away / walk back vẫn gone.
+        // Chunk streaming-safe: chunk unload/reload tôn trọng list này. Save persist.
+        public List<Vector2Int> harvestedCells = new();
     }
 
     [Serializable]
