@@ -1523,6 +1523,589 @@ no grid lines, no UI elements, no caption, no logo,
 no lens flare, no ground beneath subject for body parts.
 ```
 
+#### 3.6.2 Wolf — Hung Lang Full DST Set (14 prompts → 20 PNG)
+
+> **Setup:** tạo `Assets/_Project/Art/Characters/wolf/E/`, `wolf/N/`, `wolf/S/`.
+>
+> **Quadruped pivot map:** torso = body horizontal (E) hoặc vertical (N/S). "arm" = front legs, "leg" = back legs, plus tail. PuppetAnimController hierarchy reuse cùng PuppetRole enum như Player.
+>
+> **S/tail skip:** front view wolf body hầu như che tail → controller fallback East sprite cho slot này (xem §3.4.2 note line 745). Nên thực tế gen 14 prompts → 20 PNG (không phải 21 như §3.0 table — table tính ideal full coverage).
+>
+> **W (West):** mirror E lúc runtime, KHÔNG cần gen.
+
+##### E (East / side view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/E/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: side view of a fierce gray wolf HEAD ONLY, profile facing
+right, snarling fangs partially visible, sharp yellow eyes, ears
+back in alert pose, shaggy gray fur with darker neck ruff, NO body,
+NO neck below jaw.
+
+Palette: slate gray #7a7c80 fur base, shadow stone #5a5d63 deep
+shadow, highlight stone #a3a5a8 fur tip highlight, primary gold
+#d4a64a eye color, ink black #1a1a1a snout outline, bone white
+#c2c4ba fang.
+
+Composition: 256x256 px, isolated head on transparent background,
+NO body, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/E/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: SIDE VIEW of a gray wolf BODY ONLY (no head, no legs, no
+tail), oriented HORIZONTAL with head-end on RIGHT, hip-end on LEFT,
+shaggy gray fur, lean predator silhouette, ribcage visible through
+fur, neutral horizontal pose. Clean cuts at neck (right edge),
+hips (left edge), shoulders/hip joints (bottom edge for legs).
+
+Palette: slate gray #7a7c80 fur base, shadow stone #5a5d63 belly
+shadow, highlight stone #a3a5a8 back ridge highlight, ink black
+#1a1a1a outline at fur edges.
+
+Composition: 384x256 px (HORIZONTAL — wolf body wider than tall),
+isolated body on transparent background, NO head, NO legs, NO
+tail, NO ground.
+```
+
+```
+=== Save to: Art/Characters/wolf/E/arm_left.png  AND  arm_right.png  (FRONT LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a gray wolf's FRONT LEG, straight standing
+pose, lean muscular leg, gray fur with white sock fading to dark
+paw, sharp claws visible at paw tip, NO body, NO foot ground.
+
+Palette: slate gray #7a7c80 fur base, shadow stone #5a5d63 leg
+shadow, bone white #c2c4ba paw fur highlight, ink black #1a1a1a
+claw.
+
+Composition: 192x320 px (vertical), isolated single front leg on
+transparent, top edge clean at shoulder joint (pivot), bottom at
+paw, NO body.
+
+# NOTE: gen 1 lần flip horizontal cho arm_right.png.
+```
+
+```
+=== Save to: Art/Characters/wolf/E/leg_left.png  AND  leg_right.png  (BACK LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a gray wolf's BACK LEG, standing pose with
+slight crouch (powerful hindquarter), strong haunch muscle visible,
+gray fur, paw with claws, NO body, NO ground contact.
+
+Palette: same wolf palette — slate gray, shadow stone, highlight
+stone, ink black claw.
+
+Composition: 192x320 px (vertical), isolated single back leg, top
+edge clean at hip joint (pivot), bottom at paw, NO body.
+
+# NOTE: gen 1 lần flip horizontal cho leg_right.png.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/E/tail.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a gray wolf's bushy TAIL, oriented HORIZONTAL,
+attaches at LEFT edge (root), tip flowing to RIGHT (relaxed neutral
+hang downward at slight angle), shaggy fur with mid-tone shadow,
+darker tip, NO body.
+
+Palette: slate gray #7a7c80, shadow stone #5a5d63 deep shadow,
+highlight stone #a3a5a8 fur highlight, ink black #1a1a1a tip.
+
+Composition: 256x192 px (HORIZONTAL — tail wider than tall),
+isolated tail on transparent, root edge LEFT (pivot point at hip
+attachment), tip RIGHT, NO body.
+```
+
+##### N (North / back view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/N/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of a fierce gray wolf HEAD ONLY, back of skull
+facing camera, ears upright + back of ears with darker gray fur
+edge visible, neck ruff prominent shaggy fur fading to body, NO
+face features (back of head only), NO body.
+
+Palette: slate gray #7a7c80 fur base, shadow stone #5a5d63 deep
+shadow, highlight stone #a3a5a8 fur tip highlight, ink black
+#1a1a1a back-of-ear inner edges.
+
+Composition: 256x256 px, isolated head on transparent background,
+NO body, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/N/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of gray wolf BODY ONLY (no head, no legs, no
+tail), oriented VERTICAL — wolf walking AWAY from camera, back
+ridge visible from above, hindquarters at bottom, shoulders at top,
+shaggy gray fur with darker dorsal stripe along spine, lean
+predator silhouette from above. Clean cuts at neck (top edge),
+hips (bottom edge), shoulder/hip joints (side edges for legs).
+
+Palette: slate gray #7a7c80 fur base, shadow stone #5a5d63 spine
+shadow groove, highlight stone #a3a5a8 back ridge highlight, ink
+black #1a1a1a outline at fur edges.
+
+Composition: 256x384 px (VERTICAL — wolf body taller than wide
+when viewed from rear), isolated body on transparent, NO head,
+NO legs, NO tail, NO ground.
+```
+
+```
+=== Save to: Art/Characters/wolf/N/arm_left.png  AND  arm_right.png  (BACK VIEW front legs) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of gray wolf FRONT LEG, viewed from behind +
+slightly above, lean muscular leg straight standing, gray fur back-
+of-leg silhouette, paw with claws partially visible from behind,
+NO body.
+
+Palette: slate gray #7a7c80, shadow stone #5a5d63, bone white
+#c2c4ba paw fur, ink black #1a1a1a claw.
+
+Composition: 192x320 px (vertical), isolated single front leg, top
+edge clean at shoulder pivot, bottom at paw, NO body.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/wolf/N/leg_left.png  AND  leg_right.png  (BACK VIEW back legs) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of gray wolf BACK LEG, viewed from behind,
+strong haunch muscle visible at top, hock + paw visible at bottom,
+gray fur, slight crouch in standing pose (powerful hindquarter),
+NO body.
+
+Palette: same wolf palette as E.
+
+Composition: 192x320 px (vertical), isolated single back leg, top
+at hip pivot, bottom at paw.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/N/tail.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of gray wolf bushy TAIL, oriented VERTICAL,
+attaches at TOP edge (root, hip attachment), tip flowing DOWN at
+relaxed neutral hang straight down, shaggy fur viewed from behind
+showing dorsal stripe darker line, NO body.
+
+Palette: same wolf palette as E.
+
+Composition: 192x320 px (VERTICAL — tail straight down from rear
+view), isolated tail on transparent, root TOP pivot, tip BOTTOM,
+NO body.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG (S/tail skip — controller fallback E)
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/S/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of a fierce gray wolf HEAD ONLY, face directly
+facing camera, sharp yellow eyes prominent + symmetric, snout
+pointing forward with snarling fangs partially visible, ears alert
+and slightly back, shaggy gray fur with darker neck ruff visible
+at jaw base, NO body.
+
+Palette: same as E (slate gray, shadow stone, highlight stone,
+primary gold eye, ink black snout/fang outline, bone white fang).
+
+Composition: 256x256 px, isolated head, perfectly symmetric front-
+facing, NO body, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/wolf/S/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of gray wolf BODY ONLY, oriented VERTICAL —
+wolf facing camera, chest + belly visible from front, shoulders at
+top widening to ribcage, narrow waist, shaggy fur with paler chest
+ruff highlight, NO head, NO legs, NO tail.
+
+Palette: same as E + bone white #c2c4ba chest ruff highlight.
+
+Composition: 256x384 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== Save to: Art/Characters/wolf/S/arm_left.png  AND  arm_right.png  (FRONT VIEW front legs) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of gray wolf FRONT LEG, viewed from front, lean
+muscular leg straight standing, gray fur front-of-leg + chest fade,
+paw with sharp claws visible at bottom (toes pointing toward camera),
+NO body.
+
+Palette: same wolf palette as E.
+
+Composition: 192x320 px (vertical), isolated single front leg, top
+at shoulder, bottom at paw with claws frontal.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/wolf/S/leg_left.png  AND  leg_right.png  (FRONT VIEW back legs) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of gray wolf BACK LEG, viewed from front, strong
+haunch with subtle muscle visible from front angle, hock + paw with
+claws facing camera, NO body.
+
+Palette: same wolf palette as E.
+
+Composition: 192x320 px (vertical), isolated single back leg, top
+at hip pivot, bottom at paw.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+> **S/tail SKIP:** front-view wolf body chắn tail → để slot rỗng, controller fallback `wolf/E/tail.png` ở runtime. Nếu insistent gen S/tail, prompt: tail tip subtly peeking quanh hông (asymmetric khó match — không khuyến khích).
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi wolf generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi, no cute
+cartoony domestic dog, no fluffy puppy, no pure black outline, no
+smooth airbrush gradient, no drop shadow on transparent background,
+no text, no watermark, no signature, no border, single subject only,
+no duplicate, no grid lines, no UI elements, no caption, no logo,
+no lens flare, no ground beneath subject for body parts, no leash,
+no collar.
+```
+
+#### 3.6.3 FoxSpirit — Linh Hồ Full DST Set (14 prompts → 20 PNG)
+
+> **Setup:** tạo `Assets/_Project/Art/Characters/fox_spirit/E/`, `fox_spirit/N/`, `fox_spirit/S/`.
+>
+> **Quadruped pivot map:** giống wolf (torso horizontal E / vertical N+S, arms = front legs, legs = back legs, tail).
+>
+> **Hero feature:** spirit qi blue glow trail along dorsal ridge — **mạnh nhất ở N (back view)** vì user nhìn thẳng xuống dorsal stripe. Tail cũng là hero feature, có glow đậm hơn các parts khác.
+>
+> **S/tail skip:** giống wolf — front view body chắn tail → controller fallback East.
+>
+> **W (West):** mirror E lúc runtime.
+
+##### E (East / side view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/E/head.png ===
+
+hand-painted painterly, asian wuxia cultivation, supernatural ethereal.
+
+Subject: side view of a mystical white nine-tailed fox spirit HEAD
+ONLY, profile facing right, glowing pale blue cunning eyes, sharp
+ears upright with alert tip, fine white fur with faint blue qi
+glow at temple and ear tip, slight smirk showing tiny fang, NO
+body, NO neck below jaw.
+
+Palette: bone cream #e8d5a6 fur base, bone bleached #d4d4d4
+highlight, spirit qi blue #a8d8ff glow accent on temple and ear
+tips, sky qi mid #6fb5e0 eye color, ink black #1a1a1a fine outline,
+primary gold #d4a64a faint inner ear gold tone.
+
+Composition: 256x256 px, isolated head on transparent, NO body,
+NO ground, ethereal soft edge but still clean silhouette.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/E/torso.png ===
+
+hand-painted painterly, asian wuxia, supernatural ethereal.
+
+Subject: SIDE VIEW of a white fox spirit BODY ONLY (no head, no
+legs, no tail), HORIZONTAL orientation with head-end RIGHT, hip-end
+LEFT, lithe slender silhouette, fine snowy fur with faint blue qi
+glow trailing along back ridge, ethereal mist wisps at lower belly
+dissolving into transparent. Clean cuts at neck/hips/shoulders.
+
+Palette: bone cream #e8d5a6 fur base, bone bleached #d4d4d4
+highlight, spirit qi blue #a8d8ff glow trail along spine, sky qi
+mid #6fb5e0 belly mist, ink black #1a1a1a outline (very thin —
+1px max for ethereal feel).
+
+Composition: 384x256 px (horizontal), isolated body on transparent,
+NO head, NO legs, NO tail.
+```
+
+```
+=== Save to: Art/Characters/fox_spirit/E/arm_left.png  AND  arm_right.png  (FRONT LEGS) ===
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: side view of a white fox spirit FRONT LEG, slender lithe
+pose, fine white fur with faint blue qi outline, delicate paw with
+small claws, NO body, NO ground.
+
+Palette: bone cream #e8d5a6, bone bleached #d4d4d4, spirit qi blue
+#a8d8ff trim glow.
+
+Composition: 160x288 px (vertical), isolated single front leg on
+transparent, top edge clean at shoulder joint, bottom at paw.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/fox_spirit/E/leg_left.png  AND  leg_right.png  (BACK LEGS) ===
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: side view of a white fox spirit BACK LEG, slender powerful
+haunch with subtle muscle definition, fine white fur with faint
+blue qi line at hip, delicate paw, NO body.
+
+Palette: same fox spirit palette.
+
+Composition: 160x288 px (vertical), isolated single back leg, top
+edge at hip joint pivot, bottom at paw.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/E/tail.png ===
+
+hand-painted painterly, supernatural ethereal.
+
+Subject: side view of a magnificent fox spirit TAIL — single tail
+fluffy and majestic, oriented horizontal with attachment ROOT on
+LEFT and tip flowing to RIGHT in graceful arc, fine white fur with
+strong spirit qi blue glow trail along tail length, ethereal mist
+wisps fading at tip.
+
+Palette: bone cream #e8d5a6 fur base, bone bleached #d4d4d4, spirit
+qi blue #a8d8ff dominant glow accent (stronger than other parts —
+tail is hero feature), sky qi mid #6fb5e0 mid-tone, primary gold
+#d4a64a inner glow at root.
+
+Composition: 320x256 px (horizontal — wider than head), isolated
+tail on transparent, root LEFT pivot, tip RIGHT, NO body.
+```
+
+##### N (North / back view) — 5 prompts → 7 PNG (hero direction!)
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/N/head.png ===
+
+hand-painted painterly, asian wuxia cultivation, supernatural ethereal.
+
+Subject: BACK VIEW of a mystical white nine-tailed fox spirit HEAD
+ONLY, back of skull facing camera, sharp ears upright with alert
+tip + back of ears showing pale gold inner glow at edges, fine white
+fur with strong spirit qi blue glow trail starting at back of skull
+flowing down into nape, NO face features (back of head only), NO
+body.
+
+Palette: bone cream #e8d5a6 fur base, bone bleached #d4d4d4
+highlight, spirit qi blue #a8d8ff glow trail dominant at nape,
+primary gold #d4a64a inner ear gold tone (visible from back as edge
+glow), ink black #1a1a1a fine outline.
+
+Composition: 256x256 px, isolated head, NO body, ethereal soft
+edge but clean silhouette.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/N/torso.png ===
+
+hand-painted painterly, asian wuxia, supernatural ethereal.
+
+Subject: BACK VIEW of white fox spirit BODY ONLY, oriented VERTICAL
+— fox walking away from camera, back ridge prominent with strong
+spirit qi blue glow trail along entire spine (hero feature visible
+from this angle), lithe slender silhouette, fine snowy fur fading
+to ethereal mist at lower hindquarters dissolving into transparent.
+Clean cuts at neck (top), hips (bottom), shoulders/hip joints (sides).
+
+Palette: same as E with EMPHASIS on spirit qi blue #a8d8ff dorsal
+trail (rendered ~30% stronger than side view since back is dominant
+showcase).
+
+Composition: 256x384 px (vertical), isolated body on transparent,
+NO head, NO legs, NO tail.
+```
+
+```
+=== Save to: Art/Characters/fox_spirit/N/arm_left.png  AND  arm_right.png  (BACK VIEW front legs) ===
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: BACK VIEW of white fox spirit FRONT LEG, viewed from
+behind, slender lithe leg straight standing, fine white fur back-
+of-leg silhouette with faint blue qi outline at hip attachment,
+delicate paw with small claws visible from behind, NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single front leg, top
+edge at shoulder joint pivot, bottom at paw.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/fox_spirit/N/leg_left.png  AND  leg_right.png  (BACK VIEW back legs) ===
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: BACK VIEW of white fox spirit BACK LEG, viewed from behind,
+slender powerful haunch with subtle muscle from rear angle, fine
+white fur with faint blue qi line at hip, delicate paw at bottom,
+NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single back leg, top
+at hip pivot, bottom at paw.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/N/tail.png ===
+
+hand-painted painterly, supernatural ethereal.
+
+Subject: BACK VIEW of magnificent fox spirit TAIL — single tail
+fluffy and majestic, oriented VERTICAL with attachment ROOT at TOP
+(hip back) and tip flowing DOWN with graceful arc to one side, fine
+white fur with VERY STRONG spirit qi blue glow trail dominant along
+tail length (tail is hero feature from this angle, viewer's eye
+naturally drawn here), ethereal mist wisps fading at tip.
+
+Palette: bone cream #e8d5a6 fur base, bone bleached #d4d4d4, spirit
+qi blue #a8d8ff dominant glow accent (40% stronger than side view),
+sky qi mid #6fb5e0 mid-tone, primary gold #d4a64a inner glow at
+root.
+
+Composition: 256x320 px (vertical — tail trailing down from rear
+view), isolated tail on transparent, root TOP pivot, tip BOTTOM,
+NO body.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG (S/tail skip)
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/S/head.png ===
+
+hand-painted painterly, asian wuxia cultivation, supernatural ethereal.
+
+Subject: FRONT VIEW of mystical white nine-tailed fox spirit HEAD
+ONLY, face directly facing camera, glowing pale blue cunning eyes
+prominent and symmetric (hero feature), sharp ears upright + slightly
+flared, tiny fang visible at slight smirk, fine white fur framing
+face with faint blue qi glow at both temples (symmetric), NO body.
+
+Palette: same as E.
+
+Composition: 256x256 px, isolated head, perfectly symmetric front-
+facing, NO body, ethereal soft edge.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/fox_spirit/S/torso.png ===
+
+hand-painted painterly, asian wuxia, supernatural ethereal.
+
+Subject: FRONT VIEW of white fox spirit BODY ONLY, oriented VERTICAL
+— fox facing camera, chest + belly visible from front, shoulders at
+top, narrow waist, fine snowy fur with paler chest highlight, faint
+ethereal mist wisps trailing at lower belly dissolving into
+transparent, subtle blue qi glow at chest center (heart area), NO
+head, NO legs, NO tail.
+
+Palette: same as E + sky qi mid #6fb5e0 chest mist accent.
+
+Composition: 256x384 px (vertical), isolated body, perfectly
+symmetric front-facing, ethereal edge.
+```
+
+```
+=== Save to: Art/Characters/fox_spirit/S/arm_left.png  AND  arm_right.png  (FRONT VIEW front legs) ===
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: FRONT VIEW of white fox spirit FRONT LEG, viewed from
+front, slender lithe leg, fine white fur with faint blue qi outline
+at front of shoulder, delicate paw with small claws facing camera
+at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single front leg, top
+at shoulder, bottom at paw.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/fox_spirit/S/leg_left.png  AND  leg_right.png  (FRONT VIEW back legs) ===
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: FRONT VIEW of white fox spirit BACK LEG, viewed from front,
+slender haunch with subtle blue qi glow at hip, delicate paw with
+claws visible at bottom facing camera, NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single back leg, top
+at hip, bottom at paw.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+> **S/tail SKIP:** giống wolf — front-view body chắn tail. Controller fallback `fox_spirit/E/tail.png` runtime.
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi fox spirit generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi cute
+mascot, no domestic pet fox, no fluffy plush toy look, no pure
+black outline, no smooth airbrush gradient, no drop shadow on
+transparent background, no text, no watermark, no signature, no
+border, single subject only, no duplicate, no grid lines, no UI
+elements, no caption, no logo, no lens flare except qi glow,
+no ground beneath subject for body parts.
+```
+
 ---
 
 ## 4. Single-Sprite Mobs
