@@ -44,41 +44,80 @@ namespace WildernessCultivation.EditorTools
             // 2 lần (write + load) sẽ enum lại; copy vào List ổn định + cho phép Count.
             var roles = new List<CharacterArtSpec.PuppetRole>(
                 PuppetPlaceholderSpec.DefaultRoles(includeTail));
-            bool wroteAny = false;
 
-            foreach (var role in roles)
+            // Pass 1: write tất cả PNG missing trong batch. StartAssetEditing block defer
+            // mọi import callback đến StopAssetEditing → tránh Unity import từng file riêng
+            // gây timing race với GetAtPath/LoadAssetAtPath.
+            AssetDatabase.StartAssetEditing();
+            try
             {
-                var (w, h) = PuppetPlaceholderSpec.RectFor(role);
-                var color = PuppetPlaceholderSpec.ColorFor(role, palette);
-                string path = $"{folder}/{RoleToFilename(role)}.png";
-
-                if (!File.Exists(path))
+                foreach (var role in roles)
                 {
-                    WriteRectPng(path, w, h, color);
-                    wroteAny = true;
+                    var (w, h) = PuppetPlaceholderSpec.RectFor(role);
+                    var color = PuppetPlaceholderSpec.ColorFor(role, palette);
+                    string path = $"{folder}/{RoleToFilename(role)}.png";
+
+                    if (!File.Exists(path))
+                    {
+                        WriteRectPng(path, w, h, color);
+                    }
                 }
             }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+            }
 
-            // Refresh AssetDatabase một lần sau khi đã ghi mọi file mới — Unity cần biết về
-            // file mới qua Refresh trước khi GetAtPath trả về importer hợp lệ. Trước fix này
-            // first-run gen có thể fail (importer null → textureType giữ Default → LoadAsset
-            // trả null → puppet không có sprite → Player invisible).
-            if (wroteAny) AssetDatabase.Refresh();
+            // Force synchronous refresh — đảm bảo tất cả PNG mới ghi đã được Unity register
+            // + import xong hoàn toàn trước khi ta đụng GetAtPath/LoadAssetAtPath. Không có
+            // ForceSynchronousImport, Refresh có thể defer import → race condition giữa
+            // write và load.
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
+            // Pass 2: configure sprite import settings + load sprite reference. Mỗi file
+            // đảm bảo sync-imported sau khi settings change.
             foreach (var role in roles)
             {
                 string path = $"{folder}/{RoleToFilename(role)}.png";
-                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
-                ApplySpriteImport(path);
+                if (!File.Exists(path))
+                {
+                    Debug.LogError(
+                        $"[PuppetPlaceholderGenerator] PNG file MISSING after write pass: {path}. " +
+                        "File system write failed silently — check disk space + permissions.");
+                    continue;
+                }
+
+                bool importerOk = ApplySpriteImport(path);
+                if (!importerOk)
+                {
+                    Debug.LogWarning(
+                        $"[PuppetPlaceholderGenerator] AssetImporter.GetAtPath null cho {path} — " +
+                        "AssetDatabase chưa register file. Forcing synchronous re-import...");
+                    AssetDatabase.ImportAsset(path,
+                        ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+                    importerOk = ApplySpriteImport(path);
+                }
+
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null)
+                {
+                    // Last-ditch retry: force sync import + reload.
+                    AssetDatabase.ImportAsset(path,
+                        ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+                    sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                }
+
                 if (sprite != null)
                 {
                     dict[role] = sprite;
                 }
                 else
                 {
+                    var obj = AssetDatabase.LoadAssetAtPath<Object>(path);
+                    string objType = obj == null ? "null" : obj.GetType().Name;
                     Debug.LogWarning(
-                        $"[PuppetPlaceholderGenerator] Failed to load sprite for {characterId}/{role} at {path}. " +
+                        $"[PuppetPlaceholderGenerator] Failed to load Sprite for {characterId}/{role} at {path}. " +
+                        $"Asset loaded as type '{objType}' (expected Sprite). importerOk={importerOk}. " +
                         "Skeleton sẽ thiếu body part này.");
                 }
             }
@@ -144,10 +183,12 @@ namespace WildernessCultivation.EditorTools
 
         // PPU=64 to match world scale (head sprite 40px → 0.625u tall — humanoid scale OK).
         // Pivot=center default → matches existing real-art assumption (PR G/H/I).
-        static void ApplySpriteImport(string path)
+        // Returns false nếu importer chưa available (AssetDatabase chưa register file) —
+        // caller phải force ImportAsset rồi retry.
+        static bool ApplySpriteImport(string path)
         {
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-            if (importer == null) return;
+            if (importer == null) return false;
             bool dirty = false;
             if (importer.textureType != TextureImporterType.Sprite)
             {
@@ -168,6 +209,7 @@ namespace WildernessCultivation.EditorTools
             {
                 importer.SaveAndReimport();
             }
+            return true;
         }
     }
 }
