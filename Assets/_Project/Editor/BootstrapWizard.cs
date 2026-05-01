@@ -635,6 +635,72 @@ namespace WildernessCultivation.EditorTools
         // (không cần thread sprites["shadow"] qua từng helper).
         static Sprite s_shadowSprite;
 
+        // Build puppet child hierarchy cho character (Player / hero mob) khi user drop
+        // body-part PNG ở Art/Characters/{id}/. Cấu trúc:
+        //
+        //   {root GameObject (caller)}
+        //     └── SpriteRoot (Transform, flip X handled by PuppetAnimController)
+        //           ├── Tail        (optional, sortingOrder = base+0)
+        //           ├── LegLeft     (sortingOrder = base+1)
+        //           ├── LegRight    (sortingOrder = base+1)
+        //           ├── Torso       (sortingOrder = base+2)
+        //           │     └── Head  (child of torso → bob theo torso, sortingOrder = base+5)
+        //           ├── ArmLeft     (sortingOrder = base+3)
+        //           └── ArmRight    (sortingOrder = base+3)
+        //
+        // Default body-part offsets ước lượng cho character ~1.5u tall (head 0.4u trên torso, etc.).
+        // User có thể tinh chỉnh trong Inspector sau khi Bootstrap nếu sprite có pivot khác.
+        static void BuildPuppetHierarchy(
+            GameObject root,
+            Dictionary<CharacterArtSpec.PuppetRole, Sprite> sprites,
+            int sortingOrderBase,
+            out Transform spriteRoot,
+            out Transform torso,
+            out Transform head,
+            out Transform armLeft,
+            out Transform armRight,
+            out Transform legLeft,
+            out Transform legRight,
+            out Transform tail)
+        {
+            var rootGo = new GameObject("SpriteRoot");
+            rootGo.transform.SetParent(root.transform, false);
+            spriteRoot = rootGo.transform;
+
+            torso = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.Torso,
+                sortingOrderBase + 2, Vector3.zero);
+            head = torso != null
+                ? AddPuppetPart(torso, sprites, CharacterArtSpec.PuppetRole.Head,
+                    sortingOrderBase + 5, new Vector3(0f, 0.45f, 0f))
+                : null;
+            armLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmLeft,
+                sortingOrderBase + 3, new Vector3(-0.18f, 0.05f, 0f));
+            armRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmRight,
+                sortingOrderBase + 3, new Vector3(0.18f, 0.05f, 0f));
+            legLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegLeft,
+                sortingOrderBase + 1, new Vector3(-0.10f, -0.30f, 0f));
+            legRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegRight,
+                sortingOrderBase + 1, new Vector3(0.10f, -0.30f, 0f));
+            tail = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.Tail,
+                sortingOrderBase + 0, new Vector3(-0.25f, -0.05f, 0f));
+        }
+
+        static Transform AddPuppetPart(Transform parent,
+            Dictionary<CharacterArtSpec.PuppetRole, Sprite> sprites,
+            CharacterArtSpec.PuppetRole role,
+            int sortingOrder,
+            Vector3 localPos)
+        {
+            if (!sprites.TryGetValue(role, out var sprite) || sprite == null) return null;
+            var go = new GameObject(role.ToString());
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = sortingOrder;
+            return go.transform;
+        }
+
         // Attach DropShadow component + sinh child renderer ngay (Awake không tự
         // chạy lúc AddComponent trong Editor → phải gọi EnsureChild thủ công để
         // child shadow đi vào prefab khi SaveAsPrefab).
@@ -825,9 +891,39 @@ namespace WildernessCultivation.EditorTools
         {
             var go = new GameObject("Player");
             go.tag = "Player";
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprites["player"];
-            sr.sortingOrder = 5;
+
+            // Puppet path: nếu user đã drop body-part PNGs vào Art/Characters/player/ →
+            // build child sprite hierarchy thay vì single sprite. Fallback single-sprite
+            // (placeholder color hoặc legacy player.png) khi puppet PNG chưa có.
+            // PuppetAnimController tự handle flip qua spriteRoot.localScale → KHÔNG set
+            // pc.spriteRenderer (PlayerController.flipX skip via null guard) tránh double-flip.
+            var puppetSprites = CharacterArtImporter.TryLoadCharacterSprites("player", placeholderHeightPx: 32);
+            SpriteRenderer sr = null;
+            if (puppetSprites != null)
+            {
+                BuildPuppetHierarchy(go, puppetSprites, sortingOrderBase: 5,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                // Player tunings — slower step than mob, less aggressive swing.
+                puppet.walkFrequency = 3f;
+                puppet.armSwingDeg = 28f;
+                puppet.legSwingDeg = 18f;
+            }
+            else
+            {
+                sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = sprites["player"];
+                sr.sortingOrder = 5;
+            }
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
@@ -857,7 +953,8 @@ namespace WildernessCultivation.EditorTools
             go.AddComponent<DodgeAction>();
             go.AddComponent<FishingAction>();
 
-            // Wire SpriteRenderer ref vào PlayerController
+            // Wire SpriteRenderer ref vào PlayerController. Puppet mode: sr=null nên
+            // PlayerController.flipX nullsafe-skip; PuppetAnimController handle flipping.
             var pc = go.GetComponent<PlayerController>();
             pc.spriteRenderer = sr;
 
