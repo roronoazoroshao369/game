@@ -12,6 +12,42 @@ Art/Characters/
 └── boss/           ← (later) Boss
 ```
 
+## Layout (PR J — L3+ multi-direction support)
+
+Hai layout supported, auto-detected:
+
+### Flat (legacy, side-only — PR G/H/I):
+
+```
+player/
+├── head.png        ← side view facing right
+├── torso.png
+├── arm_left.png
+└── ...
+```
+PuppetAnimController flipX khi velocity.x < 0. Hoạt động giống Vampire Survivors / Soulstone.
+
+### Directional (multi-dir — PR J L3+):
+
+```
+player/
+├── E/              ← side view facing east (right)
+│   ├── head.png, torso.png, arm_left.png, ...
+├── N/              ← back view (lưng quay về camera)
+│   ├── head.png, torso.png, arm_left.png, ...
+└── S/              ← front view (mặt thẳng vào camera)
+    ├── head.png, torso.png, arm_left.png, ...
+```
+
+PuppetAnimController swap sprite refs theo `Mathf.Atan2(velocity)` snap nearest cardinal.
+Hoạt động giống Don't Starve / Stardew Valley NSEW.
+
+- **W (West) = flip(E)** — KHÔNG cần W folder. Tiết kiệm 25% art cost.
+- **Folder name match case-insensitive:** `E`/`e`/`East` đều OK.
+- **Hysteresis 8°** tránh flicker khi velocity gần biên (45°/135°).
+- **Backward compat:** flat folder vẫn build → side-only mode (auto-fallback).
+- **Required East:** dir nào thiếu Head + Torso → puppet không build (fallback single-sprite).
+
 ## Required filenames per character
 
 Tối thiểu (puppet không build nếu thiếu 1 trong 2):

@@ -1,4 +1,5 @@
 using UnityEngine;
+using WildernessCultivation.Core;
 
 namespace WildernessCultivation.Vfx
 {
@@ -76,10 +77,31 @@ namespace WildernessCultivation.Vfx
         [Tooltip("Tail sway max degrees.")]
         public float tailSwayDeg = 12f;
 
+        [Header("Multi-direction sprites (PR J — L3+)")]
+        [Tooltip("Sprite arrays indexed by PuppetDirection enum value (0=E, 1=N, 2=S, 3=W). " +
+                 "Null entries → fallback East sprite. West dirty render bằng East + flipX. " +
+                 "BootstrapWizard wire arrays tự động từ CharacterArtImporter (Editor) — KHÔNG " +
+                 "populate runtime. Empty array → single-dir mode (legacy PR G/H/I).")]
+        public Sprite[] headSpritesByDir;
+        public Sprite[] torsoSpritesByDir;
+        public Sprite[] armLeftSpritesByDir;
+        public Sprite[] armRightSpritesByDir;
+        public Sprite[] legLeftSpritesByDir;
+        public Sprite[] legRightSpritesByDir;
+        public Sprite[] tailSpritesByDir;
+        [Tooltip("Hysteresis (degrees) cho direction snap — tránh flicker khi velocity gần biên E↔N / E↔S.")]
+        public float directionHysteresisDeg = 8f;
+
         // Cached base local rotations / positions (init from inspector / scene-time pose).
         Quaternion baseArmLeftRot, baseArmRightRot, baseLegLeftRot, baseLegRightRot, baseTailRot;
         Vector3 baseTorsoPos, baseHeadPos;
         Vector3 baseSpriteRootScale;
+
+        // Cached SpriteRenderers từ body part transforms — dung sprite swap khi đổi direction.
+        SpriteRenderer headRenderer, torsoRenderer, armLeftRenderer, armRightRenderer,
+            legLeftRenderer, legRightRenderer, tailRenderer;
+
+        CharacterArtSpec.PuppetDirection currentDir = CharacterArtSpec.PuppetDirection.East;
 
         bool crouching;
         float currentCrouchY;
@@ -93,6 +115,7 @@ namespace WildernessCultivation.Vfx
             if (spriteRoot == null) spriteRoot = transform;
             if (body == null) body = GetComponent<Rigidbody2D>();
             CacheBasePose();
+            CacheRenderers();
         }
 
         void CacheBasePose()
@@ -107,6 +130,39 @@ namespace WildernessCultivation.Vfx
             if (spriteRoot != null) baseSpriteRootScale = spriteRoot.localScale;
         }
 
+        void CacheRenderers()
+        {
+            if (head != null) headRenderer = head.GetComponent<SpriteRenderer>();
+            if (torso != null) torsoRenderer = torso.GetComponent<SpriteRenderer>();
+            if (armLeft != null) armLeftRenderer = armLeft.GetComponent<SpriteRenderer>();
+            if (armRight != null) armRightRenderer = armRight.GetComponent<SpriteRenderer>();
+            if (legLeft != null) legLeftRenderer = legLeft.GetComponent<SpriteRenderer>();
+            if (legRight != null) legRightRenderer = legRight.GetComponent<SpriteRenderer>();
+            if (tail != null) tailRenderer = tail.GetComponent<SpriteRenderer>();
+        }
+
+        /// <summary>
+        /// True nếu ít nhất 1 part có sprite mới cho direction khác E (N/S) → enable multi-dir
+        /// switching. Else fallback legacy side-only mode (E only + flipX).
+        /// </summary>
+        bool HasMultiDirSprites()
+        {
+            return ArrayHasNonEastEntry(headSpritesByDir)
+                || ArrayHasNonEastEntry(torsoSpritesByDir)
+                || ArrayHasNonEastEntry(armLeftSpritesByDir)
+                || ArrayHasNonEastEntry(armRightSpritesByDir)
+                || ArrayHasNonEastEntry(legLeftSpritesByDir)
+                || ArrayHasNonEastEntry(legRightSpritesByDir)
+                || ArrayHasNonEastEntry(tailSpritesByDir);
+        }
+
+        static bool ArrayHasNonEastEntry(Sprite[] arr)
+        {
+            if (arr == null || arr.Length < 2) return false;
+            for (int i = 1; i < arr.Length; i++) if (arr[i] != null) return true;
+            return false;
+        }
+
         void Update()
         {
             float dt = Time.deltaTime;
@@ -116,13 +172,38 @@ namespace WildernessCultivation.Vfx
             float speed = vel.magnitude;
             bool moving = speed > movingThreshold;
 
-            // Sprite root direction flip (re-use rig vs duplicate clip).
-            if (spriteRoot != null && Mathf.Abs(vel.x) > movingThreshold)
+            // Direction snap (multi-dir) + sprite swap. Side-only mode → fallback flipX legacy.
+            bool multiDir = HasMultiDirSprites();
+            if (multiDir && moving)
             {
-                spriteRoot.localScale = new Vector3(
-                    BoneAnimController.ComputeFlipScaleX(spriteRoot.localScale.x, vel.x, movingThreshold),
-                    spriteRoot.localScale.y,
-                    spriteRoot.localScale.z);
+                var newDir = CharacterArtSpec.ComputeDirectionFromVelocity(
+                    vel.x, vel.y, currentDir, directionHysteresisDeg);
+                if (newDir != currentDir)
+                {
+                    currentDir = newDir;
+                    ApplyDirectionSprites(currentDir);
+                }
+            }
+
+            // Sprite root direction flip:
+            // - Multi-dir mode: flip chỉ khi West; N/S/E giữ scale.x positive.
+            // - Side-only mode (legacy): flipX theo vel.x (PR G/H/I behavior).
+            if (spriteRoot != null)
+            {
+                if (multiDir)
+                {
+                    bool flipped = currentDir == CharacterArtSpec.PuppetDirection.West;
+                    var s = spriteRoot.localScale;
+                    spriteRoot.localScale = new Vector3(
+                        (flipped ? -1f : 1f) * Mathf.Abs(s.x), s.y, s.z);
+                }
+                else if (Mathf.Abs(vel.x) > movingThreshold)
+                {
+                    spriteRoot.localScale = new Vector3(
+                        BoneAnimController.ComputeFlipScaleX(spriteRoot.localScale.x, vel.x, movingThreshold),
+                        spriteRoot.localScale.y,
+                        spriteRoot.localScale.z);
+                }
             }
 
             // Walk phase phụ thuộc speed (slower mob → slower step).
@@ -212,6 +293,37 @@ namespace WildernessCultivation.Vfx
                     baseSpriteRootScale.y * squashFactor,
                     baseSpriteRootScale.z);
             }
+        }
+
+        // ============ Direction sprite swap ============
+
+        /// <summary>
+        /// Apply sprite swap cho all body parts từ per-role array ứng với <paramref name="dir"/>.
+        /// West fallback: render bằng East sprite (spriteRoot.flipX handle bởi caller). Nếu
+        /// dir không có art → fallback East sprite (đảm bảo luuôn có sprite render).
+        /// </summary>
+        public void ApplyDirectionSprites(CharacterArtSpec.PuppetDirection dir)
+        {
+            // West dirty: render East sprite (flipX handled in spriteRoot).
+            int idx = dir == CharacterArtSpec.PuppetDirection.West
+                ? (int)CharacterArtSpec.PuppetDirection.East
+                : (int)dir;
+            ApplySpriteFromArray(headRenderer, headSpritesByDir, idx);
+            ApplySpriteFromArray(torsoRenderer, torsoSpritesByDir, idx);
+            ApplySpriteFromArray(armLeftRenderer, armLeftSpritesByDir, idx);
+            ApplySpriteFromArray(armRightRenderer, armRightSpritesByDir, idx);
+            ApplySpriteFromArray(legLeftRenderer, legLeftSpritesByDir, idx);
+            ApplySpriteFromArray(legRightRenderer, legRightSpritesByDir, idx);
+            ApplySpriteFromArray(tailRenderer, tailSpritesByDir, idx);
+        }
+
+        static void ApplySpriteFromArray(SpriteRenderer renderer, Sprite[] arr, int idx)
+        {
+            if (renderer == null || arr == null || arr.Length == 0) return;
+            // Fallback: nếu idx ngoài range hoặc null → dùng East (idx 0).
+            Sprite s = (idx >= 0 && idx < arr.Length) ? arr[idx] : null;
+            if (s == null && arr.Length > 0) s = arr[(int)CharacterArtSpec.PuppetDirection.East];
+            if (s != null) renderer.sprite = s;
         }
 
         // ============ IMobAnim ============

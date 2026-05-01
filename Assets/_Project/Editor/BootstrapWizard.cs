@@ -701,6 +701,39 @@ namespace WildernessCultivation.EditorTools
             return go.transform;
         }
 
+        // PR J — L3+ multi-direction wire.
+        // Khi user gen folder layout E/N/S/ → CharacterSpriteSet.isMultiDirectional=true.
+        // Populate per-role sprite arrays trên PuppetAnimController để runtime swap khi đổi
+        // direction. Flat layout → arrays giữ null → controller fallback side-only legacy.
+        static void WirePuppetMultiDirSprites(
+            PuppetAnimController puppet,
+            CharacterArtImporter.CharacterSpriteSet set)
+        {
+            if (puppet == null || set == null || !set.isMultiDirectional) return;
+            puppet.headSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.Head);
+            puppet.torsoSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.Torso);
+            puppet.armLeftSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ArmLeft);
+            puppet.armRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ArmRight);
+            puppet.legLeftSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.LegLeft);
+            puppet.legRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.LegRight);
+            puppet.tailSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.Tail);
+        }
+
+        static Sprite[] ExtractRoleArray(
+            CharacterArtImporter.CharacterSpriteSet set,
+            CharacterArtSpec.PuppetRole role)
+        {
+            // Array length 4 = enum max (East/North/South/West). West luôn null (controller
+            // dùng East sprite + flipX). Indices không có art → null → controller fallback East.
+            var arr = new Sprite[4];
+            foreach (var kv in set.spritesByDir)
+            {
+                if (kv.Value.TryGetValue(role, out var sprite) && sprite != null)
+                    arr[(int)kv.Key] = sprite;
+            }
+            return arr;
+        }
+
         // Attach DropShadow component + sinh child renderer ngay (Awake không tự
         // chạy lúc AddComponent trong Editor → phải gọi EnsureChild thủ công để
         // child shadow đi vào prefab khi SaveAsPrefab).
@@ -897,11 +930,12 @@ namespace WildernessCultivation.EditorTools
             // (placeholder color hoặc legacy player.png) khi puppet PNG chưa có.
             // PuppetAnimController tự handle flip qua spriteRoot.localScale → KHÔNG set
             // pc.spriteRenderer (PlayerController.flipX skip via null guard) tránh double-flip.
-            var puppetSprites = CharacterArtImporter.TryLoadCharacterSprites("player", placeholderHeightPx: 32);
+            // PR J: dual layout support — flat (legacy) hoặc E/N/S subfolder (multi-dir).
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("player", placeholderHeightPx: 32);
             SpriteRenderer sr = null;
-            if (puppetSprites != null)
+            if (puppetSet != null)
             {
-                BuildPuppetHierarchy(go, puppetSprites, sortingOrderBase: 5,
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 5,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
                 var puppet = go.AddComponent<PuppetAnimController>();
@@ -917,6 +951,7 @@ namespace WildernessCultivation.EditorTools
                 puppet.walkFrequency = 3f;
                 puppet.armSwingDeg = 28f;
                 puppet.legSwingDeg = 18f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
             }
             else
             {
@@ -1049,11 +1084,13 @@ namespace WildernessCultivation.EditorTools
             // Puppet path: Art/Characters/wolf/ có Head + Torso PNG → multi-piece hierarchy.
             // Tunings: faster step (4.5Hz), aggressive leg swing (28°) cho quadruped silhouette,
             // tail sway 16° (mid range — wolf tail cứng hơn fox).
-            var puppetSprites = CharacterArtImporter.TryLoadCharacterSprites("wolf", placeholderHeightPx: 32);
+            // PR J multi-dir support: flat folder (legacy) → East-only; E/N/S subfolders → full multi-dir.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("wolf", placeholderHeightPx: 32);
+            var puppetSprites = puppetSet?.EastSprites;
             SpriteRenderer sr = null;
-            if (puppetSprites != null)
+            if (puppetSet != null)
             {
-                BuildPuppetHierarchy(go, puppetSprites, sortingOrderBase: 3,
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
                 var puppet = go.AddComponent<PuppetAnimController>();
@@ -1070,6 +1107,7 @@ namespace WildernessCultivation.EditorTools
                 puppet.legSwingDeg = 28f;
                 puppet.tailSwayDeg = 16f;
                 puppet.referenceSpeed = 2.5f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
             }
             else
             {
@@ -1108,11 +1146,13 @@ namespace WildernessCultivation.EditorTools
             var go = new GameObject("FoxSpirit");
             // Puppet path: Art/Characters/fox_spirit/ tunings nhanh hơn Wolf — fox spirit
             // nimble: 5.5Hz step, longer arm swing 35°, tail sway 24° (fox tail vẫy mạnh).
-            var puppetSprites = CharacterArtImporter.TryLoadCharacterSprites("fox_spirit", placeholderHeightPx: 32);
+            // PR J multi-dir support: flat folder (legacy) → East-only; E/N/S subfolders → full multi-dir.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("fox_spirit", placeholderHeightPx: 32);
+            var puppetSprites = puppetSet?.EastSprites;
             SpriteRenderer sr = null;
-            if (puppetSprites != null)
+            if (puppetSet != null)
             {
-                BuildPuppetHierarchy(go, puppetSprites, sortingOrderBase: 3,
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
                 var puppet = go.AddComponent<PuppetAnimController>();
@@ -1130,6 +1170,7 @@ namespace WildernessCultivation.EditorTools
                 puppet.tailSwayDeg = 24f;
                 puppet.tailSwayFrequency = 2.2f;
                 puppet.referenceSpeed = 2.6f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
             }
             else
             {

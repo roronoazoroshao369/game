@@ -142,5 +142,158 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.LegLeft));
             Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.Tail));
         }
+
+        // ---------- TryParseDirection (PR J — L3+) ----------
+
+        [Test]
+        public void TryParseDirection_StandardLetters_AllRecognized()
+        {
+            bool ok;
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.East, CharacterArtSpec.TryParseDirection("e", out ok));
+            Assert.IsTrue(ok);
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.North, CharacterArtSpec.TryParseDirection("n", out ok));
+            Assert.IsTrue(ok);
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.South, CharacterArtSpec.TryParseDirection("s", out ok));
+            Assert.IsTrue(ok);
+        }
+
+        [Test]
+        public void TryParseDirection_FullNames_AlsoRecognized()
+        {
+            bool ok;
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.East, CharacterArtSpec.TryParseDirection("East", out ok));
+            Assert.IsTrue(ok);
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.North, CharacterArtSpec.TryParseDirection("NORTH", out ok));
+            Assert.IsTrue(ok);
+        }
+
+        [Test]
+        public void TryParseDirection_UnknownFolder_OkFalse()
+        {
+            bool ok;
+            CharacterArtSpec.TryParseDirection("xyz", out ok);
+            Assert.IsFalse(ok);
+            CharacterArtSpec.TryParseDirection("", out ok);
+            Assert.IsFalse(ok);
+            CharacterArtSpec.TryParseDirection(null, out ok);
+            Assert.IsFalse(ok);
+        }
+
+        // ---------- ComputeDirectionFromAngleDeg (strict, no hysteresis) ----------
+
+        [Test]
+        public void ComputeDir_PureEast_ReturnsEast()
+        {
+            // Cone: [-45, 45]. 0° = pure East.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.East,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(0f, CharacterArtSpec.PuppetDirection.North, 0f));
+        }
+
+        [Test]
+        public void ComputeDir_PureNorth_ReturnsNorth()
+        {
+            // 90° = pure North.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.North,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(90f, CharacterArtSpec.PuppetDirection.East, 0f));
+        }
+
+        [Test]
+        public void ComputeDir_PureSouth_ReturnsSouth()
+        {
+            // -90° = pure South.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.South,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(-90f, CharacterArtSpec.PuppetDirection.East, 0f));
+        }
+
+        [Test]
+        public void ComputeDir_PureWest_ReturnsWest()
+        {
+            // 180° = pure West.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.West,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(180f, CharacterArtSpec.PuppetDirection.East, 0f));
+            // -180° also West (wrap).
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.West,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(-180f, CharacterArtSpec.PuppetDirection.East, 0f));
+        }
+
+        [Test]
+        public void ComputeDir_DiagonalNE_SnapsToEast_Or_North()
+        {
+            // 45° = boundary E↔N. Strict mapping (hysteresis 0): exactly 45 → East
+            // (cone [-45, 45] inclusive). Test 30° → East, 60° → North.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.East,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(30f, CharacterArtSpec.PuppetDirection.East, 0f));
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.North,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(60f, CharacterArtSpec.PuppetDirection.East, 0f));
+        }
+
+        // ---------- Hysteresis prevents flicker ----------
+
+        [Test]
+        public void ComputeDir_Hysteresis_NearBoundary_KeepsCurrentDir()
+        {
+            // currentDir=East, hysteresis=8°. Boundary E↔N tại 45°. Angle=50° (vượt boundary
+            // 5°) → vẫn còn trong hysteresis zone → giữ East.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.East,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(50f, CharacterArtSpec.PuppetDirection.East, 8f));
+        }
+
+        [Test]
+        public void ComputeDir_Hysteresis_FarFromBoundary_Switches()
+        {
+            // Angle=60° (vượt boundary 15° > hysteresis 8°) → switch sang North.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.North,
+                CharacterArtSpec.ComputeDirectionFromAngleDeg(60f, CharacterArtSpec.PuppetDirection.East, 8f));
+        }
+
+        // ---------- ComputeDirectionFromVelocity (idle case) ----------
+
+        [Test]
+        public void ComputeDir_FromVelocity_IdleZeroVel_KeepsCurrentDir()
+        {
+            // Velocity ~0 → caller giữ direction cũ (no flicker khi mob dừng).
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.North,
+                CharacterArtSpec.ComputeDirectionFromVelocity(0f, 0f, CharacterArtSpec.PuppetDirection.North, 8f));
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.East,
+                CharacterArtSpec.ComputeDirectionFromVelocity(0.001f, 0.001f,
+                    CharacterArtSpec.PuppetDirection.East, 8f));
+        }
+
+        [Test]
+        public void ComputeDir_FromVelocity_PureMotion_MatchesAngle()
+        {
+            // Velocity (1, 0) → East.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.East,
+                CharacterArtSpec.ComputeDirectionFromVelocity(1f, 0f, CharacterArtSpec.PuppetDirection.North, 8f));
+            // Velocity (0, 1) → North.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.North,
+                CharacterArtSpec.ComputeDirectionFromVelocity(0f, 1f, CharacterArtSpec.PuppetDirection.East, 8f));
+            // Velocity (0, -1) → South.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.South,
+                CharacterArtSpec.ComputeDirectionFromVelocity(0f, -1f, CharacterArtSpec.PuppetDirection.East, 8f));
+            // Velocity (-1, 0) → West.
+            Assert.AreEqual(CharacterArtSpec.PuppetDirection.West,
+                CharacterArtSpec.ComputeDirectionFromVelocity(-1f, 0f, CharacterArtSpec.PuppetDirection.East, 8f));
+        }
+
+        // ---------- Distance-from-boundary helper ----------
+
+        [Test]
+        public void DistanceFromBoundary_East_AtCenter_Is45()
+        {
+            // East cone [-45, 45], center=0, distance từ boundary = 45.
+            Assert.AreEqual(45f,
+                CharacterArtSpec.ComputeDistanceFromBoundary(0f, CharacterArtSpec.PuppetDirection.East),
+                0.001f);
+        }
+
+        [Test]
+        public void DistanceFromBoundary_East_AtBoundary_IsZero()
+        {
+            // Angle=45° (boundary E↔N) → distance=0 từ East.
+            Assert.AreEqual(0f,
+                CharacterArtSpec.ComputeDistanceFromBoundary(45f, CharacterArtSpec.PuppetDirection.East),
+                0.001f);
+        }
     }
 }
