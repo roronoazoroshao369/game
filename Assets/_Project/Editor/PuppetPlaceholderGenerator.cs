@@ -223,6 +223,10 @@ namespace WildernessCultivation.EditorTools
                 case CharacterArtSpec.PuppetRole.ShinRight: return CharacterArtSpec.FilenameShinRight;
                 case CharacterArtSpec.PuppetRole.WingLeft: return CharacterArtSpec.FilenameWingLeft;
                 case CharacterArtSpec.PuppetRole.WingRight: return CharacterArtSpec.FilenameWingRight;
+                case CharacterArtSpec.PuppetRole.BodySegment1: return CharacterArtSpec.FilenameBodySeg1;
+                case CharacterArtSpec.PuppetRole.BodySegment2: return CharacterArtSpec.FilenameBodySeg2;
+                case CharacterArtSpec.PuppetRole.BodySegment3: return CharacterArtSpec.FilenameBodySeg3;
+                case CharacterArtSpec.PuppetRole.BodySegment4: return CharacterArtSpec.FilenameBodySeg4;
                 default: return role.ToString().ToLowerInvariant();
             }
         }
