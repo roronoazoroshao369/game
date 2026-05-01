@@ -1046,9 +1046,37 @@ namespace WildernessCultivation.EditorTools
         static GameObject BuildWolfPrefab(Sprite sprite, ItemSO meatDrop)
         {
             var go = new GameObject("Wolf");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 3;
+            // Puppet path: Art/Characters/wolf/ có Head + Torso PNG → multi-piece hierarchy.
+            // Tunings: faster step (4.5Hz), aggressive leg swing (28°) cho quadruped silhouette,
+            // tail sway 16° (mid range — wolf tail cứng hơn fox).
+            var puppetSprites = CharacterArtImporter.TryLoadCharacterSprites("wolf", placeholderHeightPx: 32);
+            SpriteRenderer sr = null;
+            if (puppetSprites != null)
+            {
+                BuildPuppetHierarchy(go, puppetSprites, sortingOrderBase: 3,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.walkFrequency = 4.5f;
+                puppet.armSwingDeg = 32f;
+                puppet.legSwingDeg = 28f;
+                puppet.tailSwayDeg = 16f;
+                puppet.referenceSpeed = 2.5f;
+            }
+            else
+            {
+                sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = sprite;
+                sr.sortingOrder = 3;
+            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -1068,16 +1096,47 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.95f, scaleY: 0.35f);
             AttachMobHitFx(go, knockbackImpulse: 2.5f);
-            AttachMobAnim(go, walkBobFreq: 4.5f, maxTiltDeg: 5f);
+            // MobAnimController bị skip khi puppet active — IMobAnim resolution lấy
+            // PuppetAnimController (đã add ở trên) qua GetComponent<IMobAnim>.
+            if (puppetSprites == null)
+                AttachMobAnim(go, walkBobFreq: 4.5f, maxTiltDeg: 5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Wolf.prefab");
         }
 
         static GameObject BuildFoxSpiritPrefab(Sprite sprite, ItemSO meatDrop)
         {
             var go = new GameObject("FoxSpirit");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 3;
+            // Puppet path: Art/Characters/fox_spirit/ tunings nhanh hơn Wolf — fox spirit
+            // nimble: 5.5Hz step, longer arm swing 35°, tail sway 24° (fox tail vẫy mạnh).
+            var puppetSprites = CharacterArtImporter.TryLoadCharacterSprites("fox_spirit", placeholderHeightPx: 32);
+            SpriteRenderer sr = null;
+            if (puppetSprites != null)
+            {
+                BuildPuppetHierarchy(go, puppetSprites, sortingOrderBase: 3,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.walkFrequency = 5.5f;
+                puppet.armSwingDeg = 35f;
+                puppet.legSwingDeg = 26f;
+                puppet.tailSwayDeg = 24f;
+                puppet.tailSwayFrequency = 2.2f;
+                puppet.referenceSpeed = 2.6f;
+            }
+            else
+            {
+                sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = sprite;
+                sr.sortingOrder = 3;
+            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -1097,7 +1156,8 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.85f, scaleY: 0.32f);
             AttachMobHitFx(go, knockbackImpulse: 2.0f);
-            AttachMobAnim(go, walkBobFreq: 5.5f, maxTiltDeg: 6f);
+            if (puppetSprites == null)
+                AttachMobAnim(go, walkBobFreq: 5.5f, maxTiltDeg: 6f);
             return SaveAsPrefab(go, $"{PrefabsDir}/FoxSpirit.prefab");
         }
 

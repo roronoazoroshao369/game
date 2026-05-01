@@ -52,15 +52,39 @@ namespace WildernessCultivation.Vfx
         [Tooltip("Color particle (tint nhân với sprite). Lá xanh, bụi đá xám.")]
         public Color burstColor = new Color(0.4f, 0.7f, 0.3f, 1f);
 
+        // Single-renderer fast path (resource / single-sprite mob). Khi self không có
+        // SpriteRenderer (puppet character: root không sprite, body parts ở children) →
+        // fallback scan children + cache list, exclude DropShadow renderer.
         SpriteRenderer cachedRenderer;
         Color cachedOriginalColor;
+        SpriteRenderer[] cachedChildRenderers;
+        Color[] cachedChildOriginalColors;
         Coroutine flashRoutine;
         Coroutine shakeRoutine;
 
         void Awake()
         {
             cachedRenderer = GetComponent<SpriteRenderer>();
-            if (cachedRenderer != null) cachedOriginalColor = cachedRenderer.color;
+            if (cachedRenderer != null)
+            {
+                cachedOriginalColor = cachedRenderer.color;
+                return;
+            }
+            // Puppet path — flash all child SpriteRenderers (head, torso, arms, legs, tail)
+            // trừ DropShadow child (lookup qua component reference, không dựa vào tên).
+            var ds = GetComponent<DropShadow>();
+            var shadowSr = ds != null ? ds.Renderer : null;
+            var all = GetComponentsInChildren<SpriteRenderer>(includeInactive: false);
+            var list = new System.Collections.Generic.List<SpriteRenderer>(all.Length);
+            foreach (var sr in all)
+            {
+                if (sr == null || sr == shadowSr) continue;
+                list.Add(sr);
+            }
+            cachedChildRenderers = list.ToArray();
+            cachedChildOriginalColors = new Color[cachedChildRenderers.Length];
+            for (int i = 0; i < cachedChildRenderers.Length; i++)
+                cachedChildOriginalColors[i] = cachedChildRenderers[i].color;
         }
 
         /// <summary>
@@ -69,7 +93,9 @@ namespace WildernessCultivation.Vfx
         /// </summary>
         public void Hit()
         {
-            if (enableFlash && cachedRenderer != null)
+            // Single OR puppet path đều tween color — guard chỉ skip khi cả 2 null
+            // (component attach nhưng GO không có renderer nào → no-op flash).
+            if (enableFlash && (cachedRenderer != null || (cachedChildRenderers != null && cachedChildRenderers.Length > 0)))
             {
                 if (flashRoutine != null) StopCoroutine(flashRoutine);
                 flashRoutine = StartCoroutine(FlashRoutine());
@@ -87,9 +113,19 @@ namespace WildernessCultivation.Vfx
 
         System.Collections.IEnumerator FlashRoutine()
         {
-            cachedRenderer.color = flashColor;
+            if (cachedRenderer != null) cachedRenderer.color = flashColor;
+            if (cachedChildRenderers != null)
+            {
+                for (int i = 0; i < cachedChildRenderers.Length; i++)
+                    if (cachedChildRenderers[i] != null) cachedChildRenderers[i].color = flashColor;
+            }
             yield return new WaitForSeconds(flashDuration);
             if (cachedRenderer != null) cachedRenderer.color = cachedOriginalColor;
+            if (cachedChildRenderers != null)
+            {
+                for (int i = 0; i < cachedChildRenderers.Length; i++)
+                    if (cachedChildRenderers[i] != null) cachedChildRenderers[i].color = cachedChildOriginalColors[i];
+            }
             flashRoutine = null;
         }
 
@@ -138,13 +174,17 @@ namespace WildernessCultivation.Vfx
         GameObject CreateFallbackParticle()
         {
             // Dùng cùng sprite của parent + scale 0.3× để tạo "mảnh vỡ". Tránh tạo
-            // texture mới (tốn alloc); just reuse + tint.
+            // texture mới (tốn alloc); just reuse + tint. Puppet path: lấy sprite
+            // của child đầu tiên (vd Torso) — có cùng visual feel.
             var p = new GameObject("BurstParticle");
             var sr = p.AddComponent<SpriteRenderer>();
-            if (cachedRenderer != null)
+            SpriteRenderer source = cachedRenderer;
+            if (source == null && cachedChildRenderers != null && cachedChildRenderers.Length > 0)
+                source = cachedChildRenderers[0];
+            if (source != null)
             {
-                sr.sprite = cachedRenderer.sprite;
-                sr.sortingOrder = cachedRenderer.sortingOrder + 1;
+                sr.sprite = source.sprite;
+                sr.sortingOrder = source.sortingOrder + 1;
             }
             p.transform.localScale = Vector3.one * 0.25f;
             return p;
