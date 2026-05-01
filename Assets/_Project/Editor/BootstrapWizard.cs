@@ -664,6 +664,7 @@ namespace WildernessCultivation.EditorTools
             Plant,       // mild plant sway, no burst (mushroom / lily)
             Cactus,      // tight quiver, no burst
             Bamboo,      // tall bamboo sway
+            Mob,         // creature flesh hit — quick shake + red blood-mist burst
         }
 
         static void AttachReactiveOnHit(GameObject go, ReactivePreset preset)
@@ -709,7 +710,63 @@ namespace WildernessCultivation.EditorTools
                     fx.burstLifetime = 0.5f;
                     fx.burstColor = new Color(0.60f, 0.80f, 0.50f, 1f); // bamboo light green
                     break;
+                case ReactivePreset.Mob:
+                    fx.flashColor = new Color(1f, 0.5f, 0.5f, 0.85f); // pink-red flesh flash
+                    fx.flashDuration = 0.10f;
+                    fx.shakeAmplitudeDeg = 5f; fx.shakeFrequencyHz = 14f;
+                    fx.shakeDecay = 14f; fx.shakeDuration = 0.18f;
+                    fx.burstCount = 3; fx.burstSpeedMin = 1f; fx.burstSpeedMax = 2.2f;
+                    fx.burstLifetime = 0.35f;
+                    fx.burstColor = new Color(0.75f, 0.20f, 0.20f, 1f); // blood mist red
+                    break;
             }
+        }
+
+        /// <summary>
+        /// Mob hit feedback bundle — <see cref="ReactiveOnHit"/> (Mob preset) +
+        /// <see cref="HitKnockback"/> với impulse tham số. Caller (Build*Prefab) chỉ
+        /// cần truyền magnitude tuỳ kích thước (rabbit nhỏ → 1.5; wolf → 2.5; boar → 3.5).
+        /// </summary>
+        static void AttachMobHitFx(GameObject go, float knockbackImpulse)
+        {
+            AttachReactiveOnHit(go, ReactivePreset.Mob);
+            var kb = go.AddComponent<HitKnockback>();
+            kb.impulse = knockbackImpulse;
+        }
+
+        /// <summary>
+        /// Rock progressive crack overlay — alpha tăng khi HP giảm. Caller truyền
+        /// rock-tint (xám / nâu) tuỳ variant.
+        /// </summary>
+        static void AttachProgressiveCrack(GameObject go, Color tint, float maxAlpha = 0.55f)
+        {
+            var c = go.AddComponent<ProgressiveCrackOverlay>();
+            c.crackTint = tint;
+            c.maxAlpha = maxAlpha;
+            c.startThreshold = 0.85f;
+        }
+
+        /// <summary>
+        /// Water ripple ring expand on player approach.
+        /// </summary>
+        static void AttachWaterRipple(GameObject go, float triggerRadius = 1f, float cooldown = 1.2f)
+        {
+            var r = go.AddComponent<WaterRipple>();
+            r.triggerRadius = triggerRadius;
+            r.spawnCooldown = cooldown;
+            r.playerMask = ~0;
+        }
+
+        /// <summary>
+        /// Grass / flora bend khi player overlap. Caller tune amplitude theo plant size
+        /// (cỏ ~12°, bush ~8°, mushroom ~5°).
+        /// </summary>
+        static void AttachPlayerOverlapSway(GameObject go, float maxBendDeg, float detectRadius = 0.6f)
+        {
+            var s = go.AddComponent<PlayerOverlapSway>();
+            s.maxBendDeg = maxBendDeg;
+            s.detectRadius = detectRadius;
+            s.playerMask = ~0;
         }
 
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
@@ -823,6 +880,8 @@ namespace WildernessCultivation.EditorTools
             else if (name == "Rock")
             {
                 AttachReactiveOnHit(go, ReactivePreset.Rock);
+                // Crack tăng dần: tint nâu xám đậm phủ rock khi HP cạn.
+                AttachProgressiveCrack(go, tint: new Color(0.15f, 0.12f, 0.10f, 1f));
             }
             return SaveAsPrefab(go, $"{PrefabsDir}/{name}.prefab");
         }
@@ -846,6 +905,7 @@ namespace WildernessCultivation.EditorTools
             // playerMask default 0 → RabbitAI không detect player. Set Everything cho placeholder.
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.25f, scaleX: 0.65f, scaleY: 0.3f);
+            AttachMobHitFx(go, knockbackImpulse: 1.5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Rabbit.prefab");
         }
 
@@ -873,6 +933,7 @@ namespace WildernessCultivation.EditorTools
             ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 3 } };
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.95f, scaleY: 0.35f);
+            AttachMobHitFx(go, knockbackImpulse: 2.5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Wolf.prefab");
         }
 
@@ -900,6 +961,7 @@ namespace WildernessCultivation.EditorTools
             ai.drops = new[] { new ResourceNode.Drop { item = meatDrop, min = 1, max = 2 } };
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.85f, scaleY: 0.32f);
+            AttachMobHitFx(go, knockbackImpulse: 2.0f);
             return SaveAsPrefab(go, $"{PrefabsDir}/FoxSpirit.prefab");
         }
 
@@ -931,6 +993,7 @@ namespace WildernessCultivation.EditorTools
             };
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.35f, scaleX: 1.1f, scaleY: 0.4f);
+            AttachMobHitFx(go, knockbackImpulse: 3.5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Boar.prefab");
         }
 
@@ -958,6 +1021,7 @@ namespace WildernessCultivation.EditorTools
             };
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.35f, scaleX: 0.9f, scaleY: 0.35f);
+            AttachMobHitFx(go, knockbackImpulse: 2.2f);
             return SaveAsPrefab(go, $"{PrefabsDir}/DeerSpirit.prefab");
         }
 
@@ -983,6 +1047,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             // Crow bay → shadow nhỏ, offsetY thấp hơn entity để cảm giác bay trên không.
             AttachDropShadow(go, offsetY: -0.45f, scaleX: 0.55f, scaleY: 0.22f);
+            AttachMobHitFx(go, knockbackImpulse: 1.2f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Crow.prefab");
         }
 
@@ -1019,6 +1084,7 @@ namespace WildernessCultivation.EditorTools
             };
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.15f, scaleX: 0.7f, scaleY: 0.22f);
+            AttachMobHitFx(go, knockbackImpulse: 1.8f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Snake.prefab");
         }
 
@@ -1050,6 +1116,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             // Bat bay → shadow thấp hơn.
             AttachDropShadow(go, offsetY: -0.5f, scaleX: 0.6f, scaleY: 0.22f);
+            AttachMobHitFx(go, knockbackImpulse: 1.5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Bat.prefab");
         }
 
@@ -1085,6 +1152,7 @@ namespace WildernessCultivation.EditorTools
             var go = MakePlantNode("LinhMushroom", sprite, mushroom, maxHP: 1f,
                 dropMin: 1, dropMax: 2, radius: 0.25f);
             AttachReactiveOnHit(go, ReactivePreset.Plant);
+            AttachPlayerOverlapSway(go, maxBendDeg: 5f, detectRadius: 0.5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/LinhMushroom.prefab");
         }
 
@@ -1094,6 +1162,7 @@ namespace WildernessCultivation.EditorTools
             var go = MakePlantNode("BerryBush", sprite, berry, maxHP: 1f,
                 dropMin: 2, dropMax: 4, radius: 0.30f);
             AttachReactiveOnHit(go, ReactivePreset.Bush);
+            AttachPlayerOverlapSway(go, maxBendDeg: 8f, detectRadius: 0.6f);
             return SaveAsPrefab(go, $"{PrefabsDir}/BerryBush.prefab");
         }
 
@@ -1105,7 +1174,9 @@ namespace WildernessCultivation.EditorTools
             var node = go.GetComponent<ResourceNode>();
             node.harvestHpDamage = 2f;
             node.harvestThirstRestore = 0f; // restore qua cactus_water item, không qua side-effect
+            // Cactus cứng — sway nhẹ (không đổ như cỏ mềm), biên độ nhỏ.
             AttachReactiveOnHit(go, ReactivePreset.Cactus);
+            AttachPlayerOverlapSway(go, maxBendDeg: 3f, detectRadius: 0.5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Cactus.prefab");
         }
 
@@ -1117,6 +1188,7 @@ namespace WildernessCultivation.EditorTools
             var node = go.GetComponent<ResourceNode>();
             node.harvestSanityDamage = 5f;
             AttachReactiveOnHit(go, ReactivePreset.Plant);
+            AttachPlayerOverlapSway(go, maxBendDeg: 6f, detectRadius: 0.5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/DeathLily.prefab");
         }
 
@@ -1139,6 +1211,8 @@ namespace WildernessCultivation.EditorTools
                 new ResourceNode.Drop { item = stick,  min = 0, max = 1 },
             };
             AttachReactiveOnHit(go, ReactivePreset.Bamboo);
+            // Bamboo cao — sway nhẹ như cây, không bổ dồn như bụi.
+            AttachPlayerOverlapSway(go, maxBendDeg: 5f, detectRadius: 0.55f);
             return SaveAsPrefab(go, $"{PrefabsDir}/LinhBamboo.prefab");
         }
 
@@ -1162,6 +1236,8 @@ namespace WildernessCultivation.EditorTools
                 new ResourceNode.Drop { item = stone, min = 1, max = 2 },
             };
             AttachReactiveOnHit(go, ReactivePreset.Rock);
+            // Mineral rock crack — tint tím nhạt hơn rock thường (match base sprite tint).
+            AttachProgressiveCrack(go, tint: new Color(0.20f, 0.15f, 0.20f, 1f));
             return SaveAsPrefab(go, $"{PrefabsDir}/MineralRock.prefab");
         }
 
@@ -1206,6 +1282,8 @@ namespace WildernessCultivation.EditorTools
             {
                 new FishingSpot.LootEntry { item = rawFish, weight = 1f, min = 1, max = 1 },
             };
+            // Ripple ring expand khi player tới gần — feedback "nước phản ứng".
+            AttachWaterRipple(go, triggerRadius: 1f, cooldown: 1.2f);
             return SaveAsPrefab(go, $"{PrefabsDir}/WaterSpring.prefab");
         }
 

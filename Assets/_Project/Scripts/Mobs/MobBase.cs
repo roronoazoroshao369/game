@@ -2,6 +2,7 @@ using UnityEngine;
 using WildernessCultivation.Core;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Items;
+using WildernessCultivation.Vfx;
 using WildernessCultivation.World;
 
 namespace WildernessCultivation.Mobs
@@ -49,6 +50,11 @@ namespace WildernessCultivation.Mobs
         protected Rigidbody2D rb;
         protected float attackReadyAt;
 
+        // Cache reactive fx + knockback ở Awake để TakeDamage() khỏi GetComponent
+        // mỗi hit (mob bị beat liên tục bởi player ⇒ hot path).
+        ReactiveOnHit reactiveFx;
+        HitKnockback knockback;
+
         // Cache player ref tránh ServiceLocator.Get fallback mỗi frame trên mọi mob.
         // Reset mỗi frame để pickup khi player respawn / scene reload.
         static Transform s_cachedPlayer;
@@ -60,6 +66,8 @@ namespace WildernessCultivation.Mobs
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             HP = maxHP;
+            reactiveFx = GetComponent<ReactiveOnHit>();
+            knockback = GetComponent<HitKnockback>();
         }
 
         /// <summary>
@@ -120,11 +128,25 @@ namespace WildernessCultivation.Mobs
                 if (proj != null && proj.Owner != null) resolvedSource = proj.Owner;
             }
             HP -= amount;
-            FlashHit();
+            ApplyHitFx(resolvedSource);
             // Juice event (camera shake + damage number) tại vị trí mob.
             if (amount > 0f) CombatEvents.RaiseDamage(transform.position, amount, false);
             if (resolvedSource != null && target == null) target = resolvedSource.transform; // aggro on hit
             if (HP <= 0f) Die(resolvedSource);
+        }
+
+        /// <summary>
+        /// Reactive feedback per hit. Ưu tiên <see cref="ReactiveOnHit"/> (flash + shake +
+        /// burst — visual rich) khi component present trên prefab; fallback <see cref="FlashHit"/>
+        /// (Color.red coroutine cũ) cho mob không attach. Knockback impulse từ source vị trí
+        /// nếu <see cref="HitKnockback"/> attached.
+        /// </summary>
+        protected virtual void ApplyHitFx(GameObject source)
+        {
+            if (reactiveFx != null) reactiveFx.Hit();
+            else FlashHit();
+            if (knockback != null && source != null)
+                knockback.ApplyFromSource(source.transform.position);
         }
 
         protected virtual void FlashHit()
