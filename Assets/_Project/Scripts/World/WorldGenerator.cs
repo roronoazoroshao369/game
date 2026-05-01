@@ -44,6 +44,9 @@ namespace WildernessCultivation.World
         public BiomeSO[] biomes;
         [Tooltip("Scale của Perlin map dùng để chọn biome (giá trị nhỏ → vùng biome rộng).")]
         public float biomeNoiseScale = 0.025f;
+        [Tooltip("Domain-warp strength (cells) cho biome boundary. 0 = ranh giới biome theo Perlin contour smooth (= đường cong cứng nhìn lộ liễu). >0 = secondary Perlin layer offset (x,y) ±warp cells trước khi sample primary noise → ranh giới ragged/uốn lượn nhìn tự nhiên hơn. Default 6 cells: vừa đủ phá smooth contour, không phá biome cohesion.")]
+        [Range(0f, 12f)]
+        public float biomeBoundaryWarp = 6f;
 
         [Header("Ground rendering (Tilemap — preferred)")]
         [Tooltip("Tilemap dùng để vẽ nền. Khi set: Generate() gọi SetTile per cell (1 SpriteRenderer batch) thay vì Instantiate per tile — tiết kiệm hàng ngàn GameObject ở map lớn. Bỏ trống để fallback per-tile Instantiate (legacy).")]
@@ -345,14 +348,38 @@ namespace WildernessCultivation.World
         }
 
         /// <summary>
+        /// Trả Perlin "biome map" value tại cell (x,y) ∈ [0,1]. Có domain-warp khi
+        /// <see cref="biomeBoundaryWarp"/> &gt; 0: secondary Perlin layer offset (x,y) ±warp
+        /// cells trước khi sample primary noise → contour boundary uốn lượn ragged thay vì
+        /// đường cong smooth (= ranh giới biome nhìn cứng). Khi warp=0 trả về exact công
+        /// thức cũ (backward compat).
+        /// </summary>
+        public float BiomeNoiseValue(int x, int y)
+        {
+            float xf = x;
+            float yf = y;
+            if (biomeBoundaryWarp > 0f)
+            {
+                const float warpFreq = 2.5f;
+                float wx = Mathf.PerlinNoise((x + seed * 0.13f) * biomeNoiseScale * warpFreq,
+                                              (y + seed * 0.31f) * biomeNoiseScale * warpFreq) - 0.5f;
+                float wy = Mathf.PerlinNoise((x + seed * 0.71f) * biomeNoiseScale * warpFreq,
+                                              (y + seed * 0.97f) * biomeNoiseScale * warpFreq) - 0.5f;
+                xf += wx * biomeBoundaryWarp;
+                yf += wy * biomeBoundaryWarp;
+            }
+            return Mathf.PerlinNoise((xf + seed * 0.7f) * biomeNoiseScale,
+                                      (yf - seed * 0.7f) * biomeNoiseScale);
+        }
+
+        /// <summary>
         /// Chọn biome cho tile (x,y) bằng Perlin "biome map" riêng. Biome đầu tiên có
         /// selectionRange chứa giá trị Perlin được chọn. Nếu không có biome nào match → trả về biome[0].
         /// </summary>
         BiomeSO PickBiomeFor(int x, int y)
         {
             if (biomes == null || biomes.Length == 0) return null;
-            float v = Mathf.PerlinNoise((x + seed * 0.7f) * biomeNoiseScale,
-                                         (y - seed * 0.7f) * biomeNoiseScale);
+            float v = BiomeNoiseValue(x, y);
             foreach (var b in biomes)
             {
                 if (b == null) continue;
