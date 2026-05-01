@@ -11,7 +11,7 @@
 
 1. [Style Anchor (universal preamble)](#1-style-anchor-universal-preamble)
 2. [Negative Prompt (universal)](#2-negative-prompt-universal)
-3. [Puppet Characters](#3-puppet-characters) — Player, Wolf, FoxSpirit (multi-piece)
+3. [Puppet Characters](#3-puppet-characters) — Player, Wolf, FoxSpirit (multi-piece) + §3.4 multi-direction NSEW variants
 4. [Single-Sprite Mobs](#4-single-sprite-mobs) — Rabbit, Boar, Deer Spirit, Crow, Snake, Bat, Boss
 5. [Resources / World Objects](#5-resources--world-objects) — tree, rock, water, mushroom, berry, cactus, lily, bamboo, grass tile, mineral, structures
 6. [Item Icons](#6-item-icons) — 22 inventory icons
@@ -60,15 +60,21 @@ no lens flare, no ground beneath subject for body parts.
 
 ## 3. Puppet Characters
 
-> **Pipeline:** Drop PNG vào `Assets/_Project/Art/Characters/{characterId}/{filename}.png`. BootstrapWizard tự build puppet hierarchy.
+> **Pipeline:** Drop PNG vào `Assets/_Project/Art/Characters/{characterId}/{filename}.png` (flat) hoặc `Assets/_Project/Art/Characters/{characterId}/{E|N|S}/{filename}.png` (multi-dir). BootstrapWizard auto-detect layout và build puppet hierarchy phù hợp.
 >
-> **Tối thiểu để puppet build:** `head.png` + `torso.png`. Nếu thiếu → fallback single-sprite. Limbs / tail optional.
+> **Tối thiểu để puppet build:** `head.png` + `torso.png` ở East dir (hoặc flat). Nếu thiếu → fallback single-sprite. Limbs / tail optional.
 >
-> **Pose lock:** "side view 90°, facing right, neutral standing — arm thẳng xuống, leg thẳng đứng". PuppetAnimController rotate runtime → KHÔNG vẽ pose dynamic.
+> **Pose lock:** "neutral standing — arm thẳng xuống, leg thẳng đứng". PuppetAnimController rotate runtime → KHÔNG vẽ pose dynamic.
 >
 > **Resolution:** 256×512 (head 256×256 OK), transparent background, isolated single object.
 >
 > **Pivot tip:** mỗi body part nên có pivot tại khớp nối — vd `arm_left.png` pivot ở **vai** (top center), `leg_left.png` pivot ở **hông** (top center). Sprite Editor có thể chỉnh pivot sau import, nhưng artist gen với clean top-edge khớp giúp default Unity Center pivot vẫn xài được.
+>
+> **Layout choice (PR J — L3+):**
+> - **Flat** = side-only (Vampire Survivors / Soulstone style). Prompts §3.1 / §3.2 / §3.3 = side view facing right (E). Drop vào `{id}/head.png` etc.
+> - **Multi-dir** = 4-cardinal NSEW (Don't Starve / Stardew style). Drop side prompts vào `{id}/E/head.png` etc., **plus** N (back) + S (front) variants per §3.4. W = mirror E (free).
+>
+> **Recommendation:** start với flat → playtest → upgrade multi-dir nếu side-only không đủ "alive". Prompts §3.4 chỉ delta (view change) — palette + style + brush strokes anchor giữ nguyên 100% từ §3.1/3.2/3.3 để đảm bảo cross-dir consistency.
 
 ### 3.1 Player — Cultivation Hero (`Art/Characters/player/`)
 
@@ -348,6 +354,522 @@ tail is hero feature), sky qi mid #6fb5e0 mid-tone, primary gold
 
 Composition: 320x256 px (horizontal — wider than head), isolated
 tail on transparent, root LEFT pivot, tip RIGHT, NO body.
+```
+
+### 3.4 Multi-Direction (L3+) Variants
+
+> **Pipeline:** Drop side prompts §3.1/3.2/3.3 vào `{id}/E/{part}.png`, **plus** N + S variants below. PuppetAnimController auto-swap sprite refs theo velocity angle.
+>
+> **W (West) = flip(E) free** — không cần W folder, controller mirror East sprite runtime.
+>
+> **Diagonal velocities (NE/SE/NW/SW)** snap về cardinal nearest qua `ComputeDirectionFromVelocity` (hysteresis 8°). Không cần gen 8-dir.
+>
+> **Cross-dir consistency rule (CRITICAL):** Khi gen N + S variants, PHẢI dùng SAME palette block + SAME style anchor + SAME brush stroke description từ E prompt — chỉ thay đổi VIEW (subject sentence + composition note). Khác palette giữa dir = character "đổi mặt" khi xoay → silhouette mismatch lộ rõ trên mobile.
+>
+> **Pivot rule:** Same pivot points across all dirs (vai cho arm, hông cho leg). N + S sprites cùng resolution với E variant.
+
+#### 3.4.1 Player — N (Back View) + S (Front View)
+
+```
+=== player/N/head.png === (BACK VIEW)
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic,
+limited color palette, clean readable silhouette, 1.5 to 2 pixel
+mid-tone outline (dark cream tone, NOT pure black).
+
+Subject: BACK VIEW of a young Asian male cultivator HEAD ONLY,
+back of head facing camera, ink-black hair tied in a topknot with
+bone cream silk ribbon (topknot prominent at back-top), nape of
+neck visible at base of skull, smooth jade-pale skin tone on visible
+ear edges and nape, NO face features visible (back of skull only),
+isolated single body part on fully transparent background.
+
+Palette (use ONLY these): bone cream skin #e8d5a6 base, warm shadow
+#b89968 mid-tone, ink black #1a1a1a hair, primary gold #d4a64a
+ribbon highlight, jade green #6b8e62 faint qi glow.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, NO shoulders, NO neck below skull
+base, NO ground, NO shadow.
+```
+
+```
+=== player/S/head.png === (FRONT VIEW)
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic,
+limited color palette, clean readable silhouette, 1.5 to 2 pixel
+mid-tone outline (dark cream tone, NOT pure black).
+
+Subject: FRONT VIEW of a young Asian male cultivator HEAD ONLY,
+face directly facing camera, calm focused expression, ink-black
+hair with center-parting and topknot peak visible above forehead,
+bone cream silk ribbon at top, smooth jade-pale skin, dark almond
+eyes, faint qi glow on both temples (symmetric), thin dark eyebrows,
+neutral closed mouth, isolated single body part on fully transparent
+background. NO neck visible below jawline.
+
+Palette: same as E.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, perfectly symmetric front-facing,
+NO shoulders, NO neck, NO ground, NO shadow.
+```
+
+```
+=== player/N/torso.png === (BACK VIEW)
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic.
+
+Subject: BACK VIEW of a young Asian male cultivator TORSO ONLY,
+back of torso facing camera, wearing flowing white martial arts
+robe — gold embroidery visible on collar back, waist sash tied at
+back with knot + tail trailing down center spine, robe falls to
+mid-thigh, NO head NO arms NO legs visible (clean cuts at shoulders,
+hips, neck base).
+
+Palette: bone cream #e8d5a6 robe base, warm shadow #b89968 fold
+shadow at center spine and side seams, primary gold #d4a64a
+embroidery accent, jade green #6b8e62 pendant string-tie at back of
+neck (front pendant invisible from back), dry leaf #8a6f47 sash
+highlight.
+
+Composition: 256x384 px (vertical), isolated single torso on fully
+transparent background, NO head, NO limbs, NO ground, NO shadow.
+Top edge clean horizontal at shoulder line (puppet rig pivot).
+```
+
+```
+=== player/S/torso.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of a young Asian male cultivator TORSO ONLY,
+chest facing camera, wearing flowing white martial arts robe —
+gold embroidery visible at collar V-neck and along chest center
+seam, green jade pendant on chest (visible directly center), waist
+sash tied in front bow with two tails trailing down, robe falls to
+mid-thigh, NO head NO arms NO legs visible (clean cuts at shoulders,
+hips, neck base).
+
+Palette: same as E (bone cream, warm shadow, primary gold, jade
+green, dry leaf).
+
+Composition: 256x384 px (vertical), isolated torso, perfectly
+symmetric front-facing, NO head, NO limbs.
+```
+
+```
+=== player/N/arm_left.png === / === player/N/arm_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of a young cultivator's LEFT (or RIGHT) arm,
+hanging straight down in neutral pose, viewed from behind — back
+of shoulder + elbow + wrist visible, white robe sleeve drape, hand
+visible at bottom showing back of hand (knuckles), arm length
+proportional to mid-thigh, NO body, NO head.
+
+Palette: same as E.
+
+Composition: 256x384 px (vertical), isolated single arm on fully
+transparent background, top edge clean horizontal at shoulder
+(pivot point), bottom edge at fingertips, NO body, NO ground.
+
+# NOTE: Same flip pattern as E — gen 1 lần rồi flip horizontal cho mặt đối xứng.
+```
+
+```
+=== player/S/arm_left.png === / === player/S/arm_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of a young cultivator's LEFT (or RIGHT) arm,
+hanging straight down at side, viewed from front — front of
+shoulder + arm + wrist visible, white robe sleeve drape at front,
+palm of hand showing fingers slightly curled inward, NO body, NO
+head.
+
+Palette: same as E.
+
+Composition: 256x384 px (vertical), isolated single arm, top edge
+at shoulder pivot, bottom at fingertips.
+```
+
+```
+=== player/N/leg_left.png === / === player/N/leg_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of a young cultivator's LEFT (or RIGHT) leg,
+straight standing pose viewed from behind, white robe pant flowing
+down to ankle (back of leg silhouette), fabric shoe with cloth
+wrap visible from behind (heel + ankle wrap), NO body, NO foot
+ground contact.
+
+Palette: same as E.
+
+Composition: 256x384 px (vertical), isolated single leg, top edge
+at hip pivot, bottom at sole, NO body.
+```
+
+```
+=== player/S/leg_left.png === / === player/S/leg_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of a young cultivator's LEFT (or RIGHT) leg,
+straight standing pose viewed from front, white robe pant draping
+at front (front shin + knee silhouette), fabric shoe toe-end
+visible (cloth wrap from front), NO body.
+
+Palette: same as E.
+
+Composition: 256x384 px (vertical), isolated single leg, top at
+hip pivot, bottom at toe.
+```
+
+#### 3.4.2 Wolf — N (Back View) + S (Front View)
+
+> **Quadruped note:** Wolf "torso" trong puppet rig = body horizontal. Khi xoay sang N (back) hoặc S (front), torso trở thành **rear-end view** (N) hoặc **chest view** (S). Front legs ("arms") + back legs ("legs") cũng đổi: N view = back of leg/paw; S view = front of leg/paw + face camera.
+
+```
+=== wolf/N/head.png === (BACK VIEW = back of wolf head)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of a fierce gray wolf HEAD ONLY, back of skull
+facing camera, ears upright + back of ears with darker gray fur
+edge visible, neck ruff prominent shaggy fur fading to body, NO
+face features (back of head only), NO body.
+
+Palette: slate gray #7a7c80 fur base, shadow stone #5a5d63 deep
+shadow, highlight stone #a3a5a8 fur tip highlight, ink black
+#1a1a1a back-of-ear inner edges.
+
+Composition: 256x256 px, isolated head on transparent background,
+NO body, NO ground, NO shadow.
+```
+
+```
+=== wolf/S/head.png === (FRONT VIEW = wolf face camera)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of a fierce gray wolf HEAD ONLY, face directly
+facing camera, sharp yellow eyes prominent + symmetric, snout
+pointing forward with snarling fangs partially visible, ears alert
+and slightly back, shaggy gray fur with darker neck ruff visible
+at jaw base, NO body.
+
+Palette: same as E (slate gray, shadow stone, highlight stone,
+primary gold eye, ink black snout/fang outline, bone white fang).
+
+Composition: 256x256 px, isolated head, perfectly symmetric front-
+facing, NO body, NO shadow.
+```
+
+```
+=== wolf/N/torso.png === (BACK VIEW = wolf rear/back of body)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of gray wolf BODY ONLY (no head, no legs, no
+tail), oriented VERTICAL — wolf walking AWAY from camera, back
+ridge visible from above, hindquarters at bottom, shoulders at top,
+shaggy gray fur with darker dorsal stripe along spine, lean
+predator silhouette from above. Clean cuts at neck (top edge),
+hips (bottom edge), shoulder/hip joints (side edges for legs).
+
+Palette: slate gray #7a7c80 fur base, shadow stone #5a5d63 spine
+shadow groove, highlight stone #a3a5a8 back ridge highlight, ink
+black #1a1a1a outline at fur edges.
+
+Composition: 256x384 px (VERTICAL — wolf body taller than wide
+when viewed from rear), isolated body on transparent, NO head,
+NO legs, NO tail, NO ground.
+```
+
+```
+=== wolf/S/torso.png === (FRONT VIEW = wolf chest facing camera)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of gray wolf BODY ONLY, oriented VERTICAL —
+wolf facing camera, chest + belly visible from front, shoulders at
+top widening to ribcage, narrow waist, shaggy fur with paler chest
+ruff highlight, NO head, NO legs, NO tail.
+
+Palette: same as E + bone white #c2c4ba chest ruff highlight.
+
+Composition: 256x384 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== wolf/N/arm_left.png === / === wolf/N/arm_right.png === (BACK VIEW front legs)
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of gray wolf FRONT LEG, viewed from behind +
+slightly above, lean muscular leg straight standing, gray fur back-
+of-leg silhouette, paw with claws partially visible from behind,
+NO body.
+
+Palette: same as E.
+
+Composition: 192x320 px (vertical), isolated single front leg, top
+edge clean at shoulder pivot, bottom at paw, NO body.
+```
+
+```
+=== wolf/S/arm_left.png === / === wolf/S/arm_right.png === (FRONT VIEW front legs)
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of gray wolf FRONT LEG, viewed from front, lean
+muscular leg straight standing, gray fur front-of-leg + chest fade,
+paw with sharp claws visible at bottom (toes pointing toward camera),
+NO body.
+
+Palette: same as E.
+
+Composition: 192x320 px (vertical), isolated single front leg, top
+at shoulder, bottom at paw with claws frontal.
+```
+
+```
+=== wolf/N/leg_left.png === / === wolf/N/leg_right.png === (BACK VIEW back legs)
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of gray wolf BACK LEG, viewed from behind,
+strong haunch muscle visible at top, hock + paw visible at bottom,
+gray fur, slight crouch in standing pose (powerful hindquarter),
+NO body.
+
+Palette: same as E.
+
+Composition: 192x320 px (vertical), isolated single back leg, top
+at hip pivot, bottom at paw.
+```
+
+```
+=== wolf/S/leg_left.png === / === wolf/S/leg_right.png === (FRONT VIEW back legs)
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of gray wolf BACK LEG, viewed from front, strong
+haunch with subtle muscle visible from front angle, hock + paw with
+claws facing camera, NO body.
+
+Palette: same as E.
+
+Composition: 192x320 px (vertical), isolated single back leg, top
+at hip pivot, bottom at paw.
+```
+
+```
+=== wolf/N/tail.png === (BACK VIEW tail)
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of gray wolf bushy TAIL, oriented VERTICAL,
+attaches at TOP edge (root, hip attachment), tip flowing DOWN at
+relaxed neutral hang straight down, shaggy fur viewed from behind
+showing dorsal stripe darker line, NO body.
+
+Palette: same as E.
+
+Composition: 192x320 px (VERTICAL — tail straight down from rear
+view), isolated tail on transparent, root TOP pivot, tip BOTTOM,
+NO body.
+```
+
+```
+=== wolf/S/tail.png === (FRONT VIEW tail — usually invisible)
+
+# NOTE: Front view của wolf hầu như không thấy tail (body chắn).
+# Option 1 (recommended): để tail.png ở S dir RỖNG — controller fallback East sprite cho slot này.
+# Option 2 (full coverage): gen tail tip subtly peeking quanh hông trái/phải — nhưng asymmetric khó match cross-dir.
+
+Skip recommended.
+```
+
+#### 3.4.3 FoxSpirit — N (Back View) + S (Front View)
+
+> **Same quadruped logic** as Wolf. Fox spirit thanh thoát hơn — back view phải cho thấy spirit qi blue trail nổi rõ trên dorsal ridge (hero feature). Front view nhấn mạnh ethereal mist + glowing eyes symmetric.
+
+```
+=== fox_spirit/N/head.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia cultivation, supernatural ethereal.
+
+Subject: BACK VIEW of a mystical white nine-tailed fox spirit HEAD
+ONLY, back of skull facing camera, sharp ears upright with alert
+tip + back of ears showing pale gold inner glow at edges, fine white
+fur with strong spirit qi blue glow trail starting at back of skull
+flowing down into nape, NO face features (back of head only), NO
+body.
+
+Palette: bone cream #e8d5a6 fur base, bone bleached #d4d4d4
+highlight, spirit qi blue #a8d8ff glow trail dominant at nape,
+primary gold #d4a64a inner ear gold tone (visible from back as edge
+glow), ink black #1a1a1a fine outline.
+
+Composition: 256x256 px, isolated head, NO body, ethereal soft
+edge but clean silhouette.
+```
+
+```
+=== fox_spirit/S/head.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia cultivation, supernatural ethereal.
+
+Subject: FRONT VIEW of mystical white nine-tailed fox spirit HEAD
+ONLY, face directly facing camera, glowing pale blue cunning eyes
+prominent and symmetric (hero feature), sharp ears upright + slightly
+flared, tiny fang visible at slight smirk, fine white fur framing
+face with faint blue qi glow at both temples (symmetric), NO body.
+
+Palette: same as E.
+
+Composition: 256x256 px, isolated head, perfectly symmetric front-
+facing, NO body, ethereal soft edge.
+```
+
+```
+=== fox_spirit/N/torso.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia, supernatural ethereal.
+
+Subject: BACK VIEW of white fox spirit BODY ONLY, oriented VERTICAL
+— fox walking away from camera, back ridge prominent with strong
+spirit qi blue glow trail along entire spine (hero feature visible
+from this angle), lithe slender silhouette, fine snowy fur fading
+to ethereal mist at lower hindquarters dissolving into transparent.
+Clean cuts at neck (top), hips (bottom), shoulders/hip joints (sides).
+
+Palette: same as E with EMPHASIS on spirit qi blue #a8d8ff dorsal
+trail (rendered ~30% stronger than side view since back is dominant
+showcase).
+
+Composition: 256x384 px (vertical), isolated body on transparent,
+NO head, NO legs, NO tail.
+```
+
+```
+=== fox_spirit/S/torso.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia, supernatural ethereal.
+
+Subject: FRONT VIEW of white fox spirit BODY ONLY, oriented VERTICAL
+— fox facing camera, chest + belly visible from front, shoulders at
+top, narrow waist, fine snowy fur with paler chest highlight, faint
+ethereal mist wisps trailing at lower belly dissolving into
+transparent, subtle blue qi glow at chest center (heart area), NO
+head, NO legs, NO tail.
+
+Palette: same as E + sky qi mid #6fb5e0 chest mist accent.
+
+Composition: 256x384 px (vertical), isolated body, perfectly
+symmetric front-facing, ethereal edge.
+```
+
+```
+=== fox_spirit/N/arm_left.png === / === fox_spirit/N/arm_right.png === (BACK VIEW front legs)
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: BACK VIEW of white fox spirit FRONT LEG, viewed from
+behind, slender lithe leg straight standing, fine white fur back-
+of-leg silhouette with faint blue qi outline at hip attachment,
+delicate paw with small claws visible from behind, NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single front leg, top
+edge at shoulder joint pivot, bottom at paw.
+```
+
+```
+=== fox_spirit/S/arm_left.png === / === fox_spirit/S/arm_right.png === (FRONT VIEW front legs)
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: FRONT VIEW of white fox spirit FRONT LEG, viewed from
+front, slender lithe leg, fine white fur with faint blue qi outline
+at front of shoulder, delicate paw with small claws facing camera
+at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single front leg, top
+at shoulder, bottom at paw.
+```
+
+```
+=== fox_spirit/N/leg_left.png === / === fox_spirit/N/leg_right.png === (BACK VIEW back legs)
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: BACK VIEW of white fox spirit BACK LEG, viewed from behind,
+slender powerful haunch with subtle muscle from rear angle, fine
+white fur with faint blue qi line at hip, delicate paw at bottom,
+NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single back leg, top
+at hip pivot, bottom at paw.
+```
+
+```
+=== fox_spirit/S/leg_left.png === / === fox_spirit/S/leg_right.png === (FRONT VIEW back legs)
+
+hand-painted painterly, supernatural fox spirit.
+
+Subject: FRONT VIEW of white fox spirit BACK LEG, viewed from front,
+slender haunch with subtle blue qi glow at hip, delicate paw with
+claws visible at bottom facing camera, NO body.
+
+Palette: same as E.
+
+Composition: 160x288 px (vertical), isolated single back leg, top
+at hip, bottom at paw.
+```
+
+```
+=== fox_spirit/N/tail.png === (BACK VIEW tail — hero feature from rear!)
+
+hand-painted painterly, supernatural ethereal.
+
+Subject: BACK VIEW of magnificent fox spirit TAIL — single tail
+fluffy and majestic, oriented VERTICAL with attachment ROOT at TOP
+(hip back) and tip flowing DOWN with graceful arc to one side, fine
+white fur with VERY STRONG spirit qi blue glow trail dominant along
+tail length (tail is hero feature from this angle, viewer's eye
+naturally drawn here), ethereal mist wisps fading at tip.
+
+Palette: bone cream #e8d5a6 fur base, bone bleached #d4d4d4, spirit
+qi blue #a8d8ff dominant glow accent (40% stronger than side view),
+sky qi mid #6fb5e0 mid-tone, primary gold #d4a64a inner glow at
+root.
+
+Composition: 256x320 px (vertical — tail trailing down from rear
+view), isolated tail on transparent, root TOP pivot, tip BOTTOM,
+NO body.
+```
+
+```
+=== fox_spirit/S/tail.png === (FRONT VIEW tail — usually invisible)
+
+# NOTE: Same as wolf/S/tail.png — front view fox usually hidden tail.
+# Skip recommended → controller fallback East sprite cho slot này.
+
+Skip recommended.
 ```
 
 ---
@@ -1034,18 +1556,35 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 
 ## Cost Estimate (GPT Image 2.0)
 
+### Side-only (flat layout — start here)
+
 | Phase | Asset count | Image gen | Cost (~$0.02/image) |
 |---|---|---|---|
-| Player puppet | 6 (head, torso, 2 arm, 2 leg) | 4 var × 6 = 24 | $0.48 |
-| Wolf puppet | 7 (+tail) | 4 × 7 = 28 | $0.56 |
-| FoxSpirit puppet | 7 | 4 × 7 = 28 | $0.56 |
+| Player puppet (E only) | 6 (head, torso, 2 arm, 2 leg) | 4 var × 6 = 24 | $0.48 |
+| Wolf puppet (E only) | 7 (+tail) | 4 × 7 = 28 | $0.56 |
+| FoxSpirit puppet (E only) | 7 | 4 × 7 = 28 | $0.56 |
 | Single-sprite mobs | 7 | 4 × 7 = 28 | $0.56 |
 | Resources | 12 | 4 × 12 = 48 | $0.96 |
 | Item icons | 22 | 4 × 22 = 88 | $1.76 |
 | Tiles | 12 | 4 × 12 = 48 | $0.96 |
-| **Total full asset set** | **73 unique** | **~292** | **~$5.84** |
+| **Total full asset set (side-only)** | **73 unique** | **~292** | **~$5.84** |
 
 Realistic with iteration (gen 2-3 lần per asset trung bình): **~$15-20**.
+
+### Multi-direction add-on (PR J — L3+)
+
+> Chỉ apply cho 3 puppet character. Mob single-sprite + resources + tiles KHÔNG cần multi-dir.
+
+| Character | Parts/dir | Dirs needed | Total PNG | Image gen (4 var) | Cost |
+|---|---|---|---|---|---|
+| Player N + S | 6 × 2 | N, S | 12 | 48 | $0.96 |
+| Wolf N + S | 7 × 2 (skip S/tail) → 13 | N, S | 13 | 52 | $1.04 |
+| FoxSpirit N + S | 7 × 2 (skip S/tail) → 13 | N, S | 13 | 52 | $1.04 |
+| **Multi-dir add-on** | | | **38** | **152** | **~$3.04** |
+
+**W = flip(E) free** (controller mirror runtime). Multi-dir total cost ~$3-5 baseline + iteration → **~$15-30** realistic.
+
+**Combined (side-only + multi-dir):** ~73 + 38 = 111 PNG. Realistic budget: **$30-50** with full iteration cycle.
 
 ---
 
