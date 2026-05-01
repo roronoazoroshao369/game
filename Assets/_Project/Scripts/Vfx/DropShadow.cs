@@ -30,9 +30,13 @@ namespace WildernessCultivation.Vfx
         [Tooltip("Counter-rotate child mỗi LateUpdate để shadow luôn flat trên đất " +
             "kể cả khi parent xoay (vd: WindSway). Tắt nếu chắc chắn parent không xoay.")]
         public bool keepFlat = true;
+        [Tooltip("Mức shadow phản ứng với mob bob (foot-impact feel). 0 = tắt. " +
+            "0.3 = khi mob squash xuống, shadow giãn thêm 30% bob amount. Caller (MobAnimController) drive qua SetBobPhase.")]
+        [Range(0f, 1f)] public float bobInfluence = 0.3f;
 
         SpriteRenderer cachedRenderer;
         Quaternion hostBaseRotation = Quaternion.identity;
+        float currentBobFactor = 1f;
 
         public SpriteRenderer Renderer => cachedRenderer;
 
@@ -44,12 +48,46 @@ namespace WildernessCultivation.Vfx
 
         void LateUpdate()
         {
-            if (!keepFlat || cachedRenderer == null) return;
-            // Counter-rotate: shadow giữ rotation = hostBaseRotation trong không gian
-            // parent. Nếu parent xoay (WindSway) thì shadow tự bù lại. Khi parent
-            // không xoay, delta = identity → assign no-op rẻ (1 quat/frame).
-            cachedRenderer.transform.localRotation =
-                Quaternion.Inverse(transform.localRotation) * hostBaseRotation;
+            if (cachedRenderer == null) return;
+
+            if (keepFlat)
+            {
+                // Counter-rotate: shadow giữ rotation = hostBaseRotation trong không gian
+                // parent. Nếu parent xoay (WindSway) thì shadow tự bù lại. Khi parent
+                // không xoay, delta = identity → assign no-op rẻ (1 quat/frame).
+                cachedRenderer.transform.localRotation =
+                    Quaternion.Inverse(transform.localRotation) * hostBaseRotation;
+            }
+
+            if (bobInfluence > 0f)
+            {
+                // Foot-impact: khi mob squash (bob < 1) shadow giãn; khi extend (bob > 1) shadow co.
+                float scaleMul = ComputeShadowBobScale(currentBobFactor, bobInfluence);
+                cachedRenderer.transform.localScale = new Vector3(
+                    localScale.x * scaleMul,
+                    localScale.y * scaleMul,
+                    1f);
+            }
+        }
+
+        /// <summary>
+        /// Caller (e.g., <c>MobAnimController</c>) feeds current mob bob factor (1 = neutral, &lt;1 squash, &gt;1 extend).
+        /// LateUpdate uses cached value to scale shadow.
+        /// </summary>
+        public void SetBobPhase(float bobYFactor)
+        {
+            currentBobFactor = bobYFactor;
+        }
+
+        /// <summary>
+        /// Pure math (EditMode testable): shadow scale multiplier in response to mob bob.
+        /// bobYFactor = 1 → 1 (no change). bobYFactor &lt; 1 → &gt; 1 (shadow expand). bobYFactor &gt; 1 → &lt; 1 (shadow shrink).
+        /// influence = 0 → always 1. influence = 1 → full reciprocal feedback.
+        /// </summary>
+        public static float ComputeShadowBobScale(float bobYFactor, float influence)
+        {
+            float clampedInfluence = Mathf.Clamp01(influence);
+            return 1f + (1f - bobYFactor) * clampedInfluence;
         }
 
         /// <summary>

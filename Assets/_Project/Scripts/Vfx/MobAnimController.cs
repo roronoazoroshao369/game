@@ -22,6 +22,8 @@ namespace WildernessCultivation.Vfx
         public float walkBobFrequency = 5f;
         [Tooltip("Reference speed mà tại đó bob đạt full amplitude. Chậm hơn → bob nhỏ tỉ lệ.")]
         public float referenceSpeed = 2f;
+        [Tooltip("Wave shape exponent. 1 = pure sin (default). <1 → snappier (sharper peaks, bước rõ ràng hơn). >1 → softer (mượt, robotic).")]
+        [Range(0.3f, 3f)] public float walkBobShape = 0.7f;
 
         [Header("Idle breathing (subtle Y scale when stationary)")]
         public float idleBreathAmplitude = 0.02f;
@@ -32,12 +34,18 @@ namespace WildernessCultivation.Vfx
         public float maxTiltDeg = 5f;
         [Tooltip("|vx| dưới ngưỡng → tilt = 0 (tránh jitter khi mob đứng yên).")]
         public float tiltSpeedThreshold = 0.05f;
+        [Tooltip("Tilt smoothing rate (1/sec). Cao = snap nhanh; thấp = trôi mượt. 12 = critical damping ~0.1s settle.")]
+        public float tiltSmoothing = 12f;
 
         [Header("Lunge (one-shot forward translate khi attack)")]
         [Tooltip("Khoảng cách lunge tối đa (unit). 0.3 = wolf bite forward.")]
         public float lungeDistance = 0.3f;
         [Tooltip("Tổng thời gian lunge (out + return). Bell curve sin(π·t/d).")]
         public float lungeDuration = 0.3f;
+        [Tooltip("Anticipation phase fraction (0..0.5). 0 = no anticipation; 0.15 = 15% đầu kéo ngược để tạo weight trước khi lunge forward.")]
+        [Range(0f, 0.5f)] public float lungeAnticipationFraction = 0.15f;
+        [Tooltip("Mức kéo ngược (relative to lungeDistance). 0.25 = pull-back 25% của forward distance.")]
+        [Range(0f, 1f)] public float lungeAnticipationStrength = 0.25f;
 
         [Header("Squash punch (scale 1→peak→1 trong window)")]
         [Tooltip("Peak scale factor. 1.2 = mob phình to 20% rồi co lại lúc attack.")]
@@ -48,11 +56,13 @@ namespace WildernessCultivation.Vfx
         public float crouchScaleY = 0.9f;
 
         Rigidbody2D rb;
+        DropShadow dropShadow;
         Vector3 baseLocalScale;
         Quaternion baseLocalRotation;
         Vector3 baseLocalPosition;
 
         bool crouching;
+        float currentTiltDeg;
 
         // Lunge state. -1 = idle.
         float lungeStartTime = -1f;
@@ -65,9 +75,11 @@ namespace WildernessCultivation.Vfx
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
+            dropShadow = GetComponent<DropShadow>();
             baseLocalScale = transform.localScale;
             baseLocalRotation = transform.localRotation;
             baseLocalPosition = transform.localPosition;
+            currentTiltDeg = 0f;
         }
 
         void Update()
@@ -79,9 +91,9 @@ namespace WildernessCultivation.Vfx
             float speed = vel.magnitude;
             bool moving = speed > tiltSpeedThreshold;
 
-            // Bob: walking → speed-proportional sine; idle → slow breath.
+            // Bob: walking → speed-proportional shaped sine; idle → slow breath.
             float bobYFactor = moving
-                ? ComputeWalkBobScale(t, speed, walkBobAmplitude, walkBobFrequency, referenceSpeed)
+                ? ComputeWalkBobScale(t, speed, walkBobAmplitude, walkBobFrequency, referenceSpeed, walkBobShape)
                 : ComputeIdleBreathScale(t, idleBreathAmplitude, idleBreathFrequency);
 
             // Squash punch (one-shot).
@@ -102,16 +114,21 @@ namespace WildernessCultivation.Vfx
             scale.y = baseLocalScale.y * bobYFactor * squashFactor * crouchY;
             transform.localScale = scale;
 
-            // Tilt: from velocity X.
-            float tiltDeg = ComputeTiltDeg(vel.x, maxTiltDeg, tiltSpeedThreshold);
-            transform.localRotation = baseLocalRotation * Quaternion.Euler(0f, 0f, tiltDeg);
+            // Tilt: target from velocity X, smoothed via exponential lerp (frame-rate independent).
+            float tiltTarget = ComputeTiltDeg(vel.x, maxTiltDeg, tiltSpeedThreshold);
+            currentTiltDeg = ApplyExponentialDamping(currentTiltDeg, tiltTarget, tiltSmoothing, dt);
+            transform.localRotation = baseLocalRotation * Quaternion.Euler(0f, 0f, currentTiltDeg);
+
+            // Bob-synced shadow: khi mob squash xuống (bobY < 1) → shadow giãn nhẹ tạo cảm giác "foot impact".
+            if (dropShadow != null) dropShadow.SetBobPhase(bobYFactor);
 
             // Lunge translate (only while active). transform.position = base + dir * offset.
             // Caller (Wolf attack) đảm bảo rb stopped in attack tick → không fight với physics.
             if (lungeStartTime >= 0f)
             {
                 float age = t - lungeStartTime;
-                float offset = ComputeLungeOffset(age, lungeDuration, lungeDistance);
+                float offset = ComputeLungeOffsetWithAnticipation(age, lungeDuration, lungeDistance,
+                    lungeAnticipationFraction, lungeAnticipationStrength);
                 Vector3 d = (Vector3)(lungeDir * offset);
                 transform.localPosition = baseLocalPosition + d;
                 if (age >= lungeDuration)
@@ -120,9 +137,6 @@ namespace WildernessCultivation.Vfx
                     transform.localPosition = baseLocalPosition;
                 }
             }
-
-            // Avoid unused warning trên dt: future expand cho damped tilt smoothing.
-            _ = dt;
         }
 
         /// <summary>Caller (e.g., WolfChase.OnEnter) toggle crouch posture. Sticky cho tới khi tắt.</summary>
@@ -154,14 +168,37 @@ namespace WildernessCultivation.Vfx
         /// <summary>
         /// Walking Y scale factor — 1 + (speed/refSpeed) * amplitude * sin(2π · freq · t).
         /// Range: clamp speed/refSpeed ∈ [0,1]. speed=0 → 1 (no bob). speed=refSpeed → ±amplitude.
+        /// (Backward-compat overload — pure sin shape; xem overload có <c>waveShape</c> cho shape control.)
         /// </summary>
         public static float ComputeWalkBobScale(float time, float speed,
             float amplitude, float frequencyHz, float referenceSpeed)
         {
+            return ComputeWalkBobScale(time, speed, amplitude, frequencyHz, referenceSpeed, waveShape: 1f);
+        }
+
+        /// <summary>
+        /// Walking Y scale factor với shape control — shaped_sin = sign(sin) * |sin|^waveShape.
+        /// waveShape = 1 → pure sin. waveShape &lt; 1 → snappier (sharper peaks, bước rõ như đang nhấn). waveShape &gt; 1 → softer.
+        /// </summary>
+        public static float ComputeWalkBobScale(float time, float speed,
+            float amplitude, float frequencyHz, float referenceSpeed, float waveShape)
+        {
             if (referenceSpeed <= 0f) return 1f;
             float speedFactor = Mathf.Clamp01(speed / referenceSpeed);
-            float wave = Mathf.Sin(2f * Mathf.PI * frequencyHz * time);
+            float rawWave = Mathf.Sin(2f * Mathf.PI * frequencyHz * time);
+            float wave = ShapeWave(rawWave, waveShape);
             return 1f + speedFactor * amplitude * wave;
+        }
+
+        /// <summary>
+        /// Shape sine wave preserving sign: sign(v) * |v|^exponent. Pure helper for shaping.
+        /// exponent = 1 → identity. exponent &lt; 1 → snappier. exponent &gt; 1 → softer.
+        /// </summary>
+        public static float ShapeWave(float value, float exponent)
+        {
+            if (Mathf.Approximately(exponent, 1f) || Mathf.Approximately(value, 0f)) return value;
+            float sign = Mathf.Sign(value);
+            return sign * Mathf.Pow(Mathf.Abs(value), Mathf.Max(0.01f, exponent));
         }
 
         /// <summary>Idle breathing Y scale factor — slow sin around 1.</summary>
@@ -189,6 +226,46 @@ namespace WildernessCultivation.Vfx
             if (duration <= 0f) return 0f;
             float u = Mathf.Clamp01(t / duration);
             return distance * Mathf.Sin(Mathf.PI * u);
+        }
+
+        /// <summary>
+        /// Lunge offset với anticipation — phase 0..anticipationFraction kéo ngược (negative offset)
+        /// để tạo "weight" trong frame đầu, sau đó forward bell curve.
+        ///
+        /// anticipationFraction ∈ [0, 0.5]; 0 → reduce về ComputeLungeOffset (no pull-back).
+        /// anticipationStrength ∈ [0, 1]; tỉ lệ với distance.
+        /// </summary>
+        public static float ComputeLungeOffsetWithAnticipation(float t, float duration,
+            float distance, float anticipationFraction, float anticipationStrength)
+        {
+            if (duration <= 0f) return 0f;
+            float u = Mathf.Clamp01(t / duration);
+            float af = Mathf.Clamp(anticipationFraction, 0f, 0.5f);
+            if (af <= 0f) return distance * Mathf.Sin(Mathf.PI * u);
+
+            if (u < af)
+            {
+                // Pull-back phase: bell curve negative.
+                float pu = u / af;
+                return -distance * anticipationStrength * Mathf.Sin(Mathf.PI * pu);
+            }
+            else
+            {
+                // Forward phase — occupies remaining (1 - af) fraction of duration.
+                float fu = (u - af) / (1f - af);
+                return distance * Mathf.Sin(Mathf.PI * fu);
+            }
+        }
+
+        /// <summary>
+        /// Frame-rate independent exponential lerp toward target. rate = how fast (1/sec).
+        /// Output: critically-damped trajectory; ~0.1s to 99% target khi rate=12.
+        /// </summary>
+        public static float ApplyExponentialDamping(float current, float target, float rate, float dt)
+        {
+            if (rate <= 0f || dt <= 0f) return target;
+            float alpha = 1f - Mathf.Exp(-rate * dt);
+            return Mathf.Lerp(current, target, alpha);
         }
 
         /// <summary>
