@@ -84,6 +84,11 @@ namespace WildernessCultivation.World
 
         const float ResourceNoiseScale = 0.12f;
 
+        [Header("Chunk streaming (PR #3b)")]
+        [Tooltip("Cạnh chunk (cells). Foundation cho ChunkManager: world chia thành chunks (chunkSize × chunkSize), load/unload theo player. 16 = 256 cells/chunk = balance giữa overhead per-chunk + granularity load. KHÔNG đổi giữa các save (deterministic spawn dựa trên cell coord, không trên chunk).")]
+        [Range(4, 64)]
+        public int chunkSize = 16;
+
         public static WorldGenerator Instance { get; private set; }
 
         void Awake()
@@ -112,16 +117,34 @@ namespace WildernessCultivation.World
 
         void Start()
         {
-            GenerateNow();
+            // Nếu có ChunkManager attached → skip global Generate. ChunkManager sẽ load
+            // chunks dynamically theo player position. Chunk streaming = world có thể
+            // size lớn nhưng chỉ render window quanh player → không hang Start ở map lớn.
+            chunkManager = GetComponent<ChunkManager>();
+            if (chunkManager == null)
+            {
+                GenerateNow();
+            }
 
             if (player != null)
                 player.position = new Vector3(size.x * 0.5f, size.y * 0.5f, 0f);
 
-            if (mobSpawner != null) mobSpawner.SetupBounds(Vector2.zero, size);
+            // ChunkManager.Start có thể đã chạy trước (Unity execution order arbitrary)
+            // → chunks đã load quanh player position cũ (vd 0,0). Force rebuild quanh
+            // teleport position mới (size/2). KHÔNG cần khi chunkManager null.
+            if (chunkManager != null) chunkManager.Rebuild();
+
+            // MobSpawner bounds: chunk streaming → ChunkManager sẽ tự update bounds
+            // theo player. Legacy mode → bound full world.
+            if (mobSpawner != null && chunkManager == null)
+                mobSpawner.SetupBounds(Vector2.zero, size);
 
             SpawnTombstones();
             SpawnSpiritSpring();
         }
+
+        /// <summary>Reference cached ở Start, exposed cho ChunkManager check.</summary>
+        ChunkManager chunkManager;
 
         /// <summary>
         /// Public hook để EditMode test gọi Generate mà không kích hoạt full Start (mob spawner /
@@ -206,81 +229,156 @@ namespace WildernessCultivation.World
 
         void Generate()
         {
-            bool useBiomes = biomes != null && biomes.Length > 0;
-
             for (int x = 0; x < size.x; x++)
                 for (int y = 0; y < size.y; y++)
+                    GenerateCellAt(x, y, contentParent);
+        }
+
+        /// <summary>
+        /// Generate 1 cell tại (worldX, worldY) — set ground tile + spawn resource/decoration.
+        /// Resources instantiate vào <paramref name="parent"/> (cho phép ChunkManager tạo
+        /// per-chunk parent → destroy = unload chunk).
+        ///
+        /// Random state save/restore + reseed deterministic per (seed, x, y) → spawn decision
+        /// stable bất kể visit order (chunk streaming có thể load chunk theo bất kỳ order).
+        /// Tilemap render tại tilemap-pos = (worldX, worldY) unwrapped — biome/variant lookup
+        /// internally wrap (PR #3a foundation) → cell vượt biên cho cùng nội dung.
+        /// </summary>
+        public void GenerateCellAt(int worldX, int worldY, Transform parent)
+        {
+            if (parent == null) parent = contentParent != null ? contentParent : transform;
+            var savedRandomState = Random.state;
+            Random.InitState(unchecked((int)VariantHash(seed, worldX, worldY)));
+            try
+            {
+                bool useBiomes = biomes != null && biomes.Length > 0;
+                int lookupX = wrapWorld ? WrapCoord(worldX, size.x) : worldX;
+                int lookupY = wrapWorld ? WrapCoord(worldY, size.y) : worldY;
+                float n = Mathf.PerlinNoise((lookupX + seed) * ResourceNoiseScale,
+                                             (lookupY + seed) * ResourceNoiseScale);
+                BiomeSO biome = useBiomes ? PickBiomeFor(worldX, worldY) : null;
+
+                TileBase tile = PickGroundTile(biome, worldX, worldY);
+                if (groundTilemap != null && tile != null)
                 {
-                    float n = Mathf.PerlinNoise((x + seed) * ResourceNoiseScale, (y + seed) * ResourceNoiseScale);
-                    BiomeSO biome = useBiomes ? PickBiomeFor(x, y) : null;
+                    groundTilemap.SetTile(new Vector3Int(worldX, worldY, 0), tile);
+                }
+                else
+                {
+                    GameObject ground = biome != null ? biome.groundPrefab : groundPrefab;
+                    if (ground != null)
+                        Instantiate(ground, new Vector3(worldX + 0.5f, worldY + 0.5f, 0f), Quaternion.identity, parent);
+                }
 
-                    TileBase tile = PickGroundTile(biome, x, y);
-                    if (groundTilemap != null && tile != null)
+                GameObject tree = biome != null ? biome.treePrefab : treePrefab;
+                GameObject rock = biome != null ? biome.rockPrefab : rockPrefab;
+                GameObject grass = biome != null ? biome.grassBushPrefab : grassBushPrefab;
+                GameObject water = biome != null ? biome.waterSpringPrefab : waterSpringPrefab;
+
+                float dTree = biome != null ? biome.treeDensity : treeDensity;
+                float dRock = biome != null ? biome.rockDensity : rockDensity;
+                float dGrass = biome != null ? biome.grassDensity : grassDensity;
+                float dWater = biome != null ? biome.waterDensity : waterDensity;
+
+                bool spawned = false;
+                if (water != null && n < 0.15f && Random.value < dWater)
+                { SpawnInto(water, worldX, worldY, parent); spawned = true; }
+                else if (tree != null && n > 0.6f && Random.value < dTree)
+                { SpawnInto(tree, worldX, worldY, parent); spawned = true; }
+                else if (rock != null && n < 0.25f && Random.value < dRock)
+                { SpawnInto(rock, worldX, worldY, parent); spawned = true; }
+                else if (grass != null && Random.value < dGrass)
+                { SpawnInto(grass, worldX, worldY, parent); spawned = true; }
+
+                // Extra nodes (linh thảo / mineral) — pass riêng, có thể overlap nếu
+                // tile chưa lấp. Tối đa 1 extra/tile để tránh dày đặc. Tôn trọng Perlin
+                // band khi configured (mặc định 0..0 = no constraint).
+                if (!spawned && biome != null && biome.extraNodes != null)
+                {
+                    foreach (var en in biome.extraNodes)
                     {
-                        groundTilemap.SetTile(new Vector3Int(x, y, 0), tile);
-                    }
-                    else
-                    {
-                        GameObject ground = biome != null ? biome.groundPrefab : groundPrefab;
-                        if (ground != null)
-                            Instantiate(ground, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, contentParent);
-                    }
-
-                    GameObject tree = biome != null ? biome.treePrefab : treePrefab;
-                    GameObject rock = biome != null ? biome.rockPrefab : rockPrefab;
-                    GameObject grass = biome != null ? biome.grassBushPrefab : grassBushPrefab;
-                    GameObject water = biome != null ? biome.waterSpringPrefab : waterSpringPrefab;
-
-                    float dTree = biome != null ? biome.treeDensity : treeDensity;
-                    float dRock = biome != null ? biome.rockDensity : rockDensity;
-                    float dGrass = biome != null ? biome.grassDensity : grassDensity;
-                    float dWater = biome != null ? biome.waterDensity : waterDensity;
-
-                    bool spawned = false;
-                    if (water != null && n < 0.15f && Random.value < dWater)
-                    { Spawn(water, x, y); spawned = true; }
-                    else if (tree != null && n > 0.6f && Random.value < dTree)
-                    { Spawn(tree, x, y); spawned = true; }
-                    else if (rock != null && n < 0.25f && Random.value < dRock)
-                    { Spawn(rock, x, y); spawned = true; }
-                    else if (grass != null && Random.value < dGrass)
-                    { Spawn(grass, x, y); spawned = true; }
-
-                    // Extra nodes (linh thảo / mineral) — pass riêng, có thể overlap nếu
-                    // tile chưa lấp. Tối đa 1 extra/tile để tránh dày đặc. Tôn trọng Perlin
-                    // band khi configured (mặc định 0..0 = no constraint).
-                    if (!spawned && biome != null && biome.extraNodes != null)
-                    {
-                        foreach (var en in biome.extraNodes)
+                        if (en.prefab == null || en.density <= 0f) continue;
+                        if (!InPerlinBand(n, en.perlinMin, en.perlinMax)) continue;
+                        if (Random.value < en.density)
                         {
-                            if (en.prefab == null || en.density <= 0f) continue;
-                            if (!InPerlinBand(n, en.perlinMin, en.perlinMax)) continue;
-                            if (Random.value < en.density)
-                            {
-                                Spawn(en.prefab, x, y);
-                                spawned = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Decoration pass — visual only, chỉ spawn khi tile chưa có resource.
-                    // Decoration không phải resource (không có Interact / harvest), không
-                    // kế thừa block tile resource — đứng trên ground bình thường.
-                    if (!spawned && biome != null && biome.decorations != null)
-                    {
-                        foreach (var d in biome.decorations)
-                        {
-                            if (d.prefab == null || d.density <= 0f) continue;
-                            if (!InPerlinBand(n, d.perlinMin, d.perlinMax)) continue;
-                            if (Random.value < d.density)
-                            {
-                                Spawn(d.prefab, x, y);
-                                break;
-                            }
+                            SpawnInto(en.prefab, worldX, worldY, parent);
+                            spawned = true;
+                            break;
                         }
                     }
                 }
+
+                // Decoration pass — visual only, chỉ spawn khi tile chưa có resource.
+                // Decoration không phải resource (không có Interact / harvest), không
+                // kế thừa block tile resource — đứng trên ground bình thường.
+                if (!spawned && biome != null && biome.decorations != null)
+                {
+                    foreach (var d in biome.decorations)
+                    {
+                        if (d.prefab == null || d.density <= 0f) continue;
+                        if (!InPerlinBand(n, d.perlinMin, d.perlinMax)) continue;
+                        if (Random.value < d.density)
+                        {
+                            SpawnInto(d.prefab, worldX, worldY, parent);
+                            break;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Random.state = savedRandomState;
+            }
+        }
+
+        /// <summary>
+        /// Generate toàn bộ cells trong chunk <paramref name="chunkCoord"/> (chunkCoord =
+        /// cell coord / <see cref="chunkSize"/>) → tilemap + resources spawn vào
+        /// <paramref name="parent"/>. Idempotent: gọi 2 lần cùng args sẽ duplicate
+        /// resources nên ChunkManager phải track loaded chunks.
+        /// </summary>
+        public void GenerateChunk(Vector2Int chunkCoord, Transform parent)
+        {
+            int x0 = chunkCoord.x * chunkSize;
+            int y0 = chunkCoord.y * chunkSize;
+            for (int dx = 0; dx < chunkSize; dx++)
+                for (int dy = 0; dy < chunkSize; dy++)
+                    GenerateCellAt(x0 + dx, y0 + dy, parent);
+        }
+
+        /// <summary>
+        /// Clear tilemap cells trong chunk (set null). Resources cleared bằng cách caller
+        /// destroy parent GameObject riêng (tilemap không own resource children).
+        /// </summary>
+        public void ClearChunkTiles(Vector2Int chunkCoord)
+        {
+            if (groundTilemap == null) return;
+            int x0 = chunkCoord.x * chunkSize;
+            int y0 = chunkCoord.y * chunkSize;
+            var bounds = new BoundsInt(x0, y0, 0, chunkSize, chunkSize, 1);
+            // SetTilesBlock với array null = clear cả block trong 1 call (rẻ hơn loop SetTile).
+            groundTilemap.SetTilesBlock(bounds, new TileBase[chunkSize * chunkSize]);
+        }
+
+        /// <summary>Convert cell coord → chunk coord (floor division — handle negative đúng).</summary>
+        public Vector2Int ChunkCoordOf(int cellX, int cellY)
+        {
+            int cs = Mathf.Max(1, chunkSize);
+            int cx = cellX >= 0 ? cellX / cs : (cellX - cs + 1) / cs;
+            int cy = cellY >= 0 ? cellY / cs : (cellY - cs + 1) / cs;
+            return new Vector2Int(cx, cy);
+        }
+
+        void SpawnInto(GameObject prefab, int x, int y, Transform parent)
+        {
+            // tránh spawn ngay trung tâm (chỗ player) — chỉ áp dụng khi center trong canonical range.
+            Vector2 mid = new(size.x * 0.5f, size.y * 0.5f);
+            int wrappedX = wrapWorld ? WrapCoord(x, size.x) : x;
+            int wrappedY = wrapWorld ? WrapCoord(y, size.y) : y;
+            Vector2 wp = new(wrappedX + 0.5f, wrappedY + 0.5f);
+            if (Vector2.Distance(wp, mid) < 4f) return;
+
+            Instantiate(prefab, new Vector3(x + 0.5f, y + 0.5f, 0f), Quaternion.identity, parent);
         }
 
         /// <summary>
@@ -342,16 +440,6 @@ namespace WildernessCultivation.World
             if (min <= 0f && max <= 0f) return true;          // unset → no constraint
             if (max <= min) return n >= min;                  // upper unset → only lower bound
             return n >= min && n <= max;
-        }
-
-        void Spawn(GameObject prefab, int x, int y)
-        {
-            // tránh spawn ngay trung tâm (chỗ player)
-            Vector2 mid = new(size.x * 0.5f, size.y * 0.5f);
-            Vector2 p = new(x + 0.5f, y + 0.5f);
-            if (Vector2.Distance(p, mid) < 4f) return;
-
-            Instantiate(prefab, new Vector3(p.x, p.y, 0f), Quaternion.identity, contentParent);
         }
 
         /// <summary>
