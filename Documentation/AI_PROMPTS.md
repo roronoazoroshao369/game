@@ -11,7 +11,7 @@
 
 1. [Style Anchor (universal preamble)](#1-style-anchor-universal-preamble)
 2. [Negative Prompt (universal)](#2-negative-prompt-universal)
-3. [Puppet Characters](#3-puppet-characters) — §3.0 asset count checklist + Player, Wolf, FoxSpirit (multi-piece) + §3.4 multi-direction NSEW variants + §3.5 L2 elbow/knee (forearm + shin)
+3. [Puppet Characters](#3-puppet-characters) — §3.0 asset count checklist + Player, Wolf, FoxSpirit (multi-piece) + §3.4 multi-direction NSEW variants + §3.5 L2 elbow/knee (forearm + shin) + §3.6 quick-copy bundles (paste-ready full sets)
 4. [Single-Sprite Mobs](#4-single-sprite-mobs) — Rabbit, Boar, Deer Spirit, Crow, Snake, Bat, Boss (Phase 1 + Phase 2 enraged)
 5. [Resources / World Objects](#5-resources--world-objects) — tree, rock, water, mushroom, berry, cactus, lily, bamboo, grass tile, mineral, structures (+ §5.13 state variants: harvested / depleted)
 6. [Item Icons](#6-item-icons) — 22 inventory icons (materials, foods, tools, accessories)
@@ -120,6 +120,8 @@ no lens flare, no ground beneath subject for body parts.
 **Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player, 7 cho Wolf/Fox, 1 mỗi single-sprite mob = 6 PNG cho 6 mob đơn) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
 
 **Required minimum để puppet build pass:** chỉ cần `head.png` + `torso.png` ở East/flat. Thiếu → fallback single-sprite (puppet không spawn). Limbs / tail optional — controller tự skip slot null.
+
+> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character (hiện có Player Multi-dir L1 = 12 prompts → 18 PNG). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
 
 ### 3.1 Player — Cultivation Hero (`Art/Characters/player/`)
 
@@ -1230,6 +1232,295 @@ Skip recommended.
 # Skip recommended.
 
 Skip recommended.
+```
+
+### 3.6 Quick-Copy Bundles (đầy đủ, paste tuần tự là xong)
+
+> Section này gom tất cả prompts cần thiết để gen **full DST set** của 1 character vào MỘT block liên tục — tránh phải scroll giữa §3.1 (E side) + §3.4.1 (N back + S front). Đây là yêu cầu trực tiếp từ user feedback PR #105/#106 follow-up: "tôi cần prompt đầy đủ để copy là dùng".
+>
+> **Maintenance note:** Prompts trong §3.6.x **LÀ COPY** của master prompts ở §3.1 (E) + §3.4.1 (N, S). Nếu sửa master prompt (palette, composition, pivot rule…) **PHẢI** sync xuống §3.6.x tương ứng. Dễ miss → khi review PR thay đổi §3.1/§3.4.1, kiểm tra §3.6 cùng file diff.
+>
+> **GPT Image 2.0 lưu ý:** mỗi block = 1 generation request. Bundle 12 prompts → 12 lần gen → 18 PNG output (arm/leg block sinh 2 PNG mỗi cái). Cost ước tính: xem §12 (Cost Estimate).
+
+#### 3.6.1 Player — Full DST Set (12 prompts → 18 PNG)
+
+> **Setup trước khi gen:** tạo folder `Assets/_Project/Art/Characters/player/E/`, `player/N/`, `player/S/` (BootstrapWizard sẽ auto-detect khi có sprite).
+>
+> **Workflow:** copy từng block bên dưới (theo thứ tự E → N → S) → paste vào GPT Image 2.0 → save output PNG vào path ghi ở dòng đầu block. Style anchor + negative prompt §1/§2 đã inline trong từng block — không cần paste riêng.
+>
+> **W (West)** = mirror East lúc runtime (PuppetAnimController flipX), KHÔNG cần gen.
+
+##### E (East / side view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/player/E/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic,
+limited color palette, clean readable silhouette, 1.5 to 2 pixel
+mid-tone outline (dark cream tone, NOT pure black).
+
+Subject: side view of a young Asian male cultivator HEAD ONLY,
+profile facing right, calm focused expression, ink-black hair tied
+in a topknot with bone cream silk ribbon, smooth jade-pale skin,
+faint qi glow on temple, isolated single body part on fully
+transparent background. NO neck visible below jawline (clean cut).
+
+Palette (use ONLY these): bone cream skin #e8d5a6 base, warm shadow
+#b89968 mid-tone, ink black #1a1a1a hair, primary gold #d4a64a
+ribbon highlight, jade green #6b8e62 faint qi glow.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, NO body parts below jaw, NO
+shoulders, NO neck, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/player/E/torso.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic.
+
+Subject: side view of a young Asian male cultivator TORSO ONLY,
+profile facing right, neutral standing pose, wearing flowing white
+martial arts robe with gold embroidery on collar and waist sash,
+green jade pendant on chest, robe falls to mid-thigh, NO head NO
+arms NO legs visible (clean cuts at shoulders, hips, neck).
+
+Palette: bone cream #e8d5a6 robe base, warm shadow #b89968 fold
+shadow, primary gold #d4a64a embroidery accent, jade green #6b8e62
+pendant, dry leaf #8a6f47 sash highlight.
+
+Composition: 256x384 px (vertical), isolated single torso on fully
+transparent background, NO head, NO limbs, NO ground, NO shadow.
+Top edge clean horizontal at shoulder line (puppet rig pivot).
+```
+
+```
+=== Save to: Art/Characters/player/E/arm_left.png  AND  arm_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia.
+
+Subject: side view of a young cultivator's LEFT (or RIGHT) arm,
+hanging straight down in neutral pose, wearing flowing white robe
+sleeve, hand visible at bottom (hand resting open, fingers slightly
+curled), arm length proportional to mid-thigh, NO body, NO head.
+
+Palette: bone cream #e8d5a6 sleeve base, warm shadow #b89968 fold
+shadow, jade pale #d4d4ba skin tone for hand, primary gold #d4a64a
+narrow trim at cuff.
+
+Composition: 256x384 px (vertical), isolated single arm on fully
+transparent background, top edge clean horizontal at shoulder
+(pivot point), bottom edge at fingertips, NO body, NO ground.
+
+# NOTE: gen 1 lần (left arm), flip horizontal trong Photopea/GIMP để
+# có arm_right.png. Hoặc gen 2 lần với prompt "right arm" cho asymmetry tự nhiên.
+```
+
+```
+=== Save to: Art/Characters/player/E/leg_left.png  AND  leg_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia.
+
+Subject: side view of a young cultivator's LEFT (or RIGHT) leg,
+straight standing pose, wearing white robe pant flowing to ankle,
+fabric shoe with cloth wrap, NO body, NO foot ground contact (foot
+just hovering in neutral pose).
+
+Palette: bone cream #e8d5a6 pant base, warm shadow #b89968 fabric
+fold, dry leaf #8a6f47 shoe.
+
+Composition: 256x384 px (vertical), isolated single leg on fully
+transparent background, top edge clean horizontal at hip (pivot
+point), bottom edge at sole of foot, NO body, NO ground, NO shadow.
+
+# NOTE: gen 1 lần (left leg), flip horizontal cho leg_right.png.
+```
+
+##### N (North / back view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/player/N/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic,
+limited color palette, clean readable silhouette, 1.5 to 2 pixel
+mid-tone outline (dark cream tone, NOT pure black).
+
+Subject: BACK VIEW of a young Asian male cultivator HEAD ONLY,
+back of head facing camera, ink-black hair tied in a topknot with
+bone cream silk ribbon (topknot prominent at back-top), nape of
+neck visible at base of skull, smooth jade-pale skin tone on visible
+ear edges and nape, NO face features visible (back of skull only),
+isolated single body part on fully transparent background.
+
+Palette (use ONLY these): bone cream skin #e8d5a6 base, warm shadow
+#b89968 mid-tone, ink black #1a1a1a hair, primary gold #d4a64a
+ribbon highlight, jade green #6b8e62 faint qi glow.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, NO shoulders, NO neck below skull
+base, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/player/N/torso.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic.
+
+Subject: BACK VIEW of a young Asian male cultivator TORSO ONLY,
+back of torso facing camera, wearing flowing white martial arts
+robe — gold embroidery visible on collar back, waist sash tied at
+back with knot + tail trailing down center spine, robe falls to
+mid-thigh, NO head NO arms NO legs visible (clean cuts at shoulders,
+hips, neck base).
+
+Palette: bone cream #e8d5a6 robe base, warm shadow #b89968 fold
+shadow at center spine and side seams, primary gold #d4a64a
+embroidery accent, jade green #6b8e62 pendant string-tie at back of
+neck (front pendant invisible from back), dry leaf #8a6f47 sash
+highlight.
+
+Composition: 256x384 px (vertical), isolated single torso on fully
+transparent background, NO head, NO limbs, NO ground, NO shadow.
+Top edge clean horizontal at shoulder line (puppet rig pivot).
+```
+
+```
+=== Save to: Art/Characters/player/N/arm_left.png  AND  arm_right.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of a young cultivator's LEFT (or RIGHT) arm,
+hanging straight down in neutral pose, viewed from behind — back
+of shoulder + elbow + wrist visible, white robe sleeve drape, hand
+visible at bottom showing back of hand (knuckles), arm length
+proportional to mid-thigh, NO body, NO head.
+
+Palette: bone cream #e8d5a6 sleeve base, warm shadow #b89968 fold
+shadow, jade pale #d4d4ba skin tone for hand, primary gold #d4a64a
+narrow trim at cuff.
+
+Composition: 256x384 px (vertical), isolated single arm on fully
+transparent background, top edge clean horizontal at shoulder
+(pivot point), bottom edge at fingertips, NO body, NO ground.
+
+# NOTE: gen 1 lần flip horizontal cho arm đối xứng.
+```
+
+```
+=== Save to: Art/Characters/player/N/leg_left.png  AND  leg_right.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: BACK VIEW of a young cultivator's LEFT (or RIGHT) leg,
+straight standing pose viewed from behind, white robe pant flowing
+down to ankle (back of leg silhouette), fabric shoe with cloth
+wrap visible from behind (heel + ankle wrap), NO body, NO foot
+ground contact.
+
+Palette: bone cream #e8d5a6 pant base, warm shadow #b89968 fabric
+fold, dry leaf #8a6f47 shoe.
+
+Composition: 256x384 px (vertical), isolated single leg, top edge
+at hip pivot, bottom at sole, NO body.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/player/S/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia cultivation fantasy aesthetic,
+limited color palette, clean readable silhouette, 1.5 to 2 pixel
+mid-tone outline (dark cream tone, NOT pure black).
+
+Subject: FRONT VIEW of a young Asian male cultivator HEAD ONLY,
+face directly facing camera, calm focused expression, ink-black
+hair with center-parting and topknot peak visible above forehead,
+bone cream silk ribbon at top, smooth jade-pale skin, dark almond
+eyes, faint qi glow on both temples (symmetric), thin dark eyebrows,
+neutral closed mouth, isolated single body part on fully transparent
+background. NO neck visible below jawline.
+
+Palette (use ONLY these): bone cream skin #e8d5a6 base, warm shadow
+#b89968 mid-tone, ink black #1a1a1a hair, primary gold #d4a64a
+ribbon highlight, jade green #6b8e62 faint qi glow.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, perfectly symmetric front-facing,
+NO shoulders, NO neck, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/player/S/torso.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of a young Asian male cultivator TORSO ONLY,
+chest facing camera, wearing flowing white martial arts robe —
+gold embroidery visible at collar V-neck and along chest center
+seam, green jade pendant on chest (visible directly center), waist
+sash tied in front bow with two tails trailing down, robe falls to
+mid-thigh, NO head NO arms NO legs visible (clean cuts at shoulders,
+hips, neck base).
+
+Palette: bone cream #e8d5a6 robe base, warm shadow #b89968 fold
+shadow, primary gold #d4a64a embroidery accent, jade green #6b8e62
+pendant, dry leaf #8a6f47 sash highlight.
+
+Composition: 256x384 px (vertical), isolated torso, perfectly
+symmetric front-facing, NO head, NO limbs, NO ground, NO shadow.
+```
+
+```
+=== Save to: Art/Characters/player/S/arm_left.png  AND  arm_right.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of a young cultivator's LEFT (or RIGHT) arm,
+hanging straight down at side, viewed from front — front of
+shoulder + arm + wrist visible, white robe sleeve drape at front,
+palm of hand showing fingers slightly curled inward, NO body, NO
+head.
+
+Palette: bone cream #e8d5a6 sleeve base, warm shadow #b89968 fold
+shadow, jade pale #d4d4ba skin tone for hand, primary gold #d4a64a
+narrow trim at cuff.
+
+Composition: 256x384 px (vertical), isolated single arm, top edge
+at shoulder pivot, bottom at fingertips.
+```
+
+```
+=== Save to: Art/Characters/player/S/leg_left.png  AND  leg_right.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: FRONT VIEW of a young cultivator's LEFT (or RIGHT) leg,
+straight standing pose viewed from front, white robe pant draping
+at front (front shin + knee silhouette), fabric shoe toe-end
+visible (cloth wrap from front), NO body.
+
+Palette: bone cream #e8d5a6 pant base, warm shadow #b89968 fabric
+fold, dry leaf #8a6f47 shoe.
+
+Composition: 256x384 px (vertical), isolated single leg, top at
+hip pivot, bottom at toe.
+```
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi,
+no pure black outline, no smooth airbrush gradient,
+no drop shadow on transparent background, no text, no watermark,
+no signature, no border, single subject only, no duplicate,
+no grid lines, no UI elements, no caption, no logo,
+no lens flare, no ground beneath subject for body parts.
 ```
 
 ---
