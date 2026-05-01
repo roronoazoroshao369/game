@@ -2,6 +2,7 @@ using UnityEngine;
 using WildernessCultivation.Combat;
 using WildernessCultivation.Items;
 using WildernessCultivation.Player;
+using WildernessCultivation.Vfx;
 
 namespace WildernessCultivation.World
 {
@@ -28,6 +29,10 @@ namespace WildernessCultivation.World
         public Drop[] drops;
         public GameObject onDestroyVfx;
 
+        // Cache reactive feedback (BootstrapWizard auto-attach lên prefab).
+        // GetComponent 1 lần ở Awake, Hit() vô số lần → tránh overhead per hit.
+        ReactiveOnHit reactiveFx;
+
         [Header("Optional harvest side-effects on harvester (PlayerStats)")]
         [Tooltip("Sát thương HP áp lên harvester sau khi node chết (vd Cactus -2).")]
         public float harvestHpDamage = 0f;
@@ -40,7 +45,11 @@ namespace WildernessCultivation.World
         [Tooltip("Trừ Sanity harvester (Death Lily -5).")]
         public float harvestSanityDamage = 0f;
 
-        void Awake() { currentHP = maxHP; }
+        void Awake()
+        {
+            currentHP = maxHP;
+            reactiveFx = GetComponent<ReactiveOnHit>();
+        }
 
         public void TakeDamage(float amount, GameObject source)
         {
@@ -51,6 +60,10 @@ namespace WildernessCultivation.World
                 if (proj != null && proj.Owner != null) source = proj.Owner;
             }
             currentHP -= amount;
+            // Reactive feedback: flash + shake + leaf burst (cây đang bị chặt rung rinh).
+            // Trigger sau khi HP trừ — nếu Harvest sẽ Destroy ngay frame này, coroutine
+            // shake/flash sẽ stop tự nhiên. Burst particles tách parent → vẫn play.
+            if (reactiveFx != null) reactiveFx.Hit();
             if (currentHP <= 0f) Harvest(source);
         }
 
