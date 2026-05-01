@@ -109,6 +109,40 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
+        public void PaletteFor_Boar_HasDarkBrownBristlyFur()
+        {
+            // Boar wild bristly fur — dark brown dominance: R > G > B + tunic brightness < 0.4.
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.BoarId);
+            Assert.Greater(p.tunic.r, p.tunic.g);
+            Assert.Greater(p.tunic.g, p.tunic.b);
+            float tunicBrightness = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+            Assert.Less(tunicBrightness, 0.4f, "Boar fur should be dark (heavy menacing mob silhouette).");
+        }
+
+        [Test]
+        public void PaletteFor_DeerSpirit_HasCreamFawnFur()
+        {
+            // Deer spirit cream fawn fur — warm earthy R > G > B same as boar/rabbit, but lighter:
+            // tunic brightness > 0.5 (vs boar < 0.4) phân biệt visual hierarchy.
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.DeerSpiritId);
+            Assert.Greater(p.tunic.r, p.tunic.g);
+            Assert.Greater(p.tunic.g, p.tunic.b);
+            float tunicBrightness = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+            Assert.Greater(tunicBrightness, 0.5f, "Deer fawn fur should be lighter than boar (graceful vs heavy).");
+        }
+
+        [Test]
+        public void PaletteFor_DeerSpirit_TailIsWhiteFlick()
+        {
+            // Deer white tail flick — brighter than fawn body fur (visual silhouette accent).
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.DeerSpiritId);
+            float tailBrightness = (p.tail.r + p.tail.g + p.tail.b) / 3f;
+            float tunicBrightness = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+            Assert.Greater(tailBrightness, tunicBrightness,
+                "Deer tail flick should be brighter than fawn body fur.");
+        }
+
+        [Test]
         public void PaletteFor_UnknownId_FallsBackToNeutralGray()
         {
             var p = PuppetPlaceholderSpec.PaletteFor("doesnt_exist");
@@ -127,7 +161,9 @@ namespace WildernessCultivation.Tests.EditMode
                 PuppetPlaceholderSpec.PlayerId,
                 PuppetPlaceholderSpec.WolfId,
                 PuppetPlaceholderSpec.FoxSpiritId,
-                PuppetPlaceholderSpec.RabbitId
+                PuppetPlaceholderSpec.RabbitId,
+                PuppetPlaceholderSpec.BoarId,
+                PuppetPlaceholderSpec.DeerSpiritId
             })
             {
                 var p = PuppetPlaceholderSpec.PaletteFor(id);

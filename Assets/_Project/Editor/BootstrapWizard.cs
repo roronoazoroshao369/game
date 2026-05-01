@@ -1303,16 +1303,47 @@ namespace WildernessCultivation.EditorTools
         static GameObject BuildBoarPrefab(Sprite sprite, ItemSO meat, ItemSO hide, ItemSO tusk)
         {
             var go = new GameObject("Boar");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 3;
+            // Puppet path: Art/Characters/boar/ có Head + Torso PNG → multi-piece quadruped
+            // hierarchy. Tunings: heavy mob — slowest step (3.5Hz match charge AI), heavier
+            // rigid leg swing (22°), short stiff bristly tail (8° — minimal sway), referenceSpeed
+            // 1.4 (match BoarAI moveSpeed). placeholderHeightPx 36 → larger silhouette than wolf.
+            // PR M placeholder skeleton fallback nếu user chưa drop real PNG.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("boar", placeholderHeightPx: 36)
+                ?? BuildPlaceholderSpriteSet("boar", includeTail: true);
+            AssertPuppetSpritesLoaded("boar", puppetSet);
+            SpriteRenderer sr = null;
+            {
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
+                puppet.walkFrequency = 3.5f;
+                puppet.armSwingDeg = 22f;
+                puppet.legSwingDeg = 22f;
+                puppet.tailSwayDeg = 8f;
+                puppet.referenceSpeed = 1.4f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
+            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             var col = go.AddComponent<CircleCollider2D>();
             col.radius = 0.45f;
             var ai = go.AddComponent<BoarAI>();
-            ai.spriteRenderer = sr;
+            ai.spriteRenderer = sr;  // null — puppet system handles sprite setup
             ai.maxHP = 45f;
             ai.HP = 45f;
             ai.moveSpeed = 1.4f;
@@ -1329,23 +1360,53 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.35f, scaleX: 1.1f, scaleY: 0.4f);
             AttachMobHitFx(go, knockbackImpulse: 3.5f);
-            AttachMobAnim(go, walkBobFreq: 3f, maxTiltDeg: 3f, walkBobAmp: 0.04f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Boar.prefab");
         }
 
         static GameObject BuildDeerSpiritPrefab(Sprite sprite, ItemSO spiritMeat, ItemSO antler)
         {
             var go = new GameObject("DeerSpirit");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 3;
+            // Puppet path: Art/Characters/deer_spirit/ có Head + Torso PNG → multi-piece
+            // quadruped hierarchy. Tunings: graceful prancing — fast step (5Hz), elegant long
+            // legs (30°), gentle arm swing (24°), short white tail flick (12°), referenceSpeed
+            // 2.0 (match DeerSpiritAI moveSpeed). placeholderHeightPx 28 → slimmer than wolf.
+            // PR M placeholder skeleton fallback nếu user chưa drop real PNG.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("deer_spirit", placeholderHeightPx: 28)
+                ?? BuildPlaceholderSpriteSet("deer_spirit", includeTail: true);
+            AssertPuppetSpritesLoaded("deer_spirit", puppetSet);
+            SpriteRenderer sr = null;
+            {
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
+                puppet.walkFrequency = 5f;
+                puppet.armSwingDeg = 24f;
+                puppet.legSwingDeg = 30f;
+                puppet.tailSwayDeg = 12f;
+                puppet.referenceSpeed = 2.0f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
+            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             var col = go.AddComponent<CircleCollider2D>();
             col.radius = 0.35f;
             var ai = go.AddComponent<DeerSpiritAI>();
-            ai.spriteRenderer = sr;
+            ai.spriteRenderer = sr;  // null — puppet system handles sprite setup
             ai.maxHP = 16f;
             ai.HP = 16f;
             ai.moveSpeed = 2.0f;
@@ -1358,7 +1419,6 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.35f, scaleX: 0.9f, scaleY: 0.35f);
             AttachMobHitFx(go, knockbackImpulse: 2.2f);
-            AttachMobAnim(go, walkBobFreq: 4f, maxTiltDeg: 5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/DeerSpirit.prefab");
         }
 

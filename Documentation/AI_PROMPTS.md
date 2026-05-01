@@ -93,7 +93,9 @@ no lens flare, no ground beneath subject for body parts.
 | **Wolf** (`Art/Characters/wolf/`) | quadruped puppet | **7** | **21** | n/a | + tail (L2 chỉ áp dụng player-shaped puppet) |
 | **FoxSpirit** (`Art/Characters/fox_spirit/`) | quadruped puppet | **7** | **21** | n/a | + tail (hero feature ở N back-view) |
 | **Rabbit** (`Art/Characters/rabbit/`) | quadruped puppet (small) | **7** | **21** | n/a | + puffy white tail (hero feature) — §3.3.5 master + §3.6.4 bundle (Phase 2A) |
-| **Boar / Deer / Crow / Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 2B/3/4) |
+| **Boar** (`Art/Characters/boar/`) | quadruped puppet (heavy) | **7** | **21** | n/a | + bristly stub tail + tusks (head sprite) — §3.3.6 master + §3.6.5 bundle (Phase 2B) |
+| **Deer Spirit** (`Art/Characters/deer_spirit/`) | quadruped puppet (graceful) | **7** | **21** | n/a | + white tail flick + antlers (head sprite, hero feature) — §3.3.7 master + §3.6.6 bundle (Phase 2B) |
+| **Crow / Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 3/4) |
 | **Boss — Hắc Vương** | single-sprite | **3** | n/a | n/a | Phase 1 + Phase 2 enraged + death decay (xem §4.7-4.9) |
 
 **Per-tier breakdown cho Player (bipedal):**
@@ -104,7 +106,7 @@ no lens flare, no ground beneath subject for body parts.
 | Multi-dir L1 | 6 | 6 | 6 | mirror E (free) | **18** | Don't Starve / Stardew (DST style) |
 | Multi-dir L1 + L2 | 10 | 10 | 10 | mirror E (free) | **30** | Hades / Cuphead polish |
 
-**Per-tier cho Wolf / FoxSpirit / Rabbit (+ tail):**
+**Per-tier cho Wolf / FoxSpirit / Rabbit / Boar / Deer Spirit (+ tail):**
 
 | Tier | E | N | S | Total |
 |---|---|---|---|---|
@@ -118,13 +120,13 @@ no lens flare, no ground beneath subject for body parts.
 > - **Multi-dir (E+N+S)** = nhân vật **xoay theo hướng đi** (DST feel — đi lên thấy lưng, đi xuống thấy mặt) thay vì luôn nhìn ngang.
 > - **L2 elbow/knee** = tay / chân **gập tự nhiên** khi attack hoặc crouch (Hades polish) thay vì rigid limb thẳng.
 >
-> **Single-sprite mob** (Boar/Deer/Crow/Snake/Bat) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG. **Phase 2B/3/4** sẽ upgrade từng nhóm lên puppet (Phase 2B = Boar+Deer cùng pattern Wolf, Phase 3 = Crow/Bat wing rig, Phase 4 = Snake serpentine).
+> **Single-sprite mob** (Crow/Snake/Bat) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG. **Phase 3/4** sẽ upgrade nốt (Phase 3 = Crow/Bat wing rig, Phase 4 = Snake serpentine).
 
-**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player, 7 cho Wolf/Fox/Rabbit, 1 mỗi single-sprite mob = 5 PNG cho 5 mob đơn còn legacy) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
+**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player, 7 cho Wolf/Fox/Rabbit/Boar/Deer, 1 mỗi single-sprite mob = 3 PNG cho 3 mob đơn còn legacy) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
 
 **Required minimum để puppet build pass:** chỉ cần `head.png` + `torso.png` ở East/flat. Thiếu → fallback single-sprite (puppet không spawn). Limbs / tail optional — controller tự skip slot null.
 
-> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character. Hiện có: §3.6.1 Player (12 prompts → 18 PNG), §3.6.2 Wolf (14 → 20), §3.6.3 FoxSpirit (14 → 20), §3.6.4 Rabbit (14 → 20). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
+> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character. Hiện có: §3.6.1 Player (12 prompts → 18 PNG), §3.6.2 Wolf (14 → 20), §3.6.3 FoxSpirit (14 → 20), §3.6.4 Rabbit (14 → 20), §3.6.5 Boar (14 → 20), §3.6.6 Deer Spirit (14 → 20). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
 
 ### 3.1 Player — Cultivation Hero (`Art/Characters/player/`)
 
@@ -509,6 +511,224 @@ outline.
 Composition: 128x128 px (square — cottontail nearly round), isolated
 tail on transparent, root edge LEFT (pivot point at hip attachment),
 NO body.
+```
+
+### 3.3.6 Boar — Hắc Trư Tusked Charger (`Art/Characters/boar/`)
+
+> **Concept:** wild forest boar (hắc trư) — heavy muscular quadruped, **bristly dark brown/black coarse fur** (NOT smooth like wolf), **curved ivory tusks** (hero feature visible from side), low-slung head, short stiff bristly stub tail, cloven black hooves. Aggressive charger silhouette — neck thick, shoulders hunched. NOT cute farm pig — feral wilderness predator.
+>
+> **Scale note:** boar ~larger silhouette than wolf (36px placeholder height vs 32px). Body bulkier — torso wider proportions (288×208 vs wolf 256×192). Sprite res same as wolf otherwise.
+
+```
+=== boar/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: side view of a wild boar HEAD ONLY, profile facing right,
+heavy lowered head with thick neck stub, small angry beady eye,
+broad flat snout with twin nostrils, **TWO CURVED IVORY TUSKS**
+protruding upward from lower jaw (hero feature — clearly visible
+from side, slightly yellowed bone tone), short pointed ear pricked
+forward (alert/aggressive), bristly coarse fur on forehead and jowl,
+NO body, NO neck below jaw cut.
+
+Palette: dark brown #4d3a28 fur base, deep shadow #2a1f15 deep
+shadow, fur highlight #8b6f47 forehead ridge highlight, ivory
+#d4c8a3 tusk, dark nose #1a1a1a eye and nostril, bone white #c2c4ba
+inner ear hint.
+
+Composition: 256x256 px, isolated head on transparent background,
+tusks fully visible (do NOT crop), NO body, NO ground, NO shadow.
+```
+
+```
+=== boar/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: SIDE VIEW of a wild boar BODY ONLY (no head, no legs, no
+tail), oriented HORIZONTAL with shoulder-end on RIGHT, hip-end on
+LEFT, heavy muscular torso with hunched shoulder hump (boar
+characteristic), bristly dark brown fur with coarse texture (NOT
+smooth — visible bristle clumps + spine ridge), low-slung belly,
+neutral horizontal pose. Clean cuts at neck (right edge), hips
+(left edge), shoulders/hip joints (bottom edge for legs).
+
+Palette: dark brown #4d3a28 fur base, deep shadow #2a1f15 belly
+shadow, fur highlight #8b6f47 spine ridge bristle highlight, deep
+shadow #2a1f15 underside, ink black #1a1a1a outline at fur edges
+and bristle clumps.
+
+Composition: 288x208 px (HORIZONTAL — boar body bulkier than wolf),
+isolated body on transparent background, NO head, NO legs, NO tail,
+NO ground.
+```
+
+```
+=== boar/arm_left.png === / === boar/arm_right.png === (FRONT LEGS)
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a wild boar's FRONT LEG, sturdy planted pose,
+short heavy forelimb (boar legs proportionally short for body bulk),
+bristly dark brown fur thigh, **black cloven hoof** at bottom (split
+hoof tip), no toenail, NO body, NO ground contact.
+
+Palette: dark brown #4d3a28 fur base, deep shadow #2a1f15 leg
+shadow, fur highlight #8b6f47 thigh highlight, dark hoof #1a1a1a
+cloven hoof tip, ink black #1a1a1a outline.
+
+Composition: 144x224 px (vertical), isolated single front leg on
+transparent, top edge clean at shoulder joint (pivot), bottom at
+hoof, NO body.
+```
+
+```
+=== boar/leg_left.png === / === boar/leg_right.png === (BACK LEGS)
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a wild boar's BACK LEG, sturdy planted pose,
+heavy hind limb with thick haunch muscle (boar charge anatomy —
+explosive thigh), bristly fur, **black cloven hoof** at bottom, NO
+body, NO ground contact.
+
+Palette: same boar palette — dark brown, deep shadow, fur highlight,
+dark hoof, ink outline.
+
+Composition: 160x240 px (vertical, slightly taller than front leg
+to hint hindquarter dominance), isolated single back leg, top edge
+clean at hip joint (pivot), bottom at hoof, NO body.
+```
+
+```
+=== boar/tail.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a wild boar's SHORT BRISTLY TAIL — short stiff
+stub (~half the length of wolf tail, NOT puffy NOT swishy), straight
+horizontal pose with slight twist, bristly dark fur with coarse
+clumps at tip, oriented HORIZONTAL, attaches at LEFT edge (root),
+tail tip extends to RIGHT, NO body.
+
+Palette: deep shadow #2a1f15 base fur, dark brown #4d3a28 mid-tone,
+fur highlight #8b6f47 tip bristle, ink black #1a1a1a outline.
+
+Composition: 128x96 px (short rectangle — tail is stub-length),
+isolated tail on transparent, root edge LEFT (pivot point at hip
+attachment), NO body.
+```
+
+### 3.3.7 Deer Spirit — Linh Lộc Antlered Spirit (`Art/Characters/deer_spirit/`)
+
+> **Concept:** mystical forest deer (linh lộc) — slender graceful quadruped, cream/fawn fur with white belly, **branching ivory antlers with subtle qi-green glow at tips** (hero feature visible from side), large gentle dark eye, long slender legs built for prancing, short white tail flick (raised when alert). NOT a generic doe — wuxia spirit beast with subtle ethereal qi presence. Antler size moderate (4-prong fork), NOT massive elk rack.
+>
+> **Scale note:** deer ~slimmer silhouette than wolf (28px placeholder height vs 32px). Body slender — torso narrower proportions (240×176 vs wolf 256×192). Legs longer relative to body.
+
+```
+=== deer_spirit/head.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: side view of a spirit deer HEAD ONLY, profile facing right,
+elegant elongated face with delicate muzzle, large gentle dark eye
+with subtle qi shimmer, twitching black nose, **PAIR OF BRANCHING
+IVORY ANTLERS** rising from forehead (hero feature — 4-prong fork
+each side, ivory bone with subtle pale jade green qi glow at tips),
+tall pointed ear pricked alertly, slender neck stub, NO body.
+
+Palette: cream fawn #b89968 fur base, warm shadow #6b5237 deep
+shadow, fur highlight #d4b896 cheek and forehead highlight, ivory
+#c4a574 antler base, jade green #a8c69b faint qi glow at antler
+tips, dark nose #1a1a1a eye and nose, white #e8d5a6 inner ear and
+muzzle.
+
+Composition: 256x288 px (TALLER than wolf head — antlers add
+vertical extent), isolated head on transparent background, antlers
+fully visible (do NOT crop tips), NO body, NO ground, NO shadow.
+```
+
+```
+=== deer_spirit/torso.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: SIDE VIEW of a spirit deer BODY ONLY (no head, no legs, no
+tail), oriented HORIZONTAL with shoulder-end on RIGHT, hip-end on
+LEFT, slender elegant torso (NOT bulky — graceful prancer
+proportions), cream fawn fur on back fading to white belly underside
+(deer countershading — pale belly is signature visual), neutral
+horizontal pose. Clean cuts at neck (right edge), hips (left edge),
+shoulders/hip joints (bottom edge for legs).
+
+Palette: cream fawn #b89968 fur base, warm shadow #6b5237 belly
+fade shadow, fur highlight #d4b896 spine ridge highlight, white
+#e8d5a6 belly underside (countershading), ink black #1a1a1a outline.
+
+Composition: 240x176 px (HORIZONTAL — deer body slimmer than wolf),
+isolated body on transparent background, NO head, NO legs, NO tail,
+NO ground.
+```
+
+```
+=== deer_spirit/arm_left.png === / === deer_spirit/arm_right.png === (FRONT LEGS)
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a spirit deer's FRONT LEG, slender standing
+pose, long graceful forelimb (deer legs are MUCH longer + thinner
+than wolf — proportionally elegant), cream fawn fur on thigh fading
+to darker shin, **dark cloven hoof** at bottom (small split hoof,
+delicate), NO body, NO ground contact.
+
+Palette: cream fawn #b89968 fur base, warm shadow #6b5237 leg
+shadow, fur highlight #d4b896 thigh highlight, dark hoof #2a1f15
+cloven hoof, ink black #1a1a1a outline.
+
+Composition: 128x256 px (vertical, longer than wolf front leg —
+deer legs taller), isolated single front leg on transparent, top
+edge clean at shoulder joint (pivot), bottom at hoof, NO body.
+```
+
+```
+=== deer_spirit/leg_left.png === / === deer_spirit/leg_right.png === (BACK LEGS)
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a spirit deer's BACK LEG, slender standing
+pose with subtle bend at hock joint (deer hock anatomy — bend looks
+"backward" vs human knee), long graceful hind limb, cream fawn fur,
+**dark cloven hoof** at bottom, NO body, NO ground contact.
+
+Palette: same deer palette — cream fawn, warm shadow, fur highlight,
+dark hoof, ink outline.
+
+Composition: 144x288 px (vertical, longest leg sprite — deer
+hindquarter taller than forelimb for prancing), isolated single
+back leg, top edge clean at hip joint (pivot), bottom at hoof, NO
+body.
+```
+
+```
+=== deer_spirit/tail.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: side view of a spirit deer's SHORT WHITE TAIL FLICK — tiny
+upturned puff (deer tail signature — small but bright white,
+typically raised when alert), oriented HORIZONTAL with slight upward
+angle, attaches at LEFT edge (root), tail tip extends to RIGHT but
+also UPWARD, white fur with cream fawn base color underneath, NO
+body.
+
+Palette: white #e8d5a6 fur tip (brightest), cream fawn #b89968
+base color underneath, warm shadow #6b5237 underside shadow, ink
+black #1a1a1a outline.
+
+Composition: 96x128 px (small tail, slightly taller than wide due
+to upturned angle), isolated tail on transparent, root edge LEFT
+(pivot point at hip attachment), NO body.
 ```
 
 ### 3.4 Multi-Direction (L3+) Variants
@@ -1192,6 +1412,349 @@ angle), isolated tail on transparent, root TOP pivot, NO body.
 
 # NOTE: Same as wolf/S/tail.png and fox_spirit/S/tail.png — front
 # view rabbit body fully hides cottontail behind torso.
+# Skip recommended → controller fallback East sprite cho slot này.
+
+Skip recommended.
+```
+
+#### 3.4.5 Boar — N (Back View) + S (Front View)
+
+> **Cross-dir consistency rule:** Same palette + same brush stroke as §3.3.6 E. Only VIEW changes (subject sentence + composition note).
+>
+> **Hero feature note:** Boar's signature shoulder hump + spine bristle ridge dominant from N (back view). From S (front view) the **two curved tusks visible face-on** — most menacing angle. Stub tail fully hidden behind body from S → SKIP `S/tail.png`.
+
+```
+=== boar/N/head.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of a wild boar HEAD ONLY, back of skull facing
+camera, thick neck stub prominent, short pointed ears pricked
+forward (visible from behind as twin pointed silhouette), bristly
+dark fur on nape and skull crest, NO face features (back of head
+only), NO body.
+
+Palette: same as E (dark brown #4d3a28 fur base, deep shadow
+#2a1f15, fur highlight #8b6f47 nape ridge, ink black outline).
+
+Composition: 256x256 px, isolated head, NO body, NO ground.
+```
+
+```
+=== boar/S/head.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of wild boar HEAD ONLY, face directly facing
+camera, **TWO CURVED IVORY TUSKS visible face-on rising upward
+symmetric** (hero feature from front — most menacing angle), broad
+flat snout centered with twin nostrils, two small angry beady eyes
+symmetric (NOT cute — feral aggressive), short pointed ears pricked
+forward symmetric, bristly dark fur framing face, NO body.
+
+Palette: same as E.
+
+Composition: 256x256 px, isolated head, perfectly symmetric front-
+facing, tusks fully visible (do NOT crop), NO body.
+```
+
+```
+=== boar/N/torso.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of wild boar BODY ONLY, oriented VERTICAL — boar
+charging away from camera, **prominent shoulder hump + spine bristle
+ridge dominant** (hero feature from rear — coarse bristle clumps
+along spine), heavy muscular silhouette tapering toward hip area at
+bottom, NO head, NO legs, NO tail.
+
+Palette: same as E + emphasis on fur highlight #8b6f47 spine bristle
+ridge (rendered ~30% stronger than side view).
+
+Composition: 208x288 px (vertical), isolated body on transparent,
+NO head, NO legs, NO tail.
+```
+
+```
+=== boar/S/torso.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of wild boar BODY ONLY, oriented VERTICAL —
+boar facing camera head-on, broad muscular chest dominant (boar
+chest plate hero feature from front — wider than wolf/deer), thick
+neck stub joining at top, low-slung belly tapering at bottom, NO
+head, NO legs, NO tail.
+
+Palette: same as E.
+
+Composition: 208x288 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== boar/N/arm_left.png === / === boar/N/arm_right.png === (BACK VIEW front legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of wild boar FRONT LEG, viewed from behind,
+short heavy forelimb (boar legs short for body bulk), bristly dark
+brown fur on back of leg, **black cloven hoof** at bottom from rear
+angle, NO body.
+
+Palette: same as E.
+
+Composition: 144x224 px (vertical), isolated single front leg, top
+edge at shoulder joint pivot, bottom at hoof.
+```
+
+```
+=== boar/S/arm_left.png === / === boar/S/arm_right.png === (FRONT VIEW front legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of wild boar FRONT LEG, viewed from front,
+short heavy forelimb planted forward, bristly dark fur, **black
+cloven hoof** facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 144x224 px (vertical), isolated single front leg, top
+at shoulder, bottom at hoof.
+```
+
+```
+=== boar/N/leg_left.png === / === boar/N/leg_right.png === (BACK VIEW back legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of wild boar BACK LEG, viewed from behind,
+heavy hindquarter with thick haunch muscle from rear angle (charge
+muscle hero from rear), bristly fur, **black cloven hoof** at
+bottom from rear, NO body.
+
+Palette: same as E.
+
+Composition: 160x240 px (vertical, slightly taller than front leg),
+isolated single back leg, top at hip pivot, bottom at hoof.
+```
+
+```
+=== boar/S/leg_left.png === / === boar/S/leg_right.png === (FRONT VIEW back legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of wild boar BACK LEG, viewed from front,
+heavy haunch visible from front, bristly fur, **black cloven hoof**
+facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 160x240 px (vertical), isolated single back leg, top
+at hip, bottom at hoof.
+```
+
+```
+=== boar/N/tail.png === (BACK VIEW tail — short stub from rear)
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of wild boar SHORT BRISTLY TAIL — tiny stiff
+stub viewed from rear (less prominent than wolf/fox tail since
+boar tail is bristle stub, not swishy plume), oriented with
+attachment ROOT at TOP (hip back), tail extends slightly DOWN as
+short coarse bristle clump, dark fur, NO body.
+
+Palette: same as E (deep shadow + dark brown + fur highlight at
+bristle tip).
+
+Composition: 96x128 px (small rectangle — tail is stub from any
+angle), isolated tail on transparent, root TOP pivot, NO body.
+```
+
+```
+=== boar/S/tail.png === (FRONT VIEW tail — fully hidden)
+
+# NOTE: Same as wolf/S/tail.png — front view boar body fully hides
+# stub tail behind torso. Boar tail is even less visible than wolf
+# tail since it's stub-length.
+# Skip recommended → controller fallback East sprite cho slot này.
+
+Skip recommended.
+```
+
+#### 3.4.6 Deer Spirit — N (Back View) + S (Front View)
+
+> **Cross-dir consistency rule:** Same palette + same brush stroke as §3.3.7 E. Only VIEW changes (subject sentence + composition note).
+>
+> **Hero feature note:** Deer's antler silhouette dominant from N (back view) — viewer sees branching antler fork from behind framed by ears, plus white tail flick raised when alert. From S (front view) the **antlers visible face-on symmetric** — most regal angle, plus white belly + chest dominant. Tail fully hidden behind body from S → SKIP `S/tail.png`.
+
+```
+=== deer_spirit/N/head.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: BACK VIEW of spirit deer HEAD ONLY, back of skull facing
+camera, **PAIR OF BRANCHING IVORY ANTLERS rising prominently from
+forehead** (hero feature from rear — 4-prong fork each side, ivory
+bone with subtle pale jade green qi glow at tips), tall pointed
+ears pricked alertly visible from behind framing antler base, cream
+fawn fur on nape, NO face features (back of head only), NO body.
+
+Palette: same as E (cream fawn #b89968 fur base, warm shadow #6b5237,
+ivory #c4a574 antler, jade green #a8c69b qi tip glow, fur highlight
+#d4b896 nape).
+
+Composition: 256x288 px (TALLER than wolf head — antlers add
+vertical extent), isolated head, antlers fully visible (do NOT
+crop tips), NO body.
+```
+
+```
+=== deer_spirit/S/head.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: FRONT VIEW of spirit deer HEAD ONLY, face directly facing
+camera, **PAIR OF BRANCHING IVORY ANTLERS rising symmetric face-on
+visible** (hero feature from front — 4-prong fork each side framing
+face like a crown, ivory bone with pale jade green qi glow tips),
+two large gentle dark eyes prominent and symmetric (most expressive
+angle), twitching black nose centered, tall pointed ears pricked
+alertly symmetric, cream fawn cheek fur framing face, NO body.
+
+Palette: same as E.
+
+Composition: 256x288 px (taller — antlers visible), isolated head,
+perfectly symmetric front-facing, antlers fully visible, NO body.
+```
+
+```
+=== deer_spirit/N/torso.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: BACK VIEW of spirit deer BODY ONLY, oriented VERTICAL —
+deer prancing away from camera, slender elegant silhouette with
+cream fawn fur on back, narrow shoulders at top, hip area at bottom
+where tail attaches, **white belly hint visible on flanks** (deer
+countershading shows on flanks even from rear), NO head, NO legs,
+NO tail.
+
+Palette: same as E.
+
+Composition: 176x240 px (vertical, slimmer than wolf), isolated body
+on transparent, NO head, NO legs, NO tail.
+```
+
+```
+=== deer_spirit/S/torso.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: FRONT VIEW of spirit deer BODY ONLY, oriented VERTICAL —
+deer facing camera head-on, **white belly + chest dominant from
+front** (hero feature from this angle — countershading creates
+striking white-on-fawn silhouette), narrow elegant shoulders at top,
+slim chest fading to white belly at bottom, NO head, NO legs, NO
+tail.
+
+Palette: same as E + emphasis on white #e8d5a6 belly underside
+(rendered ~30% larger area than side view).
+
+Composition: 176x240 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== deer_spirit/N/arm_left.png === / === deer_spirit/N/arm_right.png === (BACK VIEW front legs)
+
+hand-painted painterly, spirit beast.
+
+Subject: BACK VIEW of spirit deer FRONT LEG, viewed from behind,
+long graceful slender forelimb (deer legs much taller + thinner
+than wolf), cream fawn fur fading to darker shin from rear angle,
+**dark cloven hoof** at bottom from behind, NO body.
+
+Palette: same as E.
+
+Composition: 128x256 px (vertical, longer than wolf front leg),
+isolated single front leg, top edge at shoulder joint pivot, bottom
+at hoof.
+```
+
+```
+=== deer_spirit/S/arm_left.png === / === deer_spirit/S/arm_right.png === (FRONT VIEW front legs)
+
+hand-painted painterly, spirit beast.
+
+Subject: FRONT VIEW of spirit deer FRONT LEG, viewed from front,
+long graceful slender forelimb planted forward, cream fawn fur,
+**dark cloven hoof** facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 128x256 px (vertical), isolated single front leg, top
+at shoulder, bottom at hoof.
+```
+
+```
+=== deer_spirit/N/leg_left.png === / === deer_spirit/N/leg_right.png === (BACK VIEW back legs)
+
+hand-painted painterly, spirit beast.
+
+Subject: BACK VIEW of spirit deer BACK LEG, viewed from behind,
+long slender hind limb with subtle bend at hock (deer hock anatomy
+— bend looks "backward" vs human knee, visible from rear), cream
+fawn fur, **dark cloven hoof** at bottom from rear, NO body.
+
+Palette: same as E.
+
+Composition: 144x288 px (vertical, longest leg sprite), isolated
+single back leg, top at hip pivot, bottom at hoof.
+```
+
+```
+=== deer_spirit/S/leg_left.png === / === deer_spirit/S/leg_right.png === (FRONT VIEW back legs)
+
+hand-painted painterly, spirit beast.
+
+Subject: FRONT VIEW of spirit deer BACK LEG, viewed from front,
+long slender hind limb visible from front, cream fawn fur, **dark
+cloven hoof** facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 144x288 px (vertical), isolated single back leg, top
+at hip, bottom at hoof.
+```
+
+```
+=== deer_spirit/N/tail.png === (BACK VIEW tail — white flick raised hero from rear)
+
+hand-painted painterly, spirit beast.
+
+Subject: BACK VIEW of spirit deer SHORT WHITE TAIL FLICK — tiny
+upturned puff viewed from rear (hero feature from this angle when
+deer alert — bright white flick stands out against fawn back),
+oriented with attachment ROOT at TOP (hip back), tail body extends
+slightly UPWARD as small white puff, white fur with cream fawn
+underneath, NO body.
+
+Palette: white #e8d5a6 fur tip dominant (brightest — 40% stronger
+than side view since white flick is signature alert showcase),
+cream fawn #b89968 base color, warm shadow #6b5237 underside.
+
+Composition: 96x128 px (small tail upturned), isolated tail on
+transparent, root TOP pivot, NO body.
+```
+
+```
+=== deer_spirit/S/tail.png === (FRONT VIEW tail — fully hidden)
+
+# NOTE: Same as wolf/S/tail.png — front view deer body fully hides
+# white tail flick behind torso.
 # Skip recommended → controller fallback East sprite cho slot này.
 
 Skip recommended.
@@ -2687,6 +3250,621 @@ parts, no carrot prop.
 
 ---
 
+#### 3.6.5 Boar — Hắc Trư Full DST Set (14 prompts → 20 PNG)
+
+> **Setup:** tạo `Assets/_Project/Art/Characters/boar/E/`, `boar/N/`, `boar/S/`. BootstrapWizard sẽ build puppet hierarchy với multi-dir sprite swap khi boar di chuyển.
+>
+> **Quadruped pivot map:** giống wolf/fox — torso horizontal E / vertical N+S, arms = front legs (heavy short), legs = back legs (heavy haunch), tail = bristly stub.
+>
+> **Hero feature:** **curved ivory tusks** — visible từ E side (twin tusks rising upward) và **dominant từ S front view** (face-on most menacing angle). N back view shows shoulder hump + bristle ridge along spine.
+>
+> **S/tail skip:** giống wolf/fox/rabbit — front-view body chắn stub tail (boar tail càng nhỏ hơn nên càng không thấy). Controller fallback `boar/E/tail.png` runtime.
+>
+> **Style anchor:** wild feral aggressive forest boar, NOT cute farm pig, NOT cartoon Disney boar, NOT chibi — heavy charger silhouette với bristly coarse fur + visible tusks.
+>
+> **W (West):** mirror E lúc runtime — KHÔNG cần gen W folder.
+>
+> **Resolution scale:** boar ~larger than wolf (placeholderHeightPx 36 vs 32). Head/torso res same as wolf otherwise (256/288), legs slightly bulkier.
+
+##### E (East / side view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/E/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: side view of a wild boar HEAD ONLY, profile facing right,
+heavy lowered head with thick neck stub, small angry beady eye,
+broad flat snout with twin nostrils, **TWO CURVED IVORY TUSKS**
+protruding upward from lower jaw (hero feature — clearly visible
+from side, slightly yellowed bone tone), short pointed ear pricked
+forward (alert/aggressive), bristly coarse fur on forehead and jowl,
+NO body, NO neck below jaw cut.
+
+Palette: dark brown #4d3a28 fur base, deep shadow #2a1f15 deep
+shadow, fur highlight #8b6f47 forehead ridge highlight, ivory
+#d4c8a3 tusk, dark nose #1a1a1a eye and nostril, bone white #c2c4ba
+inner ear hint.
+
+Composition: 256x256 px, isolated head on transparent background,
+tusks fully visible (do NOT crop), NO body, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/E/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: SIDE VIEW of a wild boar BODY ONLY (no head, no legs, no
+tail), oriented HORIZONTAL with shoulder-end on RIGHT, hip-end on
+LEFT, heavy muscular torso with hunched shoulder hump (boar
+characteristic), bristly dark brown fur with coarse texture (NOT
+smooth — visible bristle clumps + spine ridge), low-slung belly,
+neutral horizontal pose. Clean cuts at neck (right edge), hips
+(left edge), shoulders/hip joints (bottom edge for legs).
+
+Palette: dark brown #4d3a28 fur base, deep shadow #2a1f15 belly
+shadow, fur highlight #8b6f47 spine ridge bristle highlight, deep
+shadow #2a1f15 underside, ink black #1a1a1a outline at fur edges
+and bristle clumps.
+
+Composition: 288x208 px (HORIZONTAL — boar body bulkier than wolf),
+isolated body on transparent, NO head, NO legs, NO tail, NO ground.
+```
+
+```
+=== Save to: Art/Characters/boar/E/arm_left.png  AND  arm_right.png  (FRONT LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a wild boar's FRONT LEG, sturdy planted pose,
+short heavy forelimb (boar legs proportionally short for body bulk),
+bristly dark brown fur thigh, **black cloven hoof** at bottom (split
+hoof tip), no toenail, NO body, NO ground contact.
+
+Palette: dark brown #4d3a28 fur base, deep shadow #2a1f15 leg
+shadow, fur highlight #8b6f47 thigh highlight, dark hoof #1a1a1a
+cloven hoof tip, ink black #1a1a1a outline.
+
+Composition: 144x224 px (vertical), isolated single front leg, top
+edge clean at shoulder joint (pivot), bottom at hoof, NO body.
+
+# NOTE: gen 1 lần rồi flip horizontal cho arm_right (Photopea/GIMP).
+```
+
+```
+=== Save to: Art/Characters/boar/E/leg_left.png  AND  leg_right.png  (BACK LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a wild boar's BACK LEG, sturdy planted pose,
+heavy hind limb with thick haunch muscle (boar charge anatomy —
+explosive thigh), bristly fur, **black cloven hoof** at bottom, NO
+body, NO ground contact.
+
+Palette: same boar palette — dark brown, deep shadow, fur highlight,
+dark hoof, ink outline.
+
+Composition: 160x240 px (vertical, slightly taller than front leg
+to hint hindquarter dominance), isolated single back leg, top edge
+clean at hip joint (pivot), bottom at hoof, NO body.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/E/tail.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a wild boar's SHORT BRISTLY TAIL — short stiff
+stub (~half the length of wolf tail, NOT puffy NOT swishy), straight
+horizontal pose with slight twist, bristly dark fur with coarse
+clumps at tip, oriented HORIZONTAL, attaches at LEFT edge (root),
+tail tip extends to RIGHT, NO body.
+
+Palette: deep shadow #2a1f15 base fur, dark brown #4d3a28 mid-tone,
+fur highlight #8b6f47 tip bristle, ink black #1a1a1a outline.
+
+Composition: 128x96 px (short rectangle — tail is stub-length),
+isolated tail on transparent, root edge LEFT (pivot point at hip
+attachment), NO body.
+```
+
+##### N (North / back view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/N/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of a wild boar HEAD ONLY, back of skull facing
+camera, thick neck stub prominent, short pointed ears pricked
+forward (visible from behind as twin pointed silhouette), bristly
+dark fur on nape and skull crest, NO face features (back of head
+only), NO body.
+
+Palette: same as E (dark brown #4d3a28 fur base, deep shadow
+#2a1f15, fur highlight #8b6f47 nape ridge, ink black outline).
+
+Composition: 256x256 px, isolated head, NO body, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/N/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of wild boar BODY ONLY, oriented VERTICAL — boar
+charging away from camera, **prominent shoulder hump + spine bristle
+ridge dominant** (hero feature from rear — coarse bristle clumps
+along spine), heavy muscular silhouette tapering toward hip area at
+bottom, NO head, NO legs, NO tail.
+
+Palette: same as E + emphasis on fur highlight #8b6f47 spine bristle
+ridge (rendered ~30% stronger than side view).
+
+Composition: 208x288 px (vertical), isolated body on transparent,
+NO head, NO legs, NO tail.
+```
+
+```
+=== Save to: Art/Characters/boar/N/arm_left.png  AND  arm_right.png  (BACK VIEW front legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of wild boar FRONT LEG, viewed from behind,
+short heavy forelimb (boar legs short for body bulk), bristly dark
+brown fur on back of leg, **black cloven hoof** at bottom from rear
+angle, NO body.
+
+Palette: same as E.
+
+Composition: 144x224 px (vertical), isolated single front leg, top
+edge at shoulder joint pivot, bottom at hoof.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/boar/N/leg_left.png  AND  leg_right.png  (BACK VIEW back legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of wild boar BACK LEG, viewed from behind,
+heavy hindquarter with thick haunch muscle from rear angle (charge
+muscle hero from rear), bristly fur, **black cloven hoof** at
+bottom from rear, NO body.
+
+Palette: same as E.
+
+Composition: 160x240 px (vertical, slightly taller than front leg),
+isolated single back leg, top at hip pivot, bottom at hoof.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/N/tail.png ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of wild boar SHORT BRISTLY TAIL — tiny stiff
+stub viewed from rear (less prominent than wolf/fox tail since
+boar tail is bristle stub, not swishy plume), oriented with
+attachment ROOT at TOP (hip back), tail extends slightly DOWN as
+short coarse bristle clump, dark fur, NO body.
+
+Palette: same as E (deep shadow + dark brown + fur highlight at
+bristle tip).
+
+Composition: 96x128 px (small rectangle — tail is stub from any
+angle), isolated tail on transparent, root TOP pivot, NO body.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG (skip tail)
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/S/head.png === (HERO FEATURE — tusks face-on)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of wild boar HEAD ONLY, face directly facing
+camera, **TWO CURVED IVORY TUSKS visible face-on rising upward
+symmetric** (hero feature from front — most menacing angle), broad
+flat snout centered with twin nostrils, two small angry beady eyes
+symmetric (NOT cute — feral aggressive), short pointed ears pricked
+forward symmetric, bristly dark fur framing face, NO body.
+
+Palette: same as E.
+
+Composition: 256x256 px, isolated head, perfectly symmetric front-
+facing, tusks fully visible (do NOT crop), NO body.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boar/S/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of wild boar BODY ONLY, oriented VERTICAL —
+boar facing camera head-on, broad muscular chest dominant (boar
+chest plate hero feature from front — wider than wolf/deer), thick
+neck stub joining at top, low-slung belly tapering at bottom, NO
+head, NO legs, NO tail.
+
+Palette: same as E.
+
+Composition: 208x288 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== Save to: Art/Characters/boar/S/arm_left.png  AND  arm_right.png  (FRONT VIEW front legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of wild boar FRONT LEG, viewed from front,
+short heavy forelimb planted forward, bristly dark fur, **black
+cloven hoof** facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 144x224 px (vertical), isolated single front leg, top
+at shoulder, bottom at hoof.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/boar/S/leg_left.png  AND  leg_right.png  (FRONT VIEW back legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of wild boar BACK LEG, viewed from front,
+heavy haunch visible from front, bristly fur, **black cloven hoof**
+facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 160x240 px (vertical), isolated single back leg, top
+at hip, bottom at hoof.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+> **S/tail SKIP:** giống wolf/fox/rabbit — front-view body chắn stub tail. Controller fallback `boar/E/tail.png` runtime.
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi boar generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi cute
+piggy mascot, no farm pig, no peppa pig, no cartoon disney boar,
+no fluffy plush toy look, no pink skin, no smooth shaved fur, no
+pure black outline, no smooth airbrush gradient, no drop shadow
+on transparent background, no text, no watermark, no signature,
+no border, single subject only, no duplicate, no grid lines, no
+UI elements, no caption, no logo, no lens flare, no ground beneath
+subject for body parts.
+```
+
+---
+
+#### 3.6.6 Deer Spirit — Linh Lộc Full DST Set (14 prompts → 20 PNG)
+
+> **Setup:** tạo `Assets/_Project/Art/Characters/deer_spirit/E/`, `deer_spirit/N/`, `deer_spirit/S/`. BootstrapWizard sẽ build puppet hierarchy với multi-dir sprite swap khi deer di chuyển.
+>
+> **Quadruped pivot map:** giống wolf/fox — torso horizontal E / vertical N+S, arms = front legs (long slender), legs = back legs (long slender với hock bend), tail = white flick.
+>
+> **Hero feature:** **branching ivory antlers với jade green qi glow tips** — visible từ E (side fork visible) và **dominant từ S (face-on symmetric crown framing face)**. N back view shows antler silhouette + white tail flick raised. White belly countershading dominant từ S (front).
+>
+> **S/tail skip:** giống wolf/fox/rabbit/boar — front-view body chắn white tail flick. Controller fallback `deer_spirit/E/tail.png` runtime.
+>
+> **Style anchor:** wuxia spirit beast deer (linh lộc) with subtle ethereal qi presence, NOT generic doe, NOT cartoon Bambi, NOT chibi — graceful slender prancer với regal antler crown + gentle expressive eyes.
+>
+> **W (West):** mirror E lúc runtime — KHÔNG cần gen W folder.
+>
+> **Resolution scale:** deer ~slimmer than wolf (placeholderHeightPx 28 vs 32). Head taller (288px) để fit antler vertical extent. Torso slimmer (240×176 vs wolf 256×192). Legs longer (256/288px vs wolf 224/256px).
+
+##### E (East / side view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/E/head.png === (HERO FEATURE — antlers)
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: side view of a spirit deer HEAD ONLY, profile facing right,
+elegant elongated face with delicate muzzle, large gentle dark eye
+with subtle qi shimmer, twitching black nose, **PAIR OF BRANCHING
+IVORY ANTLERS** rising from forehead (hero feature — 4-prong fork
+each side, ivory bone with subtle pale jade green qi glow at tips),
+tall pointed ear pricked alertly, slender neck stub, NO body.
+
+Palette: cream fawn #b89968 fur base, warm shadow #6b5237 deep
+shadow, fur highlight #d4b896 cheek and forehead highlight, ivory
+#c4a574 antler base, jade green #a8c69b faint qi glow at antler
+tips, dark nose #1a1a1a eye and nose, white #e8d5a6 inner ear and
+muzzle.
+
+Composition: 256x288 px (TALLER than wolf head — antlers add
+vertical extent), isolated head on transparent background, antlers
+fully visible (do NOT crop tips), NO body, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/E/torso.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: SIDE VIEW of a spirit deer BODY ONLY (no head, no legs, no
+tail), oriented HORIZONTAL with shoulder-end on RIGHT, hip-end on
+LEFT, slender elegant torso (NOT bulky — graceful prancer
+proportions), cream fawn fur on back fading to white belly underside
+(deer countershading — pale belly is signature visual), neutral
+horizontal pose. Clean cuts at neck (right edge), hips (left edge),
+shoulders/hip joints (bottom edge for legs).
+
+Palette: cream fawn #b89968 fur base, warm shadow #6b5237 belly
+fade shadow, fur highlight #d4b896 spine ridge highlight, white
+#e8d5a6 belly underside (countershading), ink black #1a1a1a outline.
+
+Composition: 240x176 px (HORIZONTAL — deer body slimmer than wolf),
+isolated body on transparent, NO head, NO legs, NO tail, NO ground.
+```
+
+```
+=== Save to: Art/Characters/deer_spirit/E/arm_left.png  AND  arm_right.png  (FRONT LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a spirit deer's FRONT LEG, slender standing
+pose, long graceful forelimb (deer legs are MUCH longer + thinner
+than wolf — proportionally elegant), cream fawn fur on thigh fading
+to darker shin, **dark cloven hoof** at bottom (small split hoof,
+delicate), NO body, NO ground contact.
+
+Palette: cream fawn #b89968 fur base, warm shadow #6b5237 leg
+shadow, fur highlight #d4b896 thigh highlight, dark hoof #2a1f15
+cloven hoof, ink black #1a1a1a outline.
+
+Composition: 128x256 px (vertical, longer than wolf front leg —
+deer legs taller), isolated single front leg, top edge clean at
+shoulder joint (pivot), bottom at hoof, NO body.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/deer_spirit/E/leg_left.png  AND  leg_right.png  (BACK LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a spirit deer's BACK LEG, slender standing
+pose with subtle bend at hock joint (deer hock anatomy — bend looks
+"backward" vs human knee), long graceful hind limb, cream fawn fur,
+**dark cloven hoof** at bottom, NO body, NO ground contact.
+
+Palette: same deer palette — cream fawn, warm shadow, fur highlight,
+dark hoof, ink outline.
+
+Composition: 144x288 px (vertical, longest leg sprite — deer
+hindquarter taller than forelimb for prancing), isolated single
+back leg, top edge clean at hip joint (pivot), bottom at hoof, NO
+body.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/E/tail.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: side view of a spirit deer's SHORT WHITE TAIL FLICK — tiny
+upturned puff (deer tail signature — small but bright white,
+typically raised when alert), oriented HORIZONTAL with slight upward
+angle, attaches at LEFT edge (root), tail tip extends to RIGHT but
+also UPWARD, white fur with cream fawn base color underneath, NO
+body.
+
+Palette: white #e8d5a6 fur tip (brightest), cream fawn #b89968
+base color underneath, warm shadow #6b5237 underside shadow, ink
+black #1a1a1a outline.
+
+Composition: 96x128 px (small tail, slightly taller than wide due
+to upturned angle), isolated tail on transparent, root edge LEFT
+(pivot point at hip attachment), NO body.
+```
+
+##### N (North / back view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/N/head.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: BACK VIEW of spirit deer HEAD ONLY, back of skull facing
+camera, **PAIR OF BRANCHING IVORY ANTLERS rising prominently from
+forehead** (hero feature from rear — 4-prong fork each side, ivory
+bone with subtle pale jade green qi glow at tips), tall pointed
+ears pricked alertly visible from behind framing antler base, cream
+fawn fur on nape, NO face features (back of head only), NO body.
+
+Palette: same as E (cream fawn #b89968 fur base, warm shadow #6b5237,
+ivory #c4a574 antler, jade green #a8c69b qi tip glow, fur highlight
+#d4b896 nape).
+
+Composition: 256x288 px (TALLER than wolf head — antlers add
+vertical extent), isolated head, antlers fully visible (do NOT
+crop tips), NO body.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/N/torso.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: BACK VIEW of spirit deer BODY ONLY, oriented VERTICAL —
+deer prancing away from camera, slender elegant silhouette with
+cream fawn fur on back, narrow shoulders at top, hip area at bottom
+where tail attaches, **white belly hint visible on flanks** (deer
+countershading shows on flanks even from rear), NO head, NO legs,
+NO tail.
+
+Palette: same as E.
+
+Composition: 176x240 px (vertical, slimmer than wolf), isolated body
+on transparent, NO head, NO legs, NO tail.
+```
+
+```
+=== Save to: Art/Characters/deer_spirit/N/arm_left.png  AND  arm_right.png  (BACK VIEW front legs) ===
+
+hand-painted painterly, spirit beast.
+
+Subject: BACK VIEW of spirit deer FRONT LEG, viewed from behind,
+long graceful slender forelimb (deer legs much taller + thinner
+than wolf), cream fawn fur fading to darker shin from rear angle,
+**dark cloven hoof** at bottom from behind, NO body.
+
+Palette: same as E.
+
+Composition: 128x256 px (vertical, longer than wolf front leg),
+isolated single front leg, top edge at shoulder joint pivot, bottom
+at hoof.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/deer_spirit/N/leg_left.png  AND  leg_right.png  (BACK VIEW back legs) ===
+
+hand-painted painterly, spirit beast.
+
+Subject: BACK VIEW of spirit deer BACK LEG, viewed from behind,
+long slender hind limb with subtle bend at hock (deer hock anatomy
+— bend looks "backward" vs human knee, visible from rear), cream
+fawn fur, **dark cloven hoof** at bottom from rear, NO body.
+
+Palette: same as E.
+
+Composition: 144x288 px (vertical, longest leg sprite), isolated
+single back leg, top at hip pivot, bottom at hoof.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/N/tail.png === (HERO FEATURE — white flick raised from rear)
+
+hand-painted painterly, spirit beast.
+
+Subject: BACK VIEW of spirit deer SHORT WHITE TAIL FLICK — tiny
+upturned puff viewed from rear (hero feature from this angle when
+deer alert — bright white flick stands out against fawn back),
+oriented with attachment ROOT at TOP (hip back), tail body extends
+slightly UPWARD as small white puff, white fur with cream fawn
+underneath, NO body.
+
+Palette: white #e8d5a6 fur tip dominant (brightest — 40% stronger
+than side view since white flick is signature alert showcase),
+cream fawn #b89968 base color, warm shadow #6b5237 underside.
+
+Composition: 96x128 px (small tail upturned), isolated tail on
+transparent, root TOP pivot, NO body.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG (skip tail)
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/S/head.png === (HERO FEATURE — antlers face-on)
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: FRONT VIEW of spirit deer HEAD ONLY, face directly facing
+camera, **PAIR OF BRANCHING IVORY ANTLERS rising symmetric face-on
+visible** (hero feature from front — 4-prong fork each side framing
+face like a crown, ivory bone with pale jade green qi glow tips),
+two large gentle dark eyes prominent and symmetric (most expressive
+angle), twitching black nose centered, tall pointed ears pricked
+alertly symmetric, cream fawn cheek fur framing face, NO body.
+
+Palette: same as E.
+
+Composition: 256x288 px (taller — antlers visible), isolated head,
+perfectly symmetric front-facing, antlers fully visible, NO body.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/deer_spirit/S/torso.png ===
+
+hand-painted painterly, asian wuxia, spirit beast.
+
+Subject: FRONT VIEW of spirit deer BODY ONLY, oriented VERTICAL —
+deer facing camera head-on, **white belly + chest dominant from
+front** (hero feature from this angle — countershading creates
+striking white-on-fawn silhouette), narrow elegant shoulders at top,
+slim chest fading to white belly at bottom, NO head, NO legs, NO
+tail.
+
+Palette: same as E + emphasis on white #e8d5a6 belly underside
+(rendered ~30% larger area than side view).
+
+Composition: 176x240 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== Save to: Art/Characters/deer_spirit/S/arm_left.png  AND  arm_right.png  (FRONT VIEW front legs) ===
+
+hand-painted painterly, spirit beast.
+
+Subject: FRONT VIEW of spirit deer FRONT LEG, viewed from front,
+long graceful slender forelimb planted forward, cream fawn fur,
+**dark cloven hoof** facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 128x256 px (vertical), isolated single front leg, top
+at shoulder, bottom at hoof.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/deer_spirit/S/leg_left.png  AND  leg_right.png  (FRONT VIEW back legs) ===
+
+hand-painted painterly, spirit beast.
+
+Subject: FRONT VIEW of spirit deer BACK LEG, viewed from front,
+long slender hind limb visible from front, cream fawn fur, **dark
+cloven hoof** facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 144x288 px (vertical), isolated single back leg, top
+at hip, bottom at hoof.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+> **S/tail SKIP:** giống wolf/fox/rabbit/boar — front-view body chắn white tail flick. Controller fallback `deer_spirit/E/tail.png` runtime.
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi deer_spirit generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi cute deer
+mascot, no bambi cartoon, no rudolph reindeer, no fluffy plush toy
+look, no fairy tale unicorn, no pure black outline, no smooth
+airbrush gradient, no drop shadow on transparent background, no
+text, no watermark, no signature, no border, single subject only,
+no duplicate, no grid lines, no UI elements, no caption, no logo,
+no lens flare, no ground beneath subject for body parts, no flower
+crown decoration.
+```
+
+---
+
 ## 4. Single-Sprite Mobs
 
 > **Pipeline:** Drop single PNG `Sprites/{mobId}.png` (legacy gen_sprites.py path) hoặc Art/Mobs/{mobId}/sprite.png (sau khi MobArtImporter merge — chưa có).
@@ -2720,7 +3898,9 @@ Composition: 256x256 px, isolated single rabbit on transparent background,
 NO ground, NO shadow, centered.
 ```
 
-### 4.2 Boar — Lợn Rừng (Forest mob, aggressive)
+### 4.2 Boar — Lợn Rừng (Forest mob, aggressive) — **DEPRECATED → §3.3.6 / §3.6.5 puppet**
+
+> **Phase 2B migration:** Boar đã upgrade lên multi-piece quadruped puppet (mirror Wolf/Fox pattern). Master prompts ở §3.3.6, quick-copy bundle ở §3.6.5 (14 prompts → 20 PNG). Single-sprite prompt dưới giữ làm reference cho ai chỉ muốn flat fallback (1 PNG drop ở `Art/Characters/boar/E/torso.png` — controller fallback skeleton placeholder cho parts còn thiếu).
 
 ```
 === boar ===
@@ -2740,7 +3920,9 @@ Composition: 256x192 px (horizontal — boar wider than tall), isolated
 boar on transparent, NO ground.
 ```
 
-### 4.3 Deer Spirit — Linh Lộc (Forest mob, mystical)
+### 4.3 Deer Spirit — Linh Lộc (Forest mob, mystical) — **DEPRECATED → §3.3.7 / §3.6.6 puppet**
+
+> **Phase 2B migration:** Deer Spirit đã upgrade lên multi-piece quadruped puppet (mirror Wolf/Fox pattern). Master prompts ở §3.3.7, quick-copy bundle ở §3.6.6 (14 prompts → 20 PNG). Single-sprite prompt dưới giữ làm reference cho ai chỉ muốn flat fallback (1 PNG drop ở `Art/Characters/deer_spirit/E/torso.png` — controller fallback skeleton placeholder cho parts còn thiếu).
 
 ```
 === deer_spirit ===
@@ -4812,15 +5994,17 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Wolf puppet E (7 parts incl. tail) | 7 | 28 | $0.56 |
 | FoxSpirit puppet E | 7 | 28 | $0.56 |
 | Rabbit puppet E (Phase 2A — 7 parts incl. cottontail) | 7 | 28 | $0.56 |
-| Single-sprite mobs (Boar, Deer Spirit, Crow, Snake, Bat, Boss Phase 1) | 6 | 24 | $0.48 |
+| Boar puppet E (Phase 2B — 7 parts incl. bristly stub tail) | 7 | 28 | $0.56 |
+| Deer Spirit puppet E (Phase 2B — 7 parts incl. white tail flick) | 7 | 28 | $0.56 |
+| Single-sprite mobs (Crow, Snake, Bat, Boss Phase 1) | 4 | 16 | $0.32 |
 | Resources (12 nodes) | 12 | 48 | $0.96 |
 | Item icons (22) | 22 | 88 | $1.76 |
 | Tiles (12 seamless: 3 biome × 4 var) | 12 | 48 | $0.96 |
-| **Phase 1 subtotal** | **79** | **~316** | **~$6.32** |
+| **Phase 1 subtotal** | **91** | **~364** | **~$7.28** |
 
 ### Phase 2 — Multi-direction (L3 NSEW)
 
-> Add-on cho 4 puppet character (Player + Wolf + Fox + Rabbit). Mob single-sprite + resources + tiles KHÔNG cần.
+> Add-on cho 6 puppet character (Player + Wolf + Fox + Rabbit + Boar + Deer Spirit). Mob single-sprite + resources + tiles KHÔNG cần.
 
 | Group | Asset count | Image gen (4 var) | Baseline cost |
 |---|---|---|---|
@@ -4828,7 +6012,9 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Wolf N + S (7 × 2, skip S/tail → 13) | 13 | 52 | $1.04 |
 | FoxSpirit N + S (skip S/tail → 13) | 13 | 52 | $1.04 |
 | Rabbit N + S (Phase 2A — skip S/tail → 13) | 13 | 52 | $1.04 |
-| **Phase 2 subtotal** | **51** | **204** | **~$4.08** |
+| Boar N + S (Phase 2B — skip S/tail → 13) | 13 | 52 | $1.04 |
+| Deer Spirit N + S (Phase 2B — skip S/tail → 13) | 13 | 52 | $1.04 |
+| **Phase 2 subtotal** | **77** | **308** | **~$6.16** |
 
 ### Phase 3 — L2 elbow/knee (forearm + shin)
 
