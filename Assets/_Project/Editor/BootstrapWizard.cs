@@ -726,6 +726,27 @@ namespace WildernessCultivation.EditorTools
         }
 
         /// <summary>
+        /// Phase 3 — attach wing pivots cho flying mob (Crow / Bat). Wings = direct children
+        /// của <paramref name="spriteRoot"/> (giống arm) — pivot quanh "shoulder", flap rotate
+        /// quanh Z. Sorting layer: WingLeft = back (sortingOrderBase + 0, sau torso), WingRight =
+        /// front (sortingOrderBase + 4, trước arm) — silhouette side-view shows back wing emerging
+        /// behind body, front wing covering shoulder. Both wings attach at upper torso (Y=+0.15).
+        /// Missing PNG → null Transform → flap math no-op (PuppetAnimController null-skip).
+        /// </summary>
+        static void AddPuppetWings(
+            Transform spriteRoot,
+            Dictionary<CharacterArtSpec.PuppetRole, Sprite> sprites,
+            int sortingOrderBase,
+            out Transform wingLeft,
+            out Transform wingRight)
+        {
+            wingLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.WingLeft,
+                sortingOrderBase + 0, new Vector3(-0.15f, 0.15f, 0f));
+            wingRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.WingRight,
+                sortingOrderBase + 4, new Vector3(0.15f, 0.15f, 0f));
+        }
+
+        /// <summary>
         /// PR M — wrap placeholder sprite set thành <see cref="CharacterArtImporter.CharacterSpriteSet"/>
         /// (East-only, isMultiDirectional=false). Caller dùng giống real puppetSet → puppet path
         /// luôn active. Skeleton demo motion runs ngay không cần real art.
@@ -733,10 +754,48 @@ namespace WildernessCultivation.EditorTools
         static CharacterArtImporter.CharacterSpriteSet BuildPlaceholderSpriteSet(
             string characterId, bool includeTail)
         {
-            var east = PuppetPlaceholderGenerator.EnsureSpriteSet(characterId, includeTail);
+            return BuildPlaceholderSpriteSet(characterId, includeTail, includeWings: false);
+        }
+
+        /// <summary>
+        /// Phase 3 overload — opt-in wing roles cho flying mob (Crow / Bat) với full anatomy
+        /// (humanoid joints + tail/wings). Dùng <see cref="BuildPlaceholderSpriteSet(string, IEnumerable{CharacterArtSpec.PuppetRole})"/>
+        /// nếu cần custom anatomy thu hẹp (ví dụ Crow 6 roles: head/torso/wing×2/leg×2).
+        /// </summary>
+        static CharacterArtImporter.CharacterSpriteSet BuildPlaceholderSpriteSet(
+            string characterId, bool includeTail, bool includeWings)
+        {
+            var east = PuppetPlaceholderGenerator.EnsureSpriteSet(characterId, includeTail, includeWings);
             var set = new CharacterArtImporter.CharacterSpriteSet { isMultiDirectional = false };
             set.spritesByDir[CharacterArtSpec.PuppetDirection.East] = east;
             return set;
+        }
+
+        /// <summary>
+        /// Phase 3 explicit-role overload — Crow / Bat anatomy thu hẹp.
+        /// </summary>
+        static CharacterArtImporter.CharacterSpriteSet BuildPlaceholderSpriteSet(
+            string characterId, IEnumerable<CharacterArtSpec.PuppetRole> roles)
+        {
+            var east = PuppetPlaceholderGenerator.EnsureSpriteSet(characterId, roles);
+            var set = new CharacterArtImporter.CharacterSpriteSet { isMultiDirectional = false };
+            set.spritesByDir[CharacterArtSpec.PuppetDirection.East] = east;
+            return set;
+        }
+
+        /// <summary>
+        /// Phase 3 — Crow anatomy: 6 roles (head, torso, wing×2, leg×2). No arms / forearms
+        /// / shins / tail — bird body plan: wings replace forelimbs, no tail flick (short stub
+        /// rendered ở torso silhouette).
+        /// </summary>
+        static IEnumerable<CharacterArtSpec.PuppetRole> CrowAnatomyRoles()
+        {
+            yield return CharacterArtSpec.PuppetRole.Head;
+            yield return CharacterArtSpec.PuppetRole.Torso;
+            yield return CharacterArtSpec.PuppetRole.WingLeft;
+            yield return CharacterArtSpec.PuppetRole.WingRight;
+            yield return CharacterArtSpec.PuppetRole.LegLeft;
+            yield return CharacterArtSpec.PuppetRole.LegRight;
         }
 
         // Hard-fail nếu puppet sprite set rỗng. Trước fix này, sprite load failure trong
@@ -787,6 +846,10 @@ namespace WildernessCultivation.EditorTools
             puppet.forearmRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ForearmRight);
             puppet.shinLeftSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ShinLeft);
             puppet.shinRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ShinRight);
+            // Phase 3 — wing arrays (Crow / Bat). Non-flying mob: ExtractRoleArray returns
+            // arr với all-null slots → controller no-op direction swap cho wing.
+            puppet.wingLeftSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.WingLeft);
+            puppet.wingRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.WingRight);
         }
 
         static Sprite[] ExtractRoleArray(
@@ -1426,9 +1489,56 @@ namespace WildernessCultivation.EditorTools
         static GameObject BuildCrowPrefab(Sprite sprite, ItemSO feather)
         {
             var go = new GameObject("Crow");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 4;
+            // Phase 3 puppet path — Crow flying corvid với wing rig:
+            //   Anatomy: head + torso + wing×2 + leg×2 (6 roles, no arms / forearms / shins /
+            //   tail). Wings replace forelimbs (bird body plan); legs render khi perched, tucked
+            //   under torso khi cruising (BootstrapWizard giữ legs visible — runtime tuck tương
+            //   lai có thể gắn vào CrowAI state).
+            //   Flap math: PuppetAnimController.flapAlwaysOn=true (Crow hover even khi idle),
+            //   flapFrequency=6Hz (mid corvid pace — slower than Bat 7.5Hz), wingFlapAmplitudeDeg=
+            //   50° (medium-large stroke — corvid wings broad + stiff vs Bat 55° leathery).
+            //   Walk math: armSwing=0 (no arms), legSwing=0 (legs tucked), tailSway=0 (no tail).
+            //   walkFrequency=4 ambient (idle leg twitch khi grounded — placeholder).
+            // PR M fallback: no real PNG → placeholder 6-role skeleton dùng custom anatomy
+            //   list (CrowAnatomyRoles). Real PNG drop → CharacterArtImporter loads only 6 PNGs
+            //   (head/torso/wing_left/wing_right/leg_left/leg_right) → AddPuppetPart skip arms/
+            //   forearms/shins/tail (sprite missing → returns null) → silhouette clean.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("crow", placeholderHeightPx: 18)
+                ?? BuildPlaceholderSpriteSet("crow", CrowAnatomyRoles());
+            AssertPuppetSpritesLoaded("crow", puppetSet);
+            SpriteRenderer sr = null;
+            {
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 4,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                AddPuppetWings(spriteRoot, puppetSet.EastSprites, sortingOrderBase: 4,
+                    out var wingLT, out var wingRT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
+                puppet.wingLeft = wingLT;
+                puppet.wingRight = wingRT;
+                puppet.walkFrequency = 4f;
+                puppet.armSwingDeg = 0f;
+                puppet.legSwingDeg = 0f;
+                puppet.tailSwayDeg = 0f;
+                puppet.flapFrequency = 6f;
+                puppet.wingFlapAmplitudeDeg = 50f;
+                puppet.flapAlwaysOn = true;
+                puppet.referenceSpeed = 1.8f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
+            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -1446,7 +1556,8 @@ namespace WildernessCultivation.EditorTools
             // Crow bay → shadow nhỏ, offsetY thấp hơn entity để cảm giác bay trên không.
             AttachDropShadow(go, offsetY: -0.45f, scaleX: 0.55f, scaleY: 0.22f);
             AttachMobHitFx(go, knockbackImpulse: 1.2f);
-            AttachMobAnim(go, walkBobFreq: 7f, maxTiltDeg: 4f, walkBobAmp: 0.03f);
+            // PR M: PuppetAnimController active (placeholder fallback) → MobAnimController retired.
+            // IMobAnim resolution picks PuppetAnimController qua GetComponent.
             return SaveAsPrefab(go, $"{PrefabsDir}/Crow.prefab");
         }
 

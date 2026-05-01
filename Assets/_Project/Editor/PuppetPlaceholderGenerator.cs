@@ -44,6 +44,30 @@ namespace WildernessCultivation.EditorTools
         public static Dictionary<CharacterArtSpec.PuppetRole, Sprite> EnsureSpriteSet(
             string characterId, bool includeTail = true)
         {
+            return EnsureSpriteSet(characterId, includeTail, includeWings: false);
+        }
+
+        /// <summary>
+        /// Phase 3 overload — opt-in wing roles cho flying mob (Crow / Bat).
+        /// Roles = humanoid joints + tail/wings opt-in (full 13-role anatomy max).
+        /// Dùng <see cref="EnsureSpriteSet(string, IEnumerable{CharacterArtSpec.PuppetRole})"/>
+        /// nếu cần custom anatomy (ví dụ Crow chỉ 6 roles: head/torso/wing×2/leg×2).
+        /// </summary>
+        public static Dictionary<CharacterArtSpec.PuppetRole, Sprite> EnsureSpriteSet(
+            string characterId, bool includeTail, bool includeWings)
+        {
+            return EnsureSpriteSet(characterId,
+                PuppetPlaceholderSpec.DefaultRoles(includeTail, includeWings));
+        }
+
+        /// <summary>
+        /// Phase 3 — core impl với explicit role list. Crow / Bat có anatomy thu hẹp
+        /// (no arms/forearms/shins/tail) → caller pass 6-role list (head/torso/wing×2/leg×2)
+        /// để placeholder demo không có rect dư thừa flailing quanh torso.
+        /// </summary>
+        public static Dictionary<CharacterArtSpec.PuppetRole, Sprite> EnsureSpriteSet(
+            string characterId, IEnumerable<CharacterArtSpec.PuppetRole> roleSource)
+        {
             string folder = $"{PlaceholderRoot}/{characterId}";
             EnsureFolder(folder);
 
@@ -52,8 +76,7 @@ namespace WildernessCultivation.EditorTools
 
             // Materialize IEnumerable một lần — DefaultRoles dùng yield return nên iter
             // 2 lần sẽ enum lại; copy vào List ổn định + cho phép Count.
-            var roles = new List<CharacterArtSpec.PuppetRole>(
-                PuppetPlaceholderSpec.DefaultRoles(includeTail));
+            var roles = new List<CharacterArtSpec.PuppetRole>(roleSource);
 
             // Cleanup legacy: xoá .png file cũ (PR M-Q approach) nếu còn — đảm bảo không có
             // 2 asset cùng path conflict.
@@ -198,6 +221,8 @@ namespace WildernessCultivation.EditorTools
                 case CharacterArtSpec.PuppetRole.ForearmRight: return CharacterArtSpec.FilenameForearmRight;
                 case CharacterArtSpec.PuppetRole.ShinLeft: return CharacterArtSpec.FilenameShinLeft;
                 case CharacterArtSpec.PuppetRole.ShinRight: return CharacterArtSpec.FilenameShinRight;
+                case CharacterArtSpec.PuppetRole.WingLeft: return CharacterArtSpec.FilenameWingLeft;
+                case CharacterArtSpec.PuppetRole.WingRight: return CharacterArtSpec.FilenameWingRight;
                 default: return role.ToString().ToLowerInvariant();
             }
         }

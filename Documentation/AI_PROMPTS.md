@@ -95,7 +95,8 @@ no lens flare, no ground beneath subject for body parts.
 | **Rabbit** (`Art/Characters/rabbit/`) | quadruped puppet (small) | **7** | **21** | n/a | + puffy white tail (hero feature) — §3.3.5 master + §3.6.4 bundle (Phase 2A) |
 | **Boar** (`Art/Characters/boar/`) | quadruped puppet (heavy) | **7** | **21** | n/a | + bristly stub tail + tusks (head sprite) — §3.3.6 master + §3.6.5 bundle (Phase 2B) |
 | **Deer Spirit** (`Art/Characters/deer_spirit/`) | quadruped puppet (graceful) | **7** | **21** | n/a | + white tail flick + antlers (head sprite, hero feature) — §3.3.7 master + §3.6.6 bundle (Phase 2B) |
-| **Crow / Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 3/4) |
+| **Crow** (`Art/Characters/crow/`) | flying puppet (corvid) | **6** | **18** | n/a | head + torso + wing×2 + leg×2 (no arms, no tail — bird body plan) — §3.3.9 master + §3.6.8 bundle (Phase 3) |
+| **Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 3 Bat / Phase 4 Snake) |
 | **Boss — Hắc Vương** (`Art/Characters/boss/`) | bipedal puppet (humanoid villain) | **6** | **18** | +4 (E only) / +12 (multi-dir) | head + torso + 2 arms + 2 legs (mirror Player rig, NO tail) — §3.3.8 master + §3.6.7 bundle (Phase 2C) |
 
 **Per-tier breakdown cho Player + Boss (bipedal humanoid):**
@@ -113,6 +114,15 @@ no lens flare, no ground beneath subject for body parts.
 | Flat L1 | 7 | — | — | **7** |
 | Multi-dir L1 | 7 | 7 | 7 | **21** |
 
+**Per-tier cho Crow (flying puppet — head + torso + wing×2 + leg×2, no tail):**
+
+| Tier | E | N | S | Total |
+|---|---|---|---|---|
+| Flat L1 | 6 | — | — | **6** |
+| Multi-dir L1 | 6 | 6 | 6 | **18** |
+
+> **Crow flap math (Phase 3):** PuppetAnimController.flapAlwaysOn=true → wing flap continuous (Crow hover + cruise đều vỗ cánh, independent of walk speed). flapFrequency=6Hz, wingFlapAmplitudeDeg=50°. Both wings flap **in-phase** (vỗ xuống cùng → đẩy lên — physics flying creature, vs arm opposite-phase swing).
+
 > **S/tail skip note (real-world output):** front view (S) cho quadruped tail thường bị che bởi torso → optional, controller fallback East sprite cho slot null. Bundle §3.6.x dùng 14 prompts → 20 PNG (skip `S/tail.png`) thay vì 21 lý thuyết.
 
 > **Q: Đủ rồi sẽ chuyển động mượt mà không?**
@@ -120,13 +130,13 @@ no lens flare, no ground beneath subject for body parts.
 > - **Multi-dir (E+N+S)** = nhân vật **xoay theo hướng đi** (DST feel — đi lên thấy lưng, đi xuống thấy mặt) thay vì luôn nhìn ngang.
 > - **L2 elbow/knee** = tay / chân **gập tự nhiên** khi attack hoặc crouch (Hades polish) thay vì rigid limb thẳng.
 >
-> **Single-sprite mob** (Crow/Snake/Bat) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG. **Phase 3/4** sẽ upgrade nốt (Phase 3 = Crow/Bat wing rig, Phase 4 = Snake serpentine).
+> **Single-sprite mob** (Snake/Bat) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG. **Phase 3 PR #114** sẽ upgrade Bat (mirror Crow wing rig); **Phase 4** = Snake serpentine.
 
-**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player, 7 cho Wolf/Fox/Rabbit/Boar/Deer, 1 mỗi single-sprite mob = 3 PNG cho 3 mob đơn còn legacy) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
+**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player + Boss + Crow, 7 cho Wolf/Fox/Rabbit/Boar/Deer, 1 mỗi single-sprite mob = 2 PNG cho 2 mob đơn còn legacy = Snake + Bat) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
 
 **Required minimum để puppet build pass:** chỉ cần `head.png` + `torso.png` ở East/flat. Thiếu → fallback single-sprite (puppet không spawn). Limbs / tail optional — controller tự skip slot null.
 
-> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character. Hiện có: §3.6.1 Player (12 prompts → 18 PNG), §3.6.2 Wolf (14 → 20), §3.6.3 FoxSpirit (14 → 20), §3.6.4 Rabbit (14 → 20), §3.6.5 Boar (14 → 20), §3.6.6 Deer Spirit (14 → 20). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
+> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character. Hiện có: §3.6.1 Player (12 prompts → 18 PNG), §3.6.2 Wolf (14 → 20), §3.6.3 FoxSpirit (14 → 20), §3.6.4 Rabbit (14 → 20), §3.6.5 Boar (14 → 20), §3.6.6 Deer Spirit (14 → 20), §3.6.7 Boss (12 → 18), §3.6.8 Crow (12 → 18). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
 
 ### 3.1 Player — Cultivation Hero (`Art/Characters/player/`)
 
@@ -840,6 +850,128 @@ transparent background, top edge clean horizontal at hip (pivot
 point), bottom edge at sole of boot, NO body, NO ground, NO shadow.
 
 # NOTE: same arm pattern — gen 1 lần flip cho phần đối xứng OK.
+```
+
+### 3.3.9 Crow — Quạ Đen Glossy Corvid Scavenger (`Art/Characters/crow/`)
+
+> **Concept:** mid-sized **flying corvid scavenger** — jet-black plumage, glossy primary feathers with subtle midnight-blue iridescent sheen, sharp tapered beak (charcoal gray), keen yellow eye, intelligent watchful posture. Bird body plan: **wings replace forelimbs** (no arms / no forearms), legs visible when perched, no tail flick (short stub rendered ở torso silhouette). Hover continuous khi idle (flapping wings always-on per `flapAlwaysOn=true`). Anatomy: **6 parts** = head + torso + wing×2 + leg×2.
+>
+> **Pose lock:** neutral standing (perched) — torso level, head facing right (E), wings extended outward HORIZONTALLY (mid-flap neutral pose, NOT folded), legs straight down. PuppetAnimController flap math (sin oscillation 50° amplitude @ 6Hz) rotate wings runtime around shoulder pivot — KHÔNG vẽ wings dynamic mid-flap trong sprite, vẽ neutral horizontal extended pose.
+>
+> **Cross-dir consistency rule (CRITICAL):** Khi gen N + S sau master E, dùng EXACT cùng palette (#1a1a1f charcoal beak, #18181f tunic black, #14171f wing midnight-blue accent, #f4c93a yellow eye) + cùng silhouette anchor (torso ovoid, head profile sharp beak, wings extending sideways with feather tip detail). Mismatch palette → Crow biến hình khi xoay direction.
+
+```
+=== crow/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical aesthetic adapted for
+corvid bird, limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline (dark midnight-blue tone, NOT
+pure black).
+
+Subject: side view of a CORVID (crow / raven) HEAD ONLY, profile
+facing right, sharp tapered conical BEAK pointing forward (charcoal
+gray, NOT yellow), keen golden-yellow EYE with black pupil
+(intelligent watchful gaze), small ear-tuft feather wisp visible at
+crown, glossy jet-black plumage covering skull, isolated single
+body part on fully transparent background. NO neck visible below
+jawline (clean cut horizontal).
+
+Palette (use ONLY these): jet black plumage #18181f base, midnight-
+blue iridescent sheen #14171f highlight on crown feathers, charcoal
+beak #1a1a1f base, beak shadow #0a0a0d underside, golden-yellow eye
+#f4c93a iris, black pupil #08080a center.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, beak must NOT crop at right edge
+(allow full silhouette pointing forward), NO body parts below jaw,
+NO shoulders, NO neck, NO ground, NO shadow.
+```
+
+```
+=== crow/torso.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical aesthetic adapted for
+corvid bird.
+
+Subject: side view of a CORVID TORSO ONLY (crow body, ovoid
+silhouette), profile facing right, neutral perched pose, glossy
+jet-black plumage covering chest and back, **subtle midnight-blue
+iridescent sheen** along upper back ridge, slight breast feather
+texture brush hint, NO head NO wings NO legs visible (clean cuts
+at neck, shoulders, hips). Short tail stub rendered as continuation
+of lower back silhouette (NOT a separate appendage — bird body plan,
+no tail flick).
+
+Palette: jet black plumage #18181f base, deep shadow #0a0a0d fold
+shadow at belly, midnight-blue iridescent sheen #14171f along upper
+back ridge, breast feather highlight #1f1f24 minimal lighter
+strokes.
+
+Composition: 256x384 px (vertical), isolated single torso (ovoid
+bird body) on fully transparent background, NO head, NO wings,
+NO legs, NO ground, NO shadow. Top edge clean horizontal at
+shoulder line (puppet rig pivot for wing attach), bottom edge clean
+at hip line (leg attach).
+```
+
+```
+=== crow/wing_left.png === / === crow/wing_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+corvid.
+
+Subject: side view of a CORVID LEFT (or RIGHT) WING ONLY, extended
+HORIZONTALLY OUTWARD in mid-flap neutral pose (NOT folded against
+body), primary flight feathers (long stiff feathers) splayed
+visible at wing tip, secondary coverts feathers (shorter) at root,
+glossy jet-black plumage with **midnight-blue iridescent sheen**
+on primary feather upper edges, wing root attaches at top-right
+corner of sprite (shoulder pivot), wing tip extends to bottom-left,
+NO body, NO head visible.
+
+Palette: jet black feather #18181f base, deep shadow #0a0a0d
+between feathers, midnight-blue iridescent #14171f primary feather
+upper edge highlight, feather lighter accent #1f1f24 minimal at
+tips.
+
+Composition: 256x384 px (HORIZONTAL aspect — wing wider than tall
+when extended; render as 384x256 if engine prefers, or vertical
+with wing extending diagonally), isolated single wing on fully
+transparent background, top-right edge = shoulder pivot (clean
+horizontal cut), wing extends outward / downward, NO body, NO
+ground.
+
+# NOTE: gen 1 lần flip horizontal trong Photopea/GIMP cho wing_right.
+# Hoặc gen 2 lần với prompt "right wing" để có asymmetry tự nhiên.
+# Wing aspect: extended horizontal pose key — flap math rotates around
+# shoulder pivot 50° amplitude, neutral pose extended sideways.
+```
+
+```
+=== crow/leg_left.png === / === crow/leg_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+corvid.
+
+Subject: side view of a CORVID LEFT (or RIGHT) LEG, thin scaly
+charcoal-gray BIRD LEG (NOT humanoid leg — anatomically correct
+bird tarsus + foot), neutral perched pose with leg straight down,
+**three forward toes + one rear toe** (zygodactyl perched grip)
+visible at bottom with sharp small claws, scaly skin texture brush
+hint, NO body, NO foot ground contact.
+
+Palette: charcoal gray scale #1a1a1f base, deep shadow #0a0a0d
+joint shadow (knee + ankle), claw black #08080a sharp tip, scale
+highlight #25252b minimal sheen.
+
+Composition: 256x384 px (vertical), isolated single bird leg on
+fully transparent background, top edge clean horizontal at hip
+(pivot point), bottom edge at clawtip, NO body, NO ground,
+NO shadow.
+
+# NOTE: same wing/arm pattern — gen 1 lần flip cho phần đối xứng OK.
 ```
 
 ### 3.4 Multi-Direction (L3+) Variants
@@ -2043,6 +2175,184 @@ boot accent.
 
 Composition: 256x384 px (vertical), leg on transparent, top edge
 clean hip pivot, bottom edge at boot toe, NO body, NO ground.
+```
+
+#### 3.4.8 Crow — N (Back View) + S (Front View)
+
+> **Pipeline:** drop side prompts §3.3.9 vào `crow/E/{part}.png`, plus N + S variants below. Anatomy 6 parts: head + torso + wing×2 + leg×2.
+>
+> **Wing N+S note:** wings ở back-view (N) folded UP behind body silhouette (Crow seen from behind = wings tucked). Front-view (S) wings extended outward from torso center, symmetric — animator vẫn flap rotate 50° around shoulder pivot trong runtime.
+
+```
+=== crow/N/head.png === (BACK VIEW)
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID HEAD ONLY (viewer looks at back of
+crow's head), beak NOT visible (pointed away from viewer), back of
+skull rounded with glossy jet-black plumage, ear-tuft feather wisp
+at crown center, NO eye visible (back of head), isolated single
+body part on transparent.
+
+Palette: jet black plumage #18181f base, midnight-blue iridescent
+sheen #14171f along upper crown, feather lighter accent #1f1f24
+minimal at crown highlight.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, NO beak silhouette extending
+forward (clean rounded back-of-skull), NO body parts, NO shoulders.
+```
+
+```
+=== crow/N/torso.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID TORSO ONLY, viewer looks at back of
+ovoid bird body, glossy jet-black plumage covering full back surface
+visible, **prominent midnight-blue iridescent sheen along central
+spine ridge** (back-view hero feature — most visible iridescence
+angle), feather texture brush hint along back, NO head NO wings
+NO legs visible.
+
+Palette: jet black plumage #18181f base, deep shadow #0a0a0d at
+flanks, midnight-blue iridescent sheen #14171f along central spine
+ridge (stronger than E-view), feather highlight #1f1f24 minimal.
+
+Composition: 256x384 px (vertical), back-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground.
+```
+
+```
+=== crow/N/wing_left.png === / === crow/N/wing_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID LEFT (or RIGHT) WING, viewer sees
+wing folded slightly backward against body silhouette (back-view
+posture — wings semi-tucked), primary feathers TIPS visible at
+outer edge, glossy jet-black with midnight-blue iridescent sheen
+on upper feather edges, wing root attaches at top-inner corner
+(shoulder pivot), wing extends slightly outward + backward.
+
+Palette: jet black feather #18181f base, deep shadow #0a0a0d
+between feathers, midnight-blue iridescent #14171f primary feather
+upper edge, lighter accent #1f1f24 minimal.
+
+Composition: 256x384 px (vertical), back-view single wing on
+transparent, top-inner edge = shoulder pivot, NO body, NO ground.
+
+# NOTE: gen 1 lần flip horizontal cho wing_right.
+```
+
+```
+=== crow/N/leg_left.png === / === crow/N/leg_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID LEFT (or RIGHT) LEG, viewer sees
+back of bird leg — thin scaly charcoal-gray tarsus straight down,
+**rear toe (hallux) more prominent** vs side-view (back-of-foot
+visible), front toes wrapping around forward, sharp small claws,
+NO body, NO ground.
+
+Palette: charcoal gray scale #1a1a1f base, deep shadow #0a0a0d
+joint shadow, claw black #08080a sharp tip, scale highlight
+#25252b minimal sheen.
+
+Composition: 256x384 px (vertical), back-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+
+# NOTE: same pattern — gen 1 lần flip cho phần đối xứng OK.
+```
+
+```
+=== crow/S/head.png === (FRONT VIEW — face-on)
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID HEAD ONLY (viewer faces crow head
+on), **beak pointing toward viewer** (foreshortened — short stub
+silhouette), TWO golden-yellow eyes visible flanking beak (binocular
+front view), glossy jet-black plumage covering skull, ear-tuft
+feather wisp at top, isolated single body part on transparent.
+
+Palette: jet black plumage #18181f base, midnight-blue iridescent
+sheen #14171f highlight on crown, charcoal beak #1a1a1f tip
+foreshortened, beak shadow #0a0a0d underside, golden-yellow eye
+#f4c93a iris (×2), black pupil #08080a center.
+
+Composition: 256x256 px, isolated single head on transparent,
+vertically centered, beak NOT cropped at front (allow short forward
+stub), TWO eyes visible symmetric, NO body, NO neck.
+```
+
+```
+=== crow/S/torso.png === (FRONT VIEW — face-on)
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID TORSO ONLY, viewer faces crow chest
+on, ovoid bird body silhouette face-on, glossy jet-black plumage
+covering chest, slight breast feather texture brush hint at center
+chest, **subtle midnight-blue iridescent sheen** along upper chest
+shoulders, NO head NO wings NO legs visible.
+
+Palette: jet black plumage #18181f base, deep shadow #0a0a0d at
+chest sides, midnight-blue iridescent sheen #14171f along upper
+chest shoulders, breast feather highlight #1f1f24 minimal at center.
+
+Composition: 256x384 px (vertical), front-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground. Top edge
+clean shoulder line, bottom edge clean hip line.
+```
+
+```
+=== crow/S/wing_left.png === / === crow/S/wing_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID LEFT (or RIGHT) WING, viewer faces
+crow head on — wing extended outward HORIZONTALLY from body to
+viewer's left (or right) side, primary flight feathers visible
+splaying outward, glossy jet-black with midnight-blue iridescent
+sheen on primary feather upper edges, wing root attaches at
+top-inner edge (shoulder pivot adjacent to torso center), wing tip
+extends outward toward viewer's side.
+
+Palette: jet black feather #18181f base, deep shadow #0a0a0d
+between feathers, midnight-blue iridescent #14171f primary feather
+upper edge, lighter accent #1f1f24 minimal at tips.
+
+Composition: 256x384 px (vertical, can be 384x256 horizontal if
+engine prefers), front-view single wing on transparent, top-inner
+edge = shoulder pivot, wing extends outward, NO body, NO ground.
+
+# NOTE: gen 1 lần flip horizontal cho wing_right.
+```
+
+```
+=== crow/S/leg_left.png === / === crow/S/leg_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID LEFT (or RIGHT) LEG, viewer faces
+crow head on — bird leg straight down, **front-of-foot visible**:
+three forward toes splaying forward toward viewer, rear hallux toe
+NOT prominent (hidden behind), thin scaly charcoal-gray tarsus,
+sharp small claws, NO body, NO ground.
+
+Palette: charcoal gray scale #1a1a1f base, deep shadow #0a0a0d
+joint shadow, claw black #08080a sharp tip, scale highlight
+#25252b minimal sheen.
+
+Composition: 256x384 px (vertical), front-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+
+# NOTE: same pattern — gen 1 lần flip cho phần đối xứng OK.
 ```
 
 ---
@@ -4468,6 +4778,310 @@ is BLACK + CRIMSON only).
 
 ---
 
+#### 3.6.8 Crow — Quạ Đen Full DST Set (12 prompts → 18 PNG)
+
+> **Concept lock:** flying corvid scavenger — jet-black plumage, glossy primary feathers with subtle midnight-blue iridescent sheen, sharp tapered charcoal-gray beak, keen golden-yellow eye. Bird body plan: 6 parts = head + torso + wing×2 + leg×2 (NO arms / forearms / shins / tail). Hover continuous (`flapAlwaysOn=true`, flap 50° amplitude @ 6Hz independent of move speed).
+>
+> **Cross-dir consistency rule:** EXACT cùng palette (`#18181f` plumage, `#14171f` iridescent, `#1a1a1f` beak/leg charcoal, `#f4c93a` eye) + cùng silhouette anchor (ovoid torso, sharp beak, wings extended sideways) khắp 3 dir E/N/S. Wings ở N folded behind body silhouette; ở S extended outward symmetric.
+>
+> **Pipeline:** copy block prompt → paste vào GPT Image 2.0 (hoặc Stable Diffusion XL / Midjourney) → save PNG vào path nằm trong header `=== Save to: ... ===` → next block. **12 prompts → 18 PNG output (6 parts × 3 dirs).** W mirror tự động qua `PuppetAnimController.spriteRoot.localScale` runtime — KHÔNG cần gen W.
+
+##### E (East / side view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/E/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical aesthetic adapted for
+corvid bird, limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline (dark midnight-blue tone, NOT
+pure black).
+
+Subject: side view of a CORVID (crow / raven) HEAD ONLY, profile
+facing right, sharp tapered conical BEAK pointing forward (charcoal
+gray, NOT yellow), keen golden-yellow EYE with black pupil
+(intelligent watchful gaze), small ear-tuft feather wisp visible at
+crown, glossy jet-black plumage covering skull, isolated single
+body part on fully transparent background. NO neck visible below
+jawline (clean cut horizontal).
+
+Palette (use ONLY these): jet black plumage #18181f base, midnight-
+blue iridescent sheen #14171f highlight on crown feathers, charcoal
+beak #1a1a1f base, beak shadow #0a0a0d underside, golden-yellow eye
+#f4c93a iris, black pupil #08080a center.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, beak must NOT crop at right edge
+(allow full silhouette pointing forward), NO body parts below jaw,
+NO shoulders, NO neck, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/E/torso.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+corvid.
+
+Subject: side view of a CORVID TORSO ONLY (crow body, ovoid
+silhouette), profile facing right, neutral perched pose, glossy
+jet-black plumage covering chest and back, **subtle midnight-blue
+iridescent sheen** along upper back ridge, slight breast feather
+texture brush hint, NO head NO wings NO legs visible (clean cuts
+at neck, shoulders, hips). Short tail stub rendered as continuation
+of lower back silhouette (NOT a separate appendage — bird body plan,
+no tail flick).
+
+Palette: jet black plumage #18181f base, deep shadow #0a0a0d fold
+shadow at belly, midnight-blue iridescent sheen #14171f along upper
+back ridge, breast feather highlight #1f1f24 minimal lighter
+strokes.
+
+Composition: 256x384 px (vertical), isolated single torso (ovoid
+bird body) on fully transparent background, NO head, NO wings,
+NO legs, NO ground, NO shadow. Top edge clean horizontal at
+shoulder line (puppet rig pivot for wing attach), bottom edge clean
+at hip line (leg attach).
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/E/wing_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/crow/E/wing_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+corvid.
+
+Subject: side view of a CORVID LEFT WING ONLY, extended HORIZONTALLY
+OUTWARD in mid-flap neutral pose (NOT folded against body), primary
+flight feathers (long stiff feathers) splayed visible at wing tip,
+secondary coverts feathers (shorter) at root, glossy jet-black
+plumage with **midnight-blue iridescent sheen** on primary feather
+upper edges, wing root attaches at top-right corner of sprite
+(shoulder pivot), wing tip extends to bottom-left, NO body,
+NO head visible.
+
+Palette: jet black feather #18181f base, deep shadow #0a0a0d
+between feathers, midnight-blue iridescent #14171f primary feather
+upper edge highlight, feather lighter accent #1f1f24 minimal at
+tips.
+
+Composition: 256x384 px (vertical), isolated single wing on fully
+transparent background, top-right edge = shoulder pivot (clean
+horizontal cut), wing extends outward / downward, NO body, NO
+ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/E/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/crow/E/leg_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+corvid.
+
+Subject: side view of a CORVID LEFT LEG, thin scaly charcoal-gray
+BIRD LEG (NOT humanoid leg — anatomically correct bird tarsus +
+foot), neutral perched pose with leg straight down, **three forward
+toes + one rear toe** (zygodactyl perched grip) visible at bottom
+with sharp small claws, scaly skin texture brush hint, NO body,
+NO foot ground contact.
+
+Palette: charcoal gray scale #1a1a1f base, deep shadow #0a0a0d
+joint shadow (knee + ankle), claw black #08080a sharp tip, scale
+highlight #25252b minimal sheen.
+
+Composition: 256x384 px (vertical), isolated single bird leg on
+fully transparent background, top edge clean horizontal at hip
+(pivot point), bottom edge at clawtip, NO body, NO ground,
+NO shadow.
+```
+
+##### N (North / back view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/N/head.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID HEAD ONLY (viewer looks at back of
+crow's head), beak NOT visible (pointed away from viewer), back of
+skull rounded with glossy jet-black plumage, ear-tuft feather wisp
+at crown center, NO eye visible (back of head), isolated single
+body part on transparent.
+
+Palette: jet black plumage #18181f base, midnight-blue iridescent
+sheen #14171f along upper crown, feather lighter accent #1f1f24
+minimal at crown highlight.
+
+Composition: 256x256 px, isolated single head on transparent,
+vertically centered, NO beak silhouette extending forward (clean
+rounded back-of-skull), NO body parts, NO shoulders.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/N/torso.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID TORSO ONLY, viewer looks at back of
+ovoid bird body, glossy jet-black plumage covering full back surface
+visible, **prominent midnight-blue iridescent sheen along central
+spine ridge** (back-view hero feature — most visible iridescence
+angle), feather texture brush hint along back, NO head NO wings
+NO legs visible.
+
+Palette: jet black plumage #18181f base, deep shadow #0a0a0d at
+flanks, midnight-blue iridescent sheen #14171f along central spine
+ridge (stronger than E-view), feather highlight #1f1f24 minimal.
+
+Composition: 256x384 px (vertical), back-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/N/wing_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/crow/N/wing_right.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID LEFT WING, viewer sees wing folded
+slightly backward against body silhouette (back-view posture —
+wings semi-tucked), primary feathers TIPS visible at outer edge,
+glossy jet-black with midnight-blue iridescent sheen on upper
+feather edges, wing root attaches at top-inner corner (shoulder
+pivot), wing extends slightly outward + backward.
+
+Palette: jet black feather #18181f base, deep shadow #0a0a0d
+between feathers, midnight-blue iridescent #14171f primary feather
+upper edge, lighter accent #1f1f24 minimal.
+
+Composition: 256x384 px (vertical), back-view single wing on
+transparent, top-inner edge = shoulder pivot, NO body, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/N/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/crow/N/leg_right.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: BACK view of a CORVID LEFT LEG, viewer sees back of bird
+leg — thin scaly charcoal-gray tarsus straight down, **rear toe
+(hallux) more prominent** vs side-view (back-of-foot visible),
+front toes wrapping around forward, sharp small claws, NO body,
+NO ground.
+
+Palette: charcoal gray scale #1a1a1f base, deep shadow #0a0a0d
+joint shadow, claw black #08080a sharp tip, scale highlight
+#25252b minimal sheen.
+
+Composition: 256x384 px (vertical), back-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/S/head.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID HEAD ONLY (viewer faces crow head
+on), **beak pointing toward viewer** (foreshortened — short stub
+silhouette), TWO golden-yellow eyes visible flanking beak (binocular
+front view), glossy jet-black plumage covering skull, ear-tuft
+feather wisp at top, isolated single body part on transparent.
+
+Palette: jet black plumage #18181f base, midnight-blue iridescent
+sheen #14171f highlight on crown, charcoal beak #1a1a1f tip
+foreshortened, beak shadow #0a0a0d underside, golden-yellow eye
+#f4c93a iris (×2), black pupil #08080a center.
+
+Composition: 256x256 px, isolated single head on transparent,
+vertically centered, beak NOT cropped at front (allow short forward
+stub), TWO eyes visible symmetric, NO body, NO neck.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/S/torso.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID TORSO ONLY, viewer faces crow chest
+on, ovoid bird body silhouette face-on, glossy jet-black plumage
+covering chest, slight breast feather texture brush hint at center
+chest, **subtle midnight-blue iridescent sheen** along upper chest
+shoulders, NO head NO wings NO legs visible.
+
+Palette: jet black plumage #18181f base, deep shadow #0a0a0d at
+chest sides, midnight-blue iridescent sheen #14171f along upper
+chest shoulders, breast feather highlight #1f1f24 minimal at center.
+
+Composition: 256x384 px (vertical), front-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground. Top edge
+clean shoulder line, bottom edge clean hip line.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/S/wing_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/crow/S/wing_right.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID LEFT WING, viewer faces crow head
+on — wing extended outward HORIZONTALLY from body to viewer's left
+side, primary flight feathers visible splaying outward, glossy
+jet-black with midnight-blue iridescent sheen on primary feather
+upper edges, wing root attaches at top-inner edge (shoulder pivot
+adjacent to torso center), wing tip extends outward toward viewer's
+side.
+
+Palette: jet black feather #18181f base, deep shadow #0a0a0d
+between feathers, midnight-blue iridescent #14171f primary feather
+upper edge, lighter accent #1f1f24 minimal at tips.
+
+Composition: 256x384 px (vertical), front-view single wing on
+transparent, top-inner edge = shoulder pivot, wing extends outward,
+NO body, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/crow/S/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/crow/S/leg_right.png ===
+
+hand-painted painterly, asian wuxia mystical corvid.
+
+Subject: FRONT view of a CORVID LEFT LEG, viewer faces crow head
+on — bird leg straight down, **front-of-foot visible**: three
+forward toes splaying forward toward viewer, rear hallux toe NOT
+prominent (hidden behind), thin scaly charcoal-gray tarsus, sharp
+small claws, NO body, NO ground.
+
+Palette: charcoal gray scale #1a1a1f base, deep shadow #0a0a0d
+joint shadow, claw black #08080a sharp tip, scale highlight
+#25252b minimal sheen.
+
+Composition: 256x384 px (vertical), front-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+```
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi crow generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi cute bird,
+no shounen mascot crow, no cartoon owl big eyes, no fluffy plush,
+no smooth airbrush gradient, no drop shadow on transparent background,
+no text, no watermark, no signature, no border, single subject only,
+no duplicate, no grid lines, no UI elements, no caption, no logo,
+no lens flare, no ground beneath subject for body parts, no bright
+colors (no red/blue/green plumage — crow is JET BLACK only with
+midnight-blue iridescent sheen), no humanoid arm (crow uses wings),
+no fluffy mammal tail (crow has stub tail rendered into torso), no
+predator hawk silhouette (crow is mid-sized scavenger, not raptor).
+```
+
+---
+
 ## 4. Single-Sprite Mobs
 
 > **Pipeline:** Drop single PNG `Sprites/{mobId}.png` (legacy gen_sprites.py path) hoặc Art/Mobs/{mobId}/sprite.png (sau khi MobArtImporter merge — chưa có).
@@ -6602,15 +7216,16 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Boar puppet E (Phase 2B — 7 parts incl. bristly stub tail) | 7 | 28 | $0.56 |
 | Deer Spirit puppet E (Phase 2B — 7 parts incl. white tail flick) | 7 | 28 | $0.56 |
 | Boss puppet E (Phase 2C — 6 parts humanoid mirror Player rig, NO tail) | 6 | 24 | $0.48 |
-| Single-sprite mobs (Crow, Snake, Bat) | 3 | 12 | $0.24 |
+| Crow puppet E (Phase 3 PR #113 — 6 parts flying corvid: head, torso, wing×2, leg×2) | 6 | 24 | $0.48 |
+| Single-sprite mobs (Snake, Bat) | 2 | 8 | $0.16 |
 | Resources (12 nodes) | 12 | 48 | $0.96 |
 | Item icons (22) | 22 | 88 | $1.76 |
 | Tiles (12 seamless: 3 biome × 4 var) | 12 | 48 | $0.96 |
-| **Phase 1 subtotal** | **96** | **~384** | **~$7.68** |
+| **Phase 1 subtotal** | **101** | **~404** | **~$8.08** |
 
 ### Phase 2 — Multi-direction (L3 NSEW)
 
-> Add-on cho 7 puppet character (Player + Wolf + Fox + Rabbit + Boar + Deer Spirit + Boss). Mob single-sprite + resources + tiles KHÔNG cần.
+> Add-on cho 8 puppet character (Player + Wolf + Fox + Rabbit + Boar + Deer Spirit + Boss + Crow). Mob single-sprite (Snake/Bat) + resources + tiles KHÔNG cần.
 
 | Group | Asset count | Image gen (4 var) | Baseline cost |
 |---|---|---|---|
@@ -6621,7 +7236,8 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Boar N + S (Phase 2B — skip S/tail → 13) | 13 | 52 | $1.04 |
 | Deer Spirit N + S (Phase 2B — skip S/tail → 13) | 13 | 52 | $1.04 |
 | Boss N + S (Phase 2C — humanoid 6 × 2, NO tail skip needed) | 12 | 48 | $0.96 |
-| **Phase 2 subtotal** | **89** | **356** | **~$7.12** |
+| Crow N + S (Phase 3 PR #113 — flying 6 × 2, NO tail skip needed) | 12 | 48 | $0.96 |
+| **Phase 2 subtotal** | **101** | **404** | **~$8.08** |
 
 ### Phase 3 — L2 elbow/knee (forearm + shin)
 
@@ -6679,11 +7295,11 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 
 | Scope | Asset count | Baseline cost | Realistic w/ 3× iter |
 |---|---|---|---|
-| **Phase 1 only (MVP side-only)** | 96 | ~$7.68 | ~$20-25 |
-| Phase 1 + 2 (multi-dir) | 185 | ~$14.80 | ~$40-55 |
-| Phase 1 + 2 + 3 (L3+ full puppet) | 213 | ~$17.04 | ~$45-65 |
-| Phase 1-6 (combat + VFX + weather) | 241 | ~$19.28 | ~$55-80 |
-| **Phase 1-8 (FULL game asset coverage incl. NPC + environment)** | **273** (all NPC variants: **317**) | **~$21.84** (with all NPC: **~$25.36**) | **~$70-130** |
+| **Phase 1 only (MVP side-only)** | 101 | ~$8.08 | ~$22-28 |
+| Phase 1 + 2 (multi-dir) | 202 | ~$16.16 | ~$45-60 |
+| Phase 1 + 2 + 3 (L3+ full puppet) | 230 | ~$18.40 | ~$50-70 |
+| Phase 1-6 (combat + VFX + weather) | 258 | ~$20.64 | ~$60-85 |
+| **Phase 1-8 (FULL game asset coverage incl. NPC + environment)** | **290** (all NPC variants: **334**) | **~$23.20** (with all NPC: **~$26.72**) | **~$75-135** |
 
 > **Recommendation:** ship Phase 1-3 first (MVP playtest), Phase 4-5 với balance pass, Phase 6-8 polish pass.
 > Tổng prompt count trong file này: ~310 (counting each direction + state variant + NPC variant separately).

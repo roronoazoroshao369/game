@@ -124,8 +124,7 @@ namespace WildernessCultivation.Tests.EditMode
         public void PaletteFor_AllKnownIds_HaveWingAlphaOne()
         {
             // Phase 3 wing field: tất cả palette PHẢI populate wing color (alpha=1) — kể cả non-flying
-            // characters (default fallback gray). Tránh transparent placeholder render khi Crow/Bat
-            // dùng PaletteFor (Phase 3 prefab + #113 sẽ thêm CrowId/BatId palette).
+            // characters (default fallback gray). Crow (PR #113) wing populated với glossy black.
             foreach (var id in new[]
             {
                 PuppetPlaceholderSpec.PlayerId,
@@ -135,6 +134,7 @@ namespace WildernessCultivation.Tests.EditMode
                 PuppetPlaceholderSpec.BoarId,
                 PuppetPlaceholderSpec.DeerSpiritId,
                 PuppetPlaceholderSpec.BossId,
+                PuppetPlaceholderSpec.CrowId,
             })
             {
                 var p = PuppetPlaceholderSpec.PaletteFor(id);
@@ -248,6 +248,40 @@ namespace WildernessCultivation.Tests.EditMode
                 "Boss tunic should NOT be blue-dominant (player owns that palette).");
             Assert.Greater(player.tunic.b, boss.tunic.b,
                 "Boss tunic blue channel should be much lower than player blue robe.");
+        }
+
+        [Test]
+        public void PaletteFor_Crow_HasGlossyBlackPlumage()
+        {
+            // Crow corvid — body plumage RẤT tối (jet-black silhouette nổi bật vs sky biome).
+            // Wing đậm hơn cả tunic (glossy primary feathers reflect xanh đêm) → wing
+            // brightness ≤ tunic. Tunic brightness < 0.15 (very dark).
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.CrowId);
+            float tunicBrightness = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+            float wingBrightness = (p.wing.r + p.wing.g + p.wing.b) / 3f;
+            Assert.Less(tunicBrightness, 0.15f, "Crow plumage should be jet-black silhouette.");
+            Assert.LessOrEqual(wingBrightness, tunicBrightness + 0.02f,
+                "Crow wing should be at most ~tunic brightness (glossy black, không sáng hơn body).");
+        }
+
+        [Test]
+        public void PaletteFor_Crow_DistinctFromOtherMobs()
+        {
+            // Crow tunic must be distinguishably darker than Wolf/Boar/DeerSpirit (non-flying mobs).
+            var crow = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.CrowId);
+            float crowTunic = (crow.tunic.r + crow.tunic.g + crow.tunic.b) / 3f;
+            foreach (var id in new[]
+            {
+                PuppetPlaceholderSpec.WolfId,
+                PuppetPlaceholderSpec.BoarId,
+                PuppetPlaceholderSpec.DeerSpiritId,
+            })
+            {
+                var p = PuppetPlaceholderSpec.PaletteFor(id);
+                float tunic = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+                Assert.Less(crowTunic, tunic,
+                    $"Crow plumage should be darker than {id} (jet-black silhouette).");
+            }
         }
 
         [Test]
