@@ -13,7 +13,7 @@ namespace WildernessCultivation.Vfx
     /// Pure math static methods (<see cref="ComputeWalkBobScale"/>, <see cref="ComputeTiltDeg"/>,
     /// <see cref="ComputeLungeOffset"/>, <see cref="ComputeSquashFactor"/>) → EditMode test.
     /// </summary>
-    public class MobAnimController : MonoBehaviour
+    public class MobAnimController : MonoBehaviour, IMobAnim
     {
         [Header("Walk bob (Y scale modulation while moving)")]
         [Tooltip("Biên độ bob max, cộng/trừ vào scale Y khi đi nhanh nhất. 0.05 = ±5%.")]
