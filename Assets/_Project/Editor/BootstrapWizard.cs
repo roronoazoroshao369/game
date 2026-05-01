@@ -1782,18 +1782,34 @@ namespace WildernessCultivation.EditorTools
             // Assets/_Project/Art/Tiles/{biomeId}/ → BiomeTileImporter wire vào groundTileVariants[],
             // WorldGenerator.PickGroundTile() sẽ pick variant deterministic per cell. Empty folder
             // → giữ placeholder groundTile fallback.
-            foreach (var b in biomes)
+            //
+            // BiomeTileImporter.ImportBiomeTiles() gọi importer.SaveAndReimport() cho từng PNG
+            // trong Art/Tiles/{biomeId}/. SaveAndReimport trigger asset DB sync làm invalidate
+            // các ScriptableObject reference vừa CreateAsset (BiomeSO trả về từ MakeBiome) →
+            // EditorUtility.SetDirty(b) throw MissingReferenceException. Snapshot biomeId trước,
+            // reload BiomeSO từ disk sau import để có ref mới valid.
+            var biomeIds = new string[biomes.Count];
+            for (int i = 0; i < biomes.Count; i++) biomeIds[i] = biomes[i].biomeId;
+
+            for (int i = 0; i < biomes.Count; i++)
             {
+                var biomeId = biomeIds[i];
+                var biomePath = $"{SOsDir}/Biomes/Biome_{biomeId}.asset";
+
+                var realVariants = BiomeTileImporter.ImportBiomeTiles(biomeId);
+
+                var b = AssetDatabase.LoadAssetAtPath<BiomeSO>(biomePath);
+                biomes[i] = b;
+
                 b.treePrefab = prefabs.Tree;
                 b.rockPrefab = prefabs.Rock;
                 b.waterSpringPrefab = prefabs.WaterSpring;
                 b.groundTile = defaultGroundTile;
-                var realVariants = BiomeTileImporter.ImportBiomeTiles(b.biomeId);
                 if (realVariants.Length > 0)
                 {
                     BiomeTileImporter.WireVariantsToBiome(b, realVariants);
                 }
-                b.extraNodes = BuildExtraNodesFor(b.biomeId, prefabs);
+                b.extraNodes = BuildExtraNodesFor(biomeId, prefabs);
                 EditorUtility.SetDirty(b);
             }
             wg.biomes = biomes.ToArray();
