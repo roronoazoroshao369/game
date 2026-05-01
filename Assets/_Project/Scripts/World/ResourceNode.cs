@@ -32,6 +32,7 @@ namespace WildernessCultivation.World
         // Cache reactive feedback (BootstrapWizard auto-attach lên prefab).
         // GetComponent 1 lần ở Awake, Hit() vô số lần → tránh overhead per hit.
         ReactiveOnHit reactiveFx;
+        ProgressiveCrackOverlay crackOverlay;
 
         [Header("Optional harvest side-effects on harvester (PlayerStats)")]
         [Tooltip("Sát thương HP áp lên harvester sau khi node chết (vd Cactus -2).")]
@@ -49,6 +50,7 @@ namespace WildernessCultivation.World
         {
             currentHP = maxHP;
             reactiveFx = GetComponent<ReactiveOnHit>();
+            crackOverlay = GetComponent<ProgressiveCrackOverlay>();
         }
 
         public void TakeDamage(float amount, GameObject source)
@@ -64,6 +66,7 @@ namespace WildernessCultivation.World
             // Trigger sau khi HP trừ — nếu Harvest sẽ Destroy ngay frame này, coroutine
             // shake/flash sẽ stop tự nhiên. Burst particles tách parent → vẫn play.
             if (reactiveFx != null) reactiveFx.Hit();
+            if (crackOverlay != null && maxHP > 0f) crackOverlay.SetHpRatio(currentHP / maxHP);
             if (currentHP <= 0f) Harvest(source);
         }
 
