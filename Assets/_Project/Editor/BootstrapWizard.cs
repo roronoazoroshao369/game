@@ -163,6 +163,16 @@ namespace WildernessCultivation.EditorTools
             var dict = new Dictionary<string, Sprite>();
             foreach (var d in defs)
             {
+                // Resource art override: nếu user drop PNG vào Art/Resources/{id}/ → dùng PNG
+                // đó (auto-PPU sao cho world size khớp placeholder). KHÔNG copy/overwrite
+                // Sprites/{id}.png — file user-art ở vị trí gốc giúp tracking + iterate dễ.
+                Sprite userArt = ResourceArtImporter.TryLoadSprite(d.id, d.h);
+                if (userArt != null)
+                {
+                    dict[d.id] = userArt;
+                    continue;
+                }
+
                 string path = $"{SpritesDir}/{d.id}.png";
                 // If a hand-authored PNG is already committed (see tools/gen_sprites.py),
                 // keep it and only re-import. Only fall back to the solid-color
