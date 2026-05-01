@@ -39,9 +39,14 @@ namespace WildernessCultivation.EditorTools
 
             var palette = PuppetPlaceholderSpec.PaletteFor(characterId);
             var dict = new Dictionary<CharacterArtSpec.PuppetRole, Sprite>();
+
+            // Materialize IEnumerable một lần — DefaultRoles dùng yield return nên iter
+            // 2 lần (write + load) sẽ enum lại; copy vào List ổn định + cho phép Count.
+            var roles = new List<CharacterArtSpec.PuppetRole>(
+                PuppetPlaceholderSpec.DefaultRoles(includeTail));
             bool wroteAny = false;
 
-            foreach (var role in PuppetPlaceholderSpec.DefaultRoles(includeTail))
+            foreach (var role in roles)
             {
                 var (w, h) = PuppetPlaceholderSpec.RectFor(role);
                 var color = PuppetPlaceholderSpec.ColorFor(role, palette);
@@ -60,7 +65,7 @@ namespace WildernessCultivation.EditorTools
             // trả null → puppet không có sprite → Player invisible).
             if (wroteAny) AssetDatabase.Refresh();
 
-            foreach (var role in PuppetPlaceholderSpec.DefaultRoles(includeTail))
+            foreach (var role in roles)
             {
                 string path = $"{folder}/{RoleToFilename(role)}.png";
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
@@ -79,7 +84,7 @@ namespace WildernessCultivation.EditorTools
             }
 
             Debug.Log(
-                $"[PuppetPlaceholderGenerator] {characterId}: loaded {dict.Count}/{PuppetPlaceholderSpec.DefaultRoles(includeTail).Count} placeholder sprites at {folder}/");
+                $"[PuppetPlaceholderGenerator] {characterId}: loaded {dict.Count}/{roles.Count} placeholder sprites at {folder}/");
 
             return dict;
         }
