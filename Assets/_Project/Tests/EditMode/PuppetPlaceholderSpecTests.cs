@@ -434,5 +434,88 @@ namespace WildernessCultivation.Tests.EditMode
                 Assert.AreNotEqual(Color.magenta, c, $"{role} should not be magenta sentinel");
             }
         }
+
+        // ---------- Phase 4: BodySegment1..4 (serpentine — Snake) ----------
+
+        [Test]
+        public void DefaultRoles_NoBodySegments_DefaultBehavior()
+        {
+            // 1-arg và 2-arg overload phải KHÔNG include body segments — backward compat.
+            var rolesArg1 = new HashSet<CharacterArtSpec.PuppetRole>(
+                PuppetPlaceholderSpec.DefaultRoles(includeTail: true));
+            var rolesArg2 = new HashSet<CharacterArtSpec.PuppetRole>(
+                PuppetPlaceholderSpec.DefaultRoles(includeTail: true, includeWings: true));
+            Assert.IsFalse(rolesArg1.Contains(CharacterArtSpec.PuppetRole.BodySegment1));
+            Assert.IsFalse(rolesArg2.Contains(CharacterArtSpec.PuppetRole.BodySegment4));
+        }
+
+        [Test]
+        public void DefaultRoles_WithBodySegments_AddsAllFour()
+        {
+            // includeBodySegments=true → +4 roles. Combined với includeTail=true & includeWings=false
+            // = 11 (10 humanoid + tail) + 4 segments = 15. Snake actual prefab sẽ filter ra
+            // chỉ head + 4 segments — DefaultRoles giữ full set cho consistency.
+            var roles = new HashSet<CharacterArtSpec.PuppetRole>(
+                PuppetPlaceholderSpec.DefaultRoles(includeTail: true, includeWings: false,
+                    includeBodySegments: true));
+            Assert.AreEqual(15, roles.Count);
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.BodySegment1));
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.BodySegment2));
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.BodySegment3));
+            Assert.IsTrue(roles.Contains(CharacterArtSpec.PuppetRole.BodySegment4));
+        }
+
+        [Test]
+        public void RectFor_BodySegments_PositiveAndOblong()
+        {
+            // Snake body segment — wider than tall (oblong horizontal). Tapering tail-ward
+            // (seg1 widest → seg4 thinnest).
+            var (w1, h1) = PuppetPlaceholderSpec.RectFor(CharacterArtSpec.PuppetRole.BodySegment1);
+            var (w2, h2) = PuppetPlaceholderSpec.RectFor(CharacterArtSpec.PuppetRole.BodySegment2);
+            var (w3, h3) = PuppetPlaceholderSpec.RectFor(CharacterArtSpec.PuppetRole.BodySegment3);
+            var (w4, h4) = PuppetPlaceholderSpec.RectFor(CharacterArtSpec.PuppetRole.BodySegment4);
+
+            // All positive + wider than tall.
+            Assert.Greater(w1, 0); Assert.Greater(h1, 0); Assert.Greater(w1, h1);
+            Assert.Greater(w2, 0); Assert.Greater(h2, 0); Assert.Greater(w2, h2);
+            Assert.Greater(w3, 0); Assert.Greater(h3, 0); Assert.Greater(w3, h3);
+            Assert.Greater(w4, 0); Assert.Greater(h4, 0); Assert.Greater(w4, h4);
+
+            // Tapering: seg1 ≥ seg2 ≥ seg3 ≥ seg4 width (head-most thickest, tail thinnest).
+            Assert.GreaterOrEqual(w1, w2);
+            Assert.GreaterOrEqual(w2, w3);
+            Assert.GreaterOrEqual(w3, w4);
+            Assert.Greater(w1, w4, "seg1 (neck) wider than seg4 (tail) — strict taper across chain");
+        }
+
+        [Test]
+        public void ColorFor_BodySegments_ReturnsTunicByDefault()
+        {
+            // Phase 4 #115: body segments reuse tunic color (Phase 4 #116 sẽ add SnakeId palette
+            // với scale-specific color override).
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.PlayerId);
+            Assert.AreEqual(p.tunic, PuppetPlaceholderSpec.ColorFor(CharacterArtSpec.PuppetRole.BodySegment1, p));
+            Assert.AreEqual(p.tunic, PuppetPlaceholderSpec.ColorFor(CharacterArtSpec.PuppetRole.BodySegment2, p));
+            Assert.AreEqual(p.tunic, PuppetPlaceholderSpec.ColorFor(CharacterArtSpec.PuppetRole.BodySegment3, p));
+            Assert.AreEqual(p.tunic, PuppetPlaceholderSpec.ColorFor(CharacterArtSpec.PuppetRole.BodySegment4, p));
+        }
+
+        [Test]
+        public void ColorFor_BodySegments_NotMagenta()
+        {
+            // Body segment colors must be properly mapped — no fallback magenta sentinel.
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.PlayerId);
+            foreach (var role in new[]
+            {
+                CharacterArtSpec.PuppetRole.BodySegment1,
+                CharacterArtSpec.PuppetRole.BodySegment2,
+                CharacterArtSpec.PuppetRole.BodySegment3,
+                CharacterArtSpec.PuppetRole.BodySegment4,
+            })
+            {
+                var c = PuppetPlaceholderSpec.ColorFor(role, p);
+                Assert.AreNotEqual(Color.magenta, c, $"{role} should not be magenta sentinel");
+            }
+        }
     }
 }

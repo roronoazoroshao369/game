@@ -48,6 +48,14 @@ namespace WildernessCultivation.Vfx
         public Transform wingLeft;
         [Tooltip("Phase 3 — Wing right transform (Crow / Bat). Optional, null skip flap.")]
         public Transform wingRight;
+        [Tooltip("Phase 4 — Body segment chain (Snake). Optional, null skip serpentine math. " +
+                 "Slot 0 = first segment after head (closest), slot 3 = tail. Mỗi segment child " +
+                 "của previous (head → seg1 → seg2 → seg3 → seg4) — Unity transform tree propagate " +
+                 "rotation tự nhiên khi parent rotates.")]
+        public Transform bodySegment1;
+        public Transform bodySegment2;
+        public Transform bodySegment3;
+        public Transform bodySegment4;
         [Tooltip("Rigidbody2D đọc velocity. Auto-assign nếu null.")]
         public Rigidbody2D body;
 
@@ -107,6 +115,20 @@ namespace WildernessCultivation.Vfx
                  "False → chỉ flap khi moving (bộ truyện nhân vật).")]
         public bool flapAlwaysOn = true;
 
+        [Header("Serpentine (Phase 4 — Snake)")]
+        [Tooltip("Serpentine wave tần số (Hz). Snake ~2-3, baseline 2.5Hz. Independent of " +
+                 "walkFrequency — body chain ripple liên tục cả khi idle (subtle wiggle) và moving " +
+                 "(full S-curve).")]
+        public float serpentineFrequency = 2.5f;
+        [Tooltip("Max body segment rotation tail (°). Head segment ~20% of this, tail full. " +
+                 "30-45 đẹp = stylized S-curve.")]
+        public float serpentineMaxAmplitudeDeg = 35f;
+        [Tooltip("Phase delay per segment (radians). Larger → spread S-curve khắp body, " +
+                 "smaller → tight wave. 0.5-0.8 = readable S-shape; 1.0+ = standing wave.")]
+        public float serpentineWaveSpreadPerSegment = 0.6f;
+        [Tooltip("True → serpentine luôn-on (Snake always wiggle). False → chỉ wiggle khi moving.")]
+        public bool serpentineAlwaysOn = true;
+
         [Header("Multi-direction sprites (PR J — L3+)")]
         [Tooltip("Sprite arrays indexed by PuppetDirection enum value (0=E, 1=N, 2=S, 3=W). " +
                  "Null entries → fallback East sprite. West dirty render bằng East + flipX. " +
@@ -127,6 +149,11 @@ namespace WildernessCultivation.Vfx
         [Tooltip("Phase 3 — Wing sprite arrays (multi-dir). Null entries → wing part missing, skip render.")]
         public Sprite[] wingLeftSpritesByDir;
         public Sprite[] wingRightSpritesByDir;
+        [Tooltip("Phase 4 — Body segment sprite arrays (multi-dir). Null entries → segment missing, skip render.")]
+        public Sprite[] bodySegment1SpritesByDir;
+        public Sprite[] bodySegment2SpritesByDir;
+        public Sprite[] bodySegment3SpritesByDir;
+        public Sprite[] bodySegment4SpritesByDir;
         [Tooltip("Hysteresis (degrees) cho direction snap — tránh flicker khi velocity gần biên E↔N / E↔S.")]
         public float directionHysteresisDeg = 8f;
 
@@ -134,6 +161,7 @@ namespace WildernessCultivation.Vfx
         Quaternion baseArmLeftRot, baseArmRightRot, baseLegLeftRot, baseLegRightRot, baseTailRot;
         Quaternion baseForearmLeftRot, baseForearmRightRot, baseShinLeftRot, baseShinRightRot;
         Quaternion baseWingLeftRot, baseWingRightRot;
+        Quaternion baseBodySegment1Rot, baseBodySegment2Rot, baseBodySegment3Rot, baseBodySegment4Rot;
         Vector3 baseTorsoPos, baseHeadPos;
         Vector3 baseSpriteRootScale;
 
@@ -142,6 +170,7 @@ namespace WildernessCultivation.Vfx
             legLeftRenderer, legRightRenderer, tailRenderer;
         SpriteRenderer forearmLeftRenderer, forearmRightRenderer, shinLeftRenderer, shinRightRenderer;
         SpriteRenderer wingLeftRenderer, wingRightRenderer;
+        SpriteRenderer bodySegment1Renderer, bodySegment2Renderer, bodySegment3Renderer, bodySegment4Renderer;
 
         CharacterArtSpec.PuppetDirection currentDir = CharacterArtSpec.PuppetDirection.East;
 
@@ -173,6 +202,10 @@ namespace WildernessCultivation.Vfx
             if (shinRight != null) baseShinRightRot = shinRight.localRotation;
             if (wingLeft != null) baseWingLeftRot = wingLeft.localRotation;
             if (wingRight != null) baseWingRightRot = wingRight.localRotation;
+            if (bodySegment1 != null) baseBodySegment1Rot = bodySegment1.localRotation;
+            if (bodySegment2 != null) baseBodySegment2Rot = bodySegment2.localRotation;
+            if (bodySegment3 != null) baseBodySegment3Rot = bodySegment3.localRotation;
+            if (bodySegment4 != null) baseBodySegment4Rot = bodySegment4.localRotation;
             if (torso != null) baseTorsoPos = torso.localPosition;
             if (head != null) baseHeadPos = head.localPosition;
             if (spriteRoot != null) baseSpriteRootScale = spriteRoot.localScale;
@@ -193,6 +226,10 @@ namespace WildernessCultivation.Vfx
             if (shinRight != null) shinRightRenderer = shinRight.GetComponent<SpriteRenderer>();
             if (wingLeft != null) wingLeftRenderer = wingLeft.GetComponent<SpriteRenderer>();
             if (wingRight != null) wingRightRenderer = wingRight.GetComponent<SpriteRenderer>();
+            if (bodySegment1 != null) bodySegment1Renderer = bodySegment1.GetComponent<SpriteRenderer>();
+            if (bodySegment2 != null) bodySegment2Renderer = bodySegment2.GetComponent<SpriteRenderer>();
+            if (bodySegment3 != null) bodySegment3Renderer = bodySegment3.GetComponent<SpriteRenderer>();
+            if (bodySegment4 != null) bodySegment4Renderer = bodySegment4.GetComponent<SpriteRenderer>();
         }
 
         /// <summary>
@@ -213,7 +250,11 @@ namespace WildernessCultivation.Vfx
                 || ArrayHasNonEastEntry(shinLeftSpritesByDir)
                 || ArrayHasNonEastEntry(shinRightSpritesByDir)
                 || ArrayHasNonEastEntry(wingLeftSpritesByDir)
-                || ArrayHasNonEastEntry(wingRightSpritesByDir);
+                || ArrayHasNonEastEntry(wingRightSpritesByDir)
+                || ArrayHasNonEastEntry(bodySegment1SpritesByDir)
+                || ArrayHasNonEastEntry(bodySegment2SpritesByDir)
+                || ArrayHasNonEastEntry(bodySegment3SpritesByDir)
+                || ArrayHasNonEastEntry(bodySegment4SpritesByDir);
         }
 
         static bool ArrayHasNonEastEntry(Sprite[] arr)
@@ -374,6 +415,45 @@ namespace WildernessCultivation.Vfx
                 if (wingRight != null) wingRight.localRotation = baseWingRightRot;
             }
 
+            // Serpentine S-curve (Phase 4 — Snake). Body chain head → seg1 → seg2 → seg3 → seg4
+            // (each child of previous). Wave travels head→tail: phase delay grows by index,
+            // amplitude grows linearly (head = 1/N of max, tail = full). Each segment rotates
+            // around its junction pivot — Unity transform tree propagate spatial wave automatically.
+            // Independent of walkFrequency: serpentineAlwaysOn → continuous wiggle (Snake idle
+            // poise still sways), else gated by moving.
+            int segCount = 0;
+            if (bodySegment1 != null) segCount = 1;
+            if (bodySegment2 != null) segCount = 2;
+            if (bodySegment3 != null) segCount = 3;
+            if (bodySegment4 != null) segCount = 4;
+            bool serpentine = segCount > 0 && (serpentineAlwaysOn || moving);
+            if (serpentine)
+            {
+                if (bodySegment1 != null)
+                    bodySegment1.localRotation = baseBodySegment1Rot * Quaternion.Euler(0f, 0f,
+                        ComputeSerpentineAngle(t, 0, segCount, serpentineFrequency,
+                            serpentineMaxAmplitudeDeg, serpentineWaveSpreadPerSegment));
+                if (bodySegment2 != null)
+                    bodySegment2.localRotation = baseBodySegment2Rot * Quaternion.Euler(0f, 0f,
+                        ComputeSerpentineAngle(t, 1, segCount, serpentineFrequency,
+                            serpentineMaxAmplitudeDeg, serpentineWaveSpreadPerSegment));
+                if (bodySegment3 != null)
+                    bodySegment3.localRotation = baseBodySegment3Rot * Quaternion.Euler(0f, 0f,
+                        ComputeSerpentineAngle(t, 2, segCount, serpentineFrequency,
+                            serpentineMaxAmplitudeDeg, serpentineWaveSpreadPerSegment));
+                if (bodySegment4 != null)
+                    bodySegment4.localRotation = baseBodySegment4Rot * Quaternion.Euler(0f, 0f,
+                        ComputeSerpentineAngle(t, 3, segCount, serpentineFrequency,
+                            serpentineMaxAmplitudeDeg, serpentineWaveSpreadPerSegment));
+            }
+            else
+            {
+                if (bodySegment1 != null) bodySegment1.localRotation = baseBodySegment1Rot;
+                if (bodySegment2 != null) bodySegment2.localRotation = baseBodySegment2Rot;
+                if (bodySegment3 != null) bodySegment3.localRotation = baseBodySegment3Rot;
+                if (bodySegment4 != null) bodySegment4.localRotation = baseBodySegment4Rot;
+            }
+
             // Lunge: snap arms forward then return.
             if (lungeStartTime >= 0f)
             {
@@ -435,6 +515,10 @@ namespace WildernessCultivation.Vfx
             ApplySpriteFromArray(shinRightRenderer, shinRightSpritesByDir, idx);
             ApplySpriteFromArray(wingLeftRenderer, wingLeftSpritesByDir, idx);
             ApplySpriteFromArray(wingRightRenderer, wingRightSpritesByDir, idx);
+            ApplySpriteFromArray(bodySegment1Renderer, bodySegment1SpritesByDir, idx);
+            ApplySpriteFromArray(bodySegment2Renderer, bodySegment2SpritesByDir, idx);
+            ApplySpriteFromArray(bodySegment3Renderer, bodySegment3SpritesByDir, idx);
+            ApplySpriteFromArray(bodySegment4Renderer, bodySegment4SpritesByDir, idx);
         }
 
         static void ApplySpriteFromArray(SpriteRenderer renderer, Sprite[] arr, int idx)
@@ -543,6 +627,42 @@ namespace WildernessCultivation.Vfx
         {
             if (frequency <= 0f) return 0f;
             return Mathf.Sin(time * 2f * Mathf.PI * frequency) * maxDeg;
+        }
+
+        /// <summary>
+        /// Serpentine body-segment angle (Phase 4 — Snake). S-curve wave traveling head→tail.
+        /// Phase delay per segment: each successive segment lags by <paramref name="waveSpreadPerSegment"/>
+        /// radians → wave propagates down chain. Amplitude scales linearly with position from head:
+        /// segmentIndex 0 → maxDeg × 1/segmentCount (small wiggle near head), segmentIndex
+        /// (segmentCount-1) → maxDeg (full whip at tail).
+        ///
+        /// <para>API: <paramref name="segmentIndex"/> 0-based (0 = first segment after head,
+        /// segmentCount-1 = tail). <paramref name="segmentCount"/> = total segments in chain
+        /// (excluding head).</para>
+        ///
+        /// <para>Range: [-maxDeg, +maxDeg]. Defensive returns 0 cho:
+        /// <list type="bullet">
+        ///   <item>frequency &lt;= 0</item>
+        ///   <item>segmentCount &lt;= 0</item>
+        ///   <item>segmentIndex &lt; 0 hoặc &gt;= segmentCount</item>
+        /// </list>
+        /// </para>
+        /// </summary>
+        public static float ComputeSerpentineAngle(float time, int segmentIndex, int segmentCount,
+            float frequency, float maxDeg, float waveSpreadPerSegment)
+        {
+            if (frequency <= 0f) return 0f;
+            if (segmentCount <= 0) return 0f;
+            if (segmentIndex < 0 || segmentIndex >= segmentCount) return 0f;
+
+            // Amplitude scales linear với position trong chain: idx 0 → 1/N (small), idx N-1 → 1 (full).
+            float amplitudeScale = (segmentIndex + 1) / (float)segmentCount;
+            float amplitude = maxDeg * amplitudeScale;
+
+            // Phase: time-driven oscillation, each segment delayed by waveSpreadPerSegment radians
+            // → wave travels head→tail (segmentIndex 0 leads, segmentIndex N-1 lags).
+            float phase = time * 2f * Mathf.PI * frequency - segmentIndex * waveSpreadPerSegment;
+            return Mathf.Sin(phase) * amplitude;
         }
     }
 }

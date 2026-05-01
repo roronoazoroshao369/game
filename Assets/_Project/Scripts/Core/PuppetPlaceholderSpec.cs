@@ -188,6 +188,13 @@ namespace WildernessCultivation.Core
                 // shoulder pivot — amplitude 50° cần silhouette đủ dài để đọc được motion.
                 case CharacterArtSpec.PuppetRole.WingLeft:
                 case CharacterArtSpec.PuppetRole.WingRight: return (54, 28);
+                // Phase 4 body segments (Snake). Oblong horizontal shape (wider than tall) +
+                // tapering tail-ward: seg1 (neck) widest → seg4 (tail) thinnest. Each segment
+                // pivot ở junction trước, rotation quanh Z propagate qua chain hierarchy.
+                case CharacterArtSpec.PuppetRole.BodySegment1: return (38, 26);
+                case CharacterArtSpec.PuppetRole.BodySegment2: return (36, 26);
+                case CharacterArtSpec.PuppetRole.BodySegment3: return (32, 24);
+                case CharacterArtSpec.PuppetRole.BodySegment4: return (26, 20);
                 default: return (32, 32);
             }
         }
@@ -213,6 +220,12 @@ namespace WildernessCultivation.Core
                 case CharacterArtSpec.PuppetRole.Tail: return palette.tail;
                 case CharacterArtSpec.PuppetRole.WingLeft:
                 case CharacterArtSpec.PuppetRole.WingRight: return palette.wing;
+                // Phase 4 body segments (Snake). Reuse tunic color (body fur) — Phase 4 PR #116
+                // sẽ add SnakeId palette với distinct scale color (currently fallback tunic).
+                case CharacterArtSpec.PuppetRole.BodySegment1:
+                case CharacterArtSpec.PuppetRole.BodySegment2:
+                case CharacterArtSpec.PuppetRole.BodySegment3:
+                case CharacterArtSpec.PuppetRole.BodySegment4: return palette.tunic;
                 default: return Color.magenta; // unknown → loud
             }
         }
@@ -224,7 +237,7 @@ namespace WildernessCultivation.Core
         /// </summary>
         public static IEnumerable<CharacterArtSpec.PuppetRole> DefaultRoles(bool includeTail)
         {
-            return DefaultRoles(includeTail, includeWings: false);
+            return DefaultRoles(includeTail, includeWings: false, includeBodySegments: false);
         }
 
         /// <summary>
@@ -234,6 +247,19 @@ namespace WildernessCultivation.Core
         /// to maintain consistent 6 PNG flat / 18 PNG multi-dir count với Wolf/Fox quadruped tier.
         /// </summary>
         public static IEnumerable<CharacterArtSpec.PuppetRole> DefaultRoles(bool includeTail, bool includeWings)
+        {
+            return DefaultRoles(includeTail, includeWings, includeBodySegments: false);
+        }
+
+        /// <summary>
+        /// Phase 4 overload — opt-in body segment roles cho serpentine mob (Snake).
+        /// <paramref name="includeBodySegments"/>=true adds BodySegment1..4 (chain head→tail).
+        /// Snake puppet: head + 4 segments (no arm/leg/wing/tail) — caller sẽ pass
+        /// includeTail=false, includeWings=false, includeBodySegments=true. Currently DefaultRoles
+        /// always emit limb set; Snake prefab sẽ filter qua một path khác (deferred Phase 4 #116).
+        /// </summary>
+        public static IEnumerable<CharacterArtSpec.PuppetRole> DefaultRoles(bool includeTail,
+            bool includeWings, bool includeBodySegments)
         {
             yield return CharacterArtSpec.PuppetRole.Head;
             yield return CharacterArtSpec.PuppetRole.Torso;
@@ -250,6 +276,13 @@ namespace WildernessCultivation.Core
             {
                 yield return CharacterArtSpec.PuppetRole.WingLeft;
                 yield return CharacterArtSpec.PuppetRole.WingRight;
+            }
+            if (includeBodySegments)
+            {
+                yield return CharacterArtSpec.PuppetRole.BodySegment1;
+                yield return CharacterArtSpec.PuppetRole.BodySegment2;
+                yield return CharacterArtSpec.PuppetRole.BodySegment3;
+                yield return CharacterArtSpec.PuppetRole.BodySegment4;
             }
         }
     }

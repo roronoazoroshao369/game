@@ -35,6 +35,14 @@ namespace WildernessCultivation.Core
         // riêng (always-on, amplitude lớn 45-60°, frequency independent of walk speed).
         public const string FilenameWingLeft = "wing_left";
         public const string FilenameWingRight = "wing_right";
+        // Phase 4 serpentine rig (Snake). Body segment chain — head + 4 segments theo phong cách
+        // DST tail-segment chain. Mỗi segment child of previous (head → seg1 → seg2 → seg3 → seg4)
+        // pivot quanh phía trước. Math S-curve: phase offset tăng theo index, amplitude tăng
+        // theo position từ head (head=0, tail=full). Independent of walk math.
+        public const string FilenameBodySeg1 = "body_seg_1";
+        public const string FilenameBodySeg2 = "body_seg_2";
+        public const string FilenameBodySeg3 = "body_seg_3";
+        public const string FilenameBodySeg4 = "body_seg_4";
 
         // Direction subfolder names (lowercase, single char). Importer match
         // case-insensitive — user có thể dùng "E"/"e"/"East" tùy thích.
@@ -64,6 +72,14 @@ namespace WildernessCultivation.Core
             // frequency độc lập walkFrequency.
             WingLeft = 11,
             WingRight = 12,
+            // Phase 4: serpentine body chain (Snake). 4 segments + head — chain hierarchy
+            // (head → seg1 → seg2 → seg3 → seg4), mỗi segment child của previous, pivot ở
+            // junction trước. S-curve math riêng (ComputeSerpentineAngle) phase offset tăng
+            // theo index, amplitude tăng theo position from head.
+            BodySegment1 = 13,
+            BodySegment2 = 14,
+            BodySegment3 = 15,
+            BodySegment4 = 16,
             Unknown = -1
         }
 
@@ -105,6 +121,10 @@ namespace WildernessCultivation.Core
             if (lower == FilenameShinRight) return PuppetRole.ShinRight;
             if (lower == FilenameWingLeft) return PuppetRole.WingLeft;
             if (lower == FilenameWingRight) return PuppetRole.WingRight;
+            if (lower == FilenameBodySeg1) return PuppetRole.BodySegment1;
+            if (lower == FilenameBodySeg2) return PuppetRole.BodySegment2;
+            if (lower == FilenameBodySeg3) return PuppetRole.BodySegment3;
+            if (lower == FilenameBodySeg4) return PuppetRole.BodySegment4;
             return PuppetRole.Unknown;
         }
 

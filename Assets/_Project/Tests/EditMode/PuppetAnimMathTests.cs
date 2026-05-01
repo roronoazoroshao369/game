@@ -173,6 +173,137 @@ namespace WildernessCultivation.Tests.EditMode
             }
         }
 
+        // ---------- ComputeSerpentineAngle (Phase 4 — Snake S-curve) ----------
+
+        [Test]
+        public void SerpentineAngle_AtZero_HeadsegLeads()
+        {
+            // t=0, segIndex=0, phase = 0 - 0*spread = 0 → sin(0)=0.
+            // Smallest amplitude (1/N) but result is 0 anyway since sin(0)=0.
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(0f, 0, 4, 2.5f, 35f, 0.6f),
+                0.0001f);
+        }
+
+        [Test]
+        public void SerpentineAngle_AmplitudeScalesLinearWithIndex()
+        {
+            // Sample tại quarter-period of seg0 (sin = 1) — segIndex=0 sees full sin=1.
+            // Other segments at this same time have phase delay → not at peak. So instead
+            // verify at sin-aligned time per-segment: peak amplitude per-segment = maxDeg × (idx+1)/N.
+            // Equivalent: at the segment's own sin-peak, amplitude = maxDeg × (idx+1)/N.
+            float maxDeg = 100f, freq = 1f, spread = 0.6f;
+            int N = 4;
+            for (int idx = 0; idx < N; idx++)
+            {
+                // Time tại đó phase = π/2: t * 2π = π/2 + idx * spread → t = (π/2 + idx*spread) / (2π)
+                float t = ((float)System.Math.PI / 2f + idx * spread) / (2f * (float)System.Math.PI);
+                float a = PuppetAnimController.ComputeSerpentineAngle(t, idx, N, freq, maxDeg, spread);
+                float expected = maxDeg * (idx + 1) / (float)N;
+                Assert.AreEqual(expected, a, 0.01f, $"segIndex={idx} expected amp={expected}");
+            }
+        }
+
+        [Test]
+        public void SerpentineAngle_PhaseTravelsHeadToTail()
+        {
+            // Wave should travel head→tail: at any fixed time, segIndex 0 leads phase,
+            // segIndex N-1 lags. Verify by checking that when seg0 hits sin-peak, seg(N-1)
+            // hasn't yet (its sin value < 1).
+            int N = 4;
+            float freq = 1f, spread = 0.6f, maxDeg = 100f;
+            // Time when seg0 is at its sin-peak (phase = π/2): t = 1/(4·freq) = 0.25
+            float tPeak0 = 1f / (4f * freq);
+            float a0 = PuppetAnimController.ComputeSerpentineAngle(tPeak0, 0, N, freq, maxDeg, spread);
+            float aLast = PuppetAnimController.ComputeSerpentineAngle(tPeak0, N - 1, N, freq, maxDeg, spread);
+            // Seg0 at full-amplitude peak (1/N = 25%): a0 = 25.
+            Assert.AreEqual(maxDeg / N, a0, 0.01f, "seg0 should be at its sin-peak");
+            // Seg(N-1) lags by (N-1)*spread radians = 1.8 rad → sin(π/2 - 1.8) ~ -0.227.
+            // Amplitude tail = maxDeg, so a_last ~ -22.7.
+            Assert.Less(aLast, a0, "tail (seg N-1) should lag — value differs from head leader");
+        }
+
+        [Test]
+        public void SerpentineAngle_BoundedByMaxDeg()
+        {
+            // Sample many (time, idx) → all values in [-maxDeg, +maxDeg].
+            int N = 4;
+            float freq = 2.5f, spread = 0.6f, maxDeg = 35f;
+            for (int i = 0; i < 200; i++)
+            {
+                float t = i * 0.013f; // ~2.6 sec total
+                for (int idx = 0; idx < N; idx++)
+                {
+                    float a = PuppetAnimController.ComputeSerpentineAngle(t, idx, N, freq, maxDeg, spread);
+                    Assert.LessOrEqual(System.Math.Abs(a), maxDeg + 0.0001f,
+                        $"t={t} idx={idx} a={a}");
+                }
+            }
+        }
+
+        [Test]
+        public void SerpentineAngle_ZeroFrequency_DefensiveZero()
+        {
+            // freq=0 → snake dừng wiggle (avoid sin(0·t) trivial).
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(1.5f, 1, 4, 0f, 35f, 0.6f),
+                0.0001f);
+        }
+
+        [Test]
+        public void SerpentineAngle_NegativeFrequency_DefensiveZero()
+        {
+            // Invalid input → standstill thay vì reverse-traveling wave.
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(1.5f, 1, 4, -2f, 35f, 0.6f),
+                0.0001f);
+        }
+
+        [Test]
+        public void SerpentineAngle_InvalidSegmentIndex_DefensiveZero()
+        {
+            // segIndex out-of-range → 0 (defensive — null segment slot or mis-config).
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(0.5f, -1, 4, 2.5f, 35f, 0.6f),
+                0.0001f);
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(0.5f, 4, 4, 2.5f, 35f, 0.6f),
+                0.0001f);
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(0.5f, 99, 4, 2.5f, 35f, 0.6f),
+                0.0001f);
+        }
+
+        [Test]
+        public void SerpentineAngle_ZeroSegmentCount_DefensiveZero()
+        {
+            // segmentCount=0 → nothing to drive (defensive — caller filtered out).
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(0.5f, 0, 0, 2.5f, 35f, 0.6f),
+                0.0001f);
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeSerpentineAngle(0.5f, 0, -1, 2.5f, 35f, 0.6f),
+                0.0001f);
+        }
+
+        [Test]
+        public void SerpentineAngle_PeriodicityHolds()
+        {
+            // Invariant: f(t) == f(t + 1/freq) cho cùng segIndex (1 full period repeats).
+            int N = 4;
+            float freq = 2.5f, spread = 0.6f, maxDeg = 35f;
+            float[] testTimes = { 0.013f, 0.087f, 0.21f, 0.55f };
+            foreach (var t in testTimes)
+            {
+                for (int idx = 0; idx < N; idx++)
+                {
+                    float a0 = PuppetAnimController.ComputeSerpentineAngle(t, idx, N, freq, maxDeg, spread);
+                    float a1 = PuppetAnimController.ComputeSerpentineAngle(t + 1f / freq, idx, N, freq, maxDeg, spread);
+                    Assert.AreEqual(a0, a1, 0.001f, $"t={t} idx={idx} period mismatch");
+                }
+            }
+        }
+
         // ---------- CharacterArtSpec.TryParseRole ----------
 
         [Test]
@@ -209,6 +340,34 @@ namespace WildernessCultivation.Tests.EditMode
             // Wing chỉ cần cho flying mob (Crow / Bat) — không phải required cho puppet build.
             Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.WingLeft));
             Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.WingRight));
+        }
+
+        // ---------- Phase 4: BodySegment1..4 (serpentine — Snake) ----------
+
+        [Test]
+        public void TryParseRole_BodySegmentFilenames_Recognized()
+        {
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.BodySegment1, CharacterArtSpec.TryParseRole("body_seg_1"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.BodySegment2, CharacterArtSpec.TryParseRole("body_seg_2"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.BodySegment3, CharacterArtSpec.TryParseRole("body_seg_3"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.BodySegment4, CharacterArtSpec.TryParseRole("body_seg_4"));
+        }
+
+        [Test]
+        public void TryParseRole_BodySegmentFilenames_CaseInsensitive()
+        {
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.BodySegment1, CharacterArtSpec.TryParseRole("Body_Seg_1"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.BodySegment4, CharacterArtSpec.TryParseRole("BODY_SEG_4"));
+        }
+
+        [Test]
+        public void IsRequiredForPuppet_BodySegments_AreOptional()
+        {
+            // Body segments chỉ cần cho serpentine mob (Snake) — không required cho puppet build.
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.BodySegment1));
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.BodySegment2));
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.BodySegment3));
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.BodySegment4));
         }
 
         [Test]
