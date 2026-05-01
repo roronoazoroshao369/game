@@ -39,6 +39,8 @@ namespace WildernessCultivation.World
         public int seed = 12345;
         public Vector2Int size = new(100, 100);
         public Transform contentParent;
+        [Tooltip("Toroidal world: tọa độ wrap mod size khi query biome/tile/noise. Player đi mãi không tới điểm cuối — đến edge thì lookup vòng về 0 (hình bánh donut). Tắt = clamp tọa độ ở mép (legacy). Foundation cho chunk streaming PR sau.")]
+        public bool wrapWorld = true;
 
         [Header("Biomes (cách dùng mới — bỏ trống để fallback prefab legacy)")]
         public BiomeSO[] biomes;
@@ -284,12 +286,17 @@ namespace WildernessCultivation.World
         /// <summary>
         /// Pick ground tile cho cell (x,y). Ưu tiên biome.groundTileVariants nếu có (deterministic
         /// hash) → biome.groundTile → legacyGroundTile. Variant pick stable across regenerate cùng seed.
+        ///
+        /// Khi <see cref="wrapWorld"/> = true: (x, y) wrap mod size trước khi hash → cell ở
+        /// vượt biên trả về cùng variant như cell wrapped tương ứng (toroidal lookup).
         /// </summary>
         public TileBase PickGroundTile(BiomeSO biome, int x, int y)
         {
             if (biome != null && biome.groundTileVariants != null && biome.groundTileVariants.Length > 0)
             {
-                int idx = (int)(VariantHash(seed, x, y) % (uint)biome.groundTileVariants.Length);
+                int hx = wrapWorld ? WrapCoord(x, size.x) : x;
+                int hy = wrapWorld ? WrapCoord(y, size.y) : y;
+                int idx = (int)(VariantHash(seed, hx, hy) % (uint)biome.groundTileVariants.Length);
                 var picked = biome.groundTileVariants[idx];
                 if (picked != null) return picked;
                 // Variant slot null → fallback groundTile (don't crash on partial config).
@@ -353,9 +360,19 @@ namespace WildernessCultivation.World
         /// cells trước khi sample primary noise → contour boundary uốn lượn ragged thay vì
         /// đường cong smooth (= ranh giới biome nhìn cứng). Khi warp=0 trả về exact công
         /// thức cũ (backward compat).
+        ///
+        /// Khi <see cref="wrapWorld"/> = true (default): tọa độ (x, y) wrap mod
+        /// (size.x, size.y) ở entry → query vượt biên trả về cùng noise như cell tương
+        /// ứng trong [0..size). Foundation cho chunk streaming + toroidal "đi mãi
+        /// không tới điểm cuối".
         /// </summary>
         public float BiomeNoiseValue(int x, int y)
         {
+            if (wrapWorld)
+            {
+                x = WrapCoord(x, size.x);
+                y = WrapCoord(y, size.y);
+            }
             float xf = x;
             float yf = y;
             if (biomeBoundaryWarp > 0f)
@@ -370,6 +387,18 @@ namespace WildernessCultivation.World
             }
             return Mathf.PerlinNoise((xf + seed * 0.7f) * biomeNoiseScale,
                                       (yf - seed * 0.7f) * biomeNoiseScale);
+        }
+
+        /// <summary>
+        /// Wrap tọa độ về [0, N) bằng modulo dương (handle negative input đúng cách —
+        /// `-1 % N == N-1`, không phải `-1`). Trả về v unchanged nếu N &lt;= 0
+        /// (safety guard cho size chưa init).
+        /// </summary>
+        public static int WrapCoord(int v, int N)
+        {
+            if (N <= 0) return v;
+            int r = v % N;
+            return r < 0 ? r + N : r;
         }
 
         /// <summary>
@@ -388,12 +417,25 @@ namespace WildernessCultivation.World
             return biomes[0];
         }
 
-        /// <summary>Trả về biome ở vị trí world (làm tròn về tile). Null nếu chưa setup biome list.</summary>
+        /// <summary>
+        /// Trả về biome ở vị trí world (làm tròn về tile). Null nếu chưa setup biome list.
+        /// Khi <see cref="wrapWorld"/> = true: tọa độ wrap mod size (player ở vượt biên
+        /// vẫn lookup đúng biome qua toroidal). Tắt = clamp về mép (legacy).
+        /// </summary>
         public BiomeSO BiomeAt(Vector3 worldPos)
         {
             if (biomes == null || biomes.Length == 0) return null;
-            int x = Mathf.Clamp((int)worldPos.x, 0, Mathf.Max(0, size.x - 1));
-            int y = Mathf.Clamp((int)worldPos.y, 0, Mathf.Max(0, size.y - 1));
+            int x, y;
+            if (wrapWorld)
+            {
+                x = WrapCoord(Mathf.FloorToInt(worldPos.x), size.x);
+                y = WrapCoord(Mathf.FloorToInt(worldPos.y), size.y);
+            }
+            else
+            {
+                x = Mathf.Clamp((int)worldPos.x, 0, Mathf.Max(0, size.x - 1));
+                y = Mathf.Clamp((int)worldPos.y, 0, Mathf.Max(0, size.y - 1));
+            }
             return PickBiomeFor(x, y);
         }
     }
