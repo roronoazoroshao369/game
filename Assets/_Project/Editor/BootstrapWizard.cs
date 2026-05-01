@@ -1282,7 +1282,10 @@ namespace WildernessCultivation.EditorTools
             // World container + WorldGenerator
             var worldGo = new GameObject("World");
             var wg = worldGo.AddComponent<WorldGenerator>();
-            wg.size = new Vector2Int(40, 40);
+            // 256×256 = 64 chunks (chunkSize=16) × 64 chunks. Đủ rộng cho user
+            // demo wrap-around (đi >256 cells theo 1 hướng → loop về). ChunkManager
+            // bên dưới chỉ load render window quanh player → KHÔNG hang Start.
+            wg.size = new Vector2Int(256, 256);
             wg.seed = 12345;
             wg.contentParent = worldGo.transform;
             wg.player = player.transform;
@@ -1344,6 +1347,15 @@ namespace WildernessCultivation.EditorTools
             spawner.parent = worldGo.transform;
             wg.mobSpawner = spawner;
             saveLoad.worldGenerator = wg;
+
+            // ChunkManager: render window 4-chunk radius (=9×9=81 chunks active = 81×256
+            // = 20k cells render quanh player). World 256² = 64×64 chunks → ChunkManager
+            // dynamic load/unload khi player di chuyển. WorldGenerator.Start() detect
+            // ChunkManager component → skip global Generate.
+            var chunkMgr = worldGo.AddComponent<ChunkManager>();
+            chunkMgr.player = player.transform;
+            chunkMgr.mobSpawner = spawner;
+            chunkMgr.renderRadiusChunks = 4;
 
             // Place 1 campfire near spawn. WorldGenerator.Start() teleports player to
             // (size.x*0.5, size.y*0.5, 0) = (20, 20, 0) với size 40x40, nên campfire phải
