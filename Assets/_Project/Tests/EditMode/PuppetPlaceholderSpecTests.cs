@@ -89,6 +89,26 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
+        public void PaletteFor_Rabbit_HasBrownTanTunic()
+        {
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.RabbitId);
+            // Brown/tan dominance: R > G > B (warm earthy fur).
+            Assert.Greater(p.tunic.r, p.tunic.g);
+            Assert.Greater(p.tunic.g, p.tunic.b);
+        }
+
+        [Test]
+        public void PaletteFor_Rabbit_TailIsBrightWhite()
+        {
+            // Rabbit puffy white tail = hero feature, brighter than torso fur.
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.RabbitId);
+            float tailBrightness = (p.tail.r + p.tail.g + p.tail.b) / 3f;
+            float tunicBrightness = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+            Assert.Greater(tailBrightness, tunicBrightness,
+                "Rabbit puffy tail should be brighter than torso fur (hero feature visibility).");
+        }
+
+        [Test]
         public void PaletteFor_UnknownId_FallsBackToNeutralGray()
         {
             var p = PuppetPlaceholderSpec.PaletteFor("doesnt_exist");
@@ -106,7 +126,8 @@ namespace WildernessCultivation.Tests.EditMode
             {
                 PuppetPlaceholderSpec.PlayerId,
                 PuppetPlaceholderSpec.WolfId,
-                PuppetPlaceholderSpec.FoxSpiritId
+                PuppetPlaceholderSpec.FoxSpiritId,
+                PuppetPlaceholderSpec.RabbitId
             })
             {
                 var p = PuppetPlaceholderSpec.PaletteFor(id);

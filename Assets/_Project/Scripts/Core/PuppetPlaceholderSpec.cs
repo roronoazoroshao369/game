@@ -30,6 +30,7 @@ namespace WildernessCultivation.Core
         public const string PlayerId = "player";
         public const string WolfId = "wolf";
         public const string FoxSpiritId = "fox_spirit";
+        public const string RabbitId = "rabbit";
 
         /// <summary>
         /// Default palette per character ID. Unknown id → fallback "neutral" gray. Distinct
@@ -65,6 +66,15 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.65f, 0.32f, 0.15f),
                         shin = new Color(0.40f, 0.20f, 0.10f),
                         tail = new Color(0.92f, 0.55f, 0.25f),
+                    };
+                case RabbitId:
+                    return new Palette
+                    {
+                        skin = new Color(0.91f, 0.84f, 0.72f),
+                        tunic = new Color(0.72f, 0.58f, 0.44f),
+                        trousers = new Color(0.55f, 0.42f, 0.30f),
+                        shin = new Color(0.36f, 0.28f, 0.20f),
+                        tail = new Color(0.95f, 0.92f, 0.85f),
                     };
                 default:
                     return new Palette
