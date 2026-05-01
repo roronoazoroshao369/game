@@ -25,6 +25,12 @@ namespace WildernessCultivation.Core
         public const string FilenameLegLeft = "leg_left";
         public const string FilenameLegRight = "leg_right";
         public const string FilenameTail = "tail";
+        // PR K (L2 elbow/knee joints): forearm child of arm, shin child of leg.
+        // All 4 optional — puppet build vẫn pass nếu thiếu (legacy 7-joint behavior).
+        public const string FilenameForearmLeft = "forearm_left";
+        public const string FilenameForearmRight = "forearm_right";
+        public const string FilenameShinLeft = "shin_left";
+        public const string FilenameShinRight = "shin_right";
 
         // Direction subfolder names (lowercase, single char). Importer match
         // case-insensitive — user có thể dùng "E"/"e"/"East" tùy thích.
@@ -41,9 +47,13 @@ namespace WildernessCultivation.Core
             Tail = 0,        // optional, sau body
             LegLeft = 1,
             LegRight = 2,
+            ShinLeft = 7,    // PR K: child of LegLeft, render same layer
+            ShinRight = 8,   // PR K: child of LegRight
             Torso = 3,
             ArmLeft = 4,
             ArmRight = 5,
+            ForearmLeft = 9,  // PR K: child of ArmLeft, sortingOrder above arm
+            ForearmRight = 10, // PR K: child of ArmRight
             Head = 6,
             Unknown = -1
         }
@@ -80,6 +90,10 @@ namespace WildernessCultivation.Core
             if (lower == FilenameLegLeft) return PuppetRole.LegLeft;
             if (lower == FilenameLegRight) return PuppetRole.LegRight;
             if (lower == FilenameTail) return PuppetRole.Tail;
+            if (lower == FilenameForearmLeft) return PuppetRole.ForearmLeft;
+            if (lower == FilenameForearmRight) return PuppetRole.ForearmRight;
+            if (lower == FilenameShinLeft) return PuppetRole.ShinLeft;
+            if (lower == FilenameShinRight) return PuppetRole.ShinRight;
             return PuppetRole.Unknown;
         }
 

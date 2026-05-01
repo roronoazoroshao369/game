@@ -36,6 +36,14 @@ namespace WildernessCultivation.Vfx
         public Transform legRight;
         [Tooltip("Optional tail (cho mob có tail).")]
         public Transform tail;
+        [Tooltip("PR K — Forearm child of armLeft (elbow bend khi attack). Optional, null skip.")]
+        public Transform forearmLeft;
+        [Tooltip("PR K — Forearm child of armRight (elbow bend khi attack). Optional.")]
+        public Transform forearmRight;
+        [Tooltip("PR K — Shin child of legLeft (knee bend khi crouch + walk back-swing).")]
+        public Transform shinLeft;
+        [Tooltip("PR K — Shin child of legRight (knee bend khi crouch + walk back-swing).")]
+        public Transform shinRight;
         [Tooltip("Rigidbody2D đọc velocity. Auto-assign nếu null.")]
         public Rigidbody2D body;
 
@@ -71,6 +79,14 @@ namespace WildernessCultivation.Vfx
         [Tooltip("Lerp speed crouch transition.")]
         public float crouchLerpRate = 12f;
 
+        [Header("Joints — elbow / knee (PR K, L2)")]
+        [Tooltip("Max forearm bend (deg) khi attack lunge. 30-50 = stylized punch.")]
+        public float elbowBendDeg = 40f;
+        [Tooltip("Max shin bend (deg) khi crouch knee bend.")]
+        public float kneeCrouchBendDeg = 35f;
+        [Tooltip("Max shin bend (deg) khi walk back-swing (foot lift). 0 = disable, 10-20 đẹp.")]
+        public float kneeWalkBendDeg = 12f;
+
         [Header("Tail (optional)")]
         [Tooltip("Tail sway tần số.")]
         public float tailSwayFrequency = 1.5f;
@@ -89,17 +105,24 @@ namespace WildernessCultivation.Vfx
         public Sprite[] legLeftSpritesByDir;
         public Sprite[] legRightSpritesByDir;
         public Sprite[] tailSpritesByDir;
+        [Tooltip("PR K — Forearm sprite arrays (multi-dir). Null entries → forearm part missing, skip render.")]
+        public Sprite[] forearmLeftSpritesByDir;
+        public Sprite[] forearmRightSpritesByDir;
+        public Sprite[] shinLeftSpritesByDir;
+        public Sprite[] shinRightSpritesByDir;
         [Tooltip("Hysteresis (degrees) cho direction snap — tránh flicker khi velocity gần biên E↔N / E↔S.")]
         public float directionHysteresisDeg = 8f;
 
         // Cached base local rotations / positions (init from inspector / scene-time pose).
         Quaternion baseArmLeftRot, baseArmRightRot, baseLegLeftRot, baseLegRightRot, baseTailRot;
+        Quaternion baseForearmLeftRot, baseForearmRightRot, baseShinLeftRot, baseShinRightRot;
         Vector3 baseTorsoPos, baseHeadPos;
         Vector3 baseSpriteRootScale;
 
         // Cached SpriteRenderers từ body part transforms — dung sprite swap khi đổi direction.
         SpriteRenderer headRenderer, torsoRenderer, armLeftRenderer, armRightRenderer,
             legLeftRenderer, legRightRenderer, tailRenderer;
+        SpriteRenderer forearmLeftRenderer, forearmRightRenderer, shinLeftRenderer, shinRightRenderer;
 
         CharacterArtSpec.PuppetDirection currentDir = CharacterArtSpec.PuppetDirection.East;
 
@@ -125,6 +148,10 @@ namespace WildernessCultivation.Vfx
             if (legLeft != null) baseLegLeftRot = legLeft.localRotation;
             if (legRight != null) baseLegRightRot = legRight.localRotation;
             if (tail != null) baseTailRot = tail.localRotation;
+            if (forearmLeft != null) baseForearmLeftRot = forearmLeft.localRotation;
+            if (forearmRight != null) baseForearmRightRot = forearmRight.localRotation;
+            if (shinLeft != null) baseShinLeftRot = shinLeft.localRotation;
+            if (shinRight != null) baseShinRightRot = shinRight.localRotation;
             if (torso != null) baseTorsoPos = torso.localPosition;
             if (head != null) baseHeadPos = head.localPosition;
             if (spriteRoot != null) baseSpriteRootScale = spriteRoot.localScale;
@@ -139,6 +166,10 @@ namespace WildernessCultivation.Vfx
             if (legLeft != null) legLeftRenderer = legLeft.GetComponent<SpriteRenderer>();
             if (legRight != null) legRightRenderer = legRight.GetComponent<SpriteRenderer>();
             if (tail != null) tailRenderer = tail.GetComponent<SpriteRenderer>();
+            if (forearmLeft != null) forearmLeftRenderer = forearmLeft.GetComponent<SpriteRenderer>();
+            if (forearmRight != null) forearmRightRenderer = forearmRight.GetComponent<SpriteRenderer>();
+            if (shinLeft != null) shinLeftRenderer = shinLeft.GetComponent<SpriteRenderer>();
+            if (shinRight != null) shinRightRenderer = shinRight.GetComponent<SpriteRenderer>();
         }
 
         /// <summary>
@@ -153,7 +184,11 @@ namespace WildernessCultivation.Vfx
                 || ArrayHasNonEastEntry(armRightSpritesByDir)
                 || ArrayHasNonEastEntry(legLeftSpritesByDir)
                 || ArrayHasNonEastEntry(legRightSpritesByDir)
-                || ArrayHasNonEastEntry(tailSpritesByDir);
+                || ArrayHasNonEastEntry(tailSpritesByDir)
+                || ArrayHasNonEastEntry(forearmLeftSpritesByDir)
+                || ArrayHasNonEastEntry(forearmRightSpritesByDir)
+                || ArrayHasNonEastEntry(shinLeftSpritesByDir)
+                || ArrayHasNonEastEntry(shinRightSpritesByDir);
         }
 
         static bool ArrayHasNonEastEntry(Sprite[] arr)
@@ -222,6 +257,13 @@ namespace WildernessCultivation.Vfx
                     legLeft.localRotation = baseLegLeftRot * Quaternion.Euler(0f, 0f, -walkSin * legSwingDeg);
                 if (legRight != null)
                     legRight.localRotation = baseLegRightRot * Quaternion.Euler(0f, 0f, walkSin * legSwingDeg);
+
+                // Knee bend on walk back-swing: shin rotates forward when foot lifts up
+                // (leg swinging backward). Left leg back-swing = walkSin > 0; right = walkSin < 0.
+                if (shinLeft != null)
+                    shinLeft.localRotation = baseShinLeftRot * Quaternion.Euler(0f, 0f, ComputeWalkKneeBend(walkSin, kneeWalkBendDeg));
+                if (shinRight != null)
+                    shinRight.localRotation = baseShinRightRot * Quaternion.Euler(0f, 0f, ComputeWalkKneeBend(-walkSin, kneeWalkBendDeg));
             }
             else
             {
@@ -230,7 +272,14 @@ namespace WildernessCultivation.Vfx
                 if (armRight != null) armRight.localRotation = baseArmRightRot;
                 if (legLeft != null) legLeft.localRotation = baseLegLeftRot;
                 if (legRight != null) legRight.localRotation = baseLegRightRot;
+                if (shinLeft != null) shinLeft.localRotation = baseShinLeftRot;
+                if (shinRight != null) shinRight.localRotation = baseShinRightRot;
             }
+
+            // Forearm follows arm rigidly during walk (no extra bend). Reset to neutral every
+            // frame — lunge block below overrides for attacking arm.
+            if (forearmLeft != null) forearmLeft.localRotation = baseForearmLeftRot;
+            if (forearmRight != null) forearmRight.localRotation = baseForearmRightRot;
 
             // Torso bob: walking → speed-proportional sin; idle → slow breath.
             float bobY = moving
@@ -240,6 +289,18 @@ namespace WildernessCultivation.Vfx
             // Crouch lerp (sticky toggle).
             float crouchTarget = crouching ? crouchTorsoYOffset : 0f;
             currentCrouchY = MobAnimController.ApplyExponentialDamping(currentCrouchY, crouchTarget, crouchLerpRate, dt);
+
+            // Knee crouch bend: proportional to current crouch Y (lerped). Apply additive
+            // on top of walk back-swing bend (max wins via additive deg — in practice walk
+            // bend is small and crouch state is sticky, so additive is OK).
+            float crouchAmount = crouchTorsoYOffset != 0f
+                ? Mathf.Clamp01(currentCrouchY / crouchTorsoYOffset)
+                : 0f;
+            float kneeCrouchAngle = ComputeCrouchKneeBend(crouchAmount, kneeCrouchBendDeg);
+            if (shinLeft != null && kneeCrouchAngle > 0.01f)
+                shinLeft.localRotation *= Quaternion.Euler(0f, 0f, kneeCrouchAngle);
+            if (shinRight != null && kneeCrouchAngle > 0.01f)
+                shinRight.localRotation *= Quaternion.Euler(0f, 0f, kneeCrouchAngle);
 
             // Squash punch — applied as scale on spriteRoot.
             float squashFactor = 1f;
@@ -281,6 +342,15 @@ namespace WildernessCultivation.Vfx
                     armRight.localRotation = baseArmRightRot * Quaternion.Euler(0f, 0f, signedAngle);
                 if (armLeft != null)
                     armLeft.localRotation = baseArmLeftRot * Quaternion.Euler(0f, 0f, signedAngle);
+
+                // Elbow bend during punch: forearm bends back at mid-lunge (windup peak)
+                // then extends straight at end. Bell curve sin(π × u) signed opposite of arm swing.
+                float elbowAngle = ComputeLungeElbowBend(u, elbowBendDeg);
+                float signedElbow = lungeDir.x >= 0f ? elbowAngle : -elbowAngle;
+                if (forearmRight != null)
+                    forearmRight.localRotation = baseForearmRightRot * Quaternion.Euler(0f, 0f, signedElbow);
+                if (forearmLeft != null)
+                    forearmLeft.localRotation = baseForearmLeftRot * Quaternion.Euler(0f, 0f, signedElbow);
                 if (age >= lungeDuration) lungeStartTime = -1f;
             }
 
@@ -315,6 +385,10 @@ namespace WildernessCultivation.Vfx
             ApplySpriteFromArray(legLeftRenderer, legLeftSpritesByDir, idx);
             ApplySpriteFromArray(legRightRenderer, legRightSpritesByDir, idx);
             ApplySpriteFromArray(tailRenderer, tailSpritesByDir, idx);
+            ApplySpriteFromArray(forearmLeftRenderer, forearmLeftSpritesByDir, idx);
+            ApplySpriteFromArray(forearmRightRenderer, forearmRightSpritesByDir, idx);
+            ApplySpriteFromArray(shinLeftRenderer, shinLeftSpritesByDir, idx);
+            ApplySpriteFromArray(shinRightRenderer, shinRightSpritesByDir, idx);
         }
 
         static void ApplySpriteFromArray(SpriteRenderer renderer, Sprite[] arr, int idx)
@@ -379,6 +453,36 @@ namespace WildernessCultivation.Vfx
         {
             if (referenceSpeed <= 0f) return 1f;
             return Mathf.Clamp(speed / referenceSpeed, minRatio, maxRatio);
+        }
+
+        /// <summary>
+        /// Walk knee bend (PR K, L2): shin rotates forward when leg swings backward.
+        /// Pass leg-specific sin (positive = back-swing). Returns deg ∈ [0, maxDeg]
+        /// (knee never hyper-extends backward — clamped at 0).
+        /// </summary>
+        public static float ComputeWalkKneeBend(float legBackSin, float maxDeg)
+        {
+            return Mathf.Max(0f, legBackSin) * maxDeg;
+        }
+
+        /// <summary>
+        /// Crouch knee bend (PR K, L2): shin rotates forward proportional to crouch amount.
+        /// <paramref name="crouchAmount"/> ∈ [0, 1] (0 = standing, 1 = full crouch). Returns deg.
+        /// </summary>
+        public static float ComputeCrouchKneeBend(float crouchAmount, float maxDeg)
+        {
+            return Mathf.Clamp01(crouchAmount) * maxDeg;
+        }
+
+        /// <summary>
+        /// Lunge elbow bend (PR K, L2): forearm bends inward at mid-lunge windup peak,
+        /// straightens at end. Bell curve sin(π × u). Returns positive deg — caller signs
+        /// based on lunge direction (mirror with arm signedAngle).
+        /// </summary>
+        public static float ComputeLungeElbowBend(float u, float maxDeg)
+        {
+            float clamped = Mathf.Clamp01(u);
+            return Mathf.Sin(Mathf.PI * clamped) * maxDeg;
         }
     }
 }
