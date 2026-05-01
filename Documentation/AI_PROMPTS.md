@@ -11,7 +11,7 @@
 
 1. [Style Anchor (universal preamble)](#1-style-anchor-universal-preamble)
 2. [Negative Prompt (universal)](#2-negative-prompt-universal)
-3. [Puppet Characters](#3-puppet-characters) — Player, Wolf, FoxSpirit (multi-piece) + §3.4 multi-direction NSEW variants + §3.5 L2 elbow/knee (forearm + shin)
+3. [Puppet Characters](#3-puppet-characters) — §3.0 asset count checklist + Player, Wolf, FoxSpirit (multi-piece) + §3.4 multi-direction NSEW variants + §3.5 L2 elbow/knee (forearm + shin)
 4. [Single-Sprite Mobs](#4-single-sprite-mobs) — Rabbit, Boar, Deer Spirit, Crow, Snake, Bat, Boss (Phase 1 + Phase 2 enraged)
 5. [Resources / World Objects](#5-resources--world-objects) — tree, rock, water, mushroom, berry, cactus, lily, bamboo, grass tile, mineral, structures (+ §5.13 state variants: harvested / depleted)
 6. [Item Icons](#6-item-icons) — 22 inventory icons (materials, foods, tools, accessories)
@@ -81,6 +81,45 @@ no lens flare, no ground beneath subject for body parts.
 > - **Multi-dir** = 4-cardinal NSEW (Don't Starve / Stardew style). Drop side prompts vào `{id}/E/head.png` etc., **plus** N (back) + S (front) variants per §3.4. W = mirror E (free).
 >
 > **Recommendation:** start với flat → playtest → upgrade multi-dir nếu side-only không đủ "alive". Prompts §3.4 chỉ delta (view change) — palette + style + brush strokes anchor giữ nguyên 100% từ §3.1/3.2/3.3 để đảm bảo cross-dir consistency.
+
+### 3.0 Asset Count Checklist (đọc TRƯỚC khi gen)
+
+> **Q: 1 character / mob đủ là bao nhiêu ảnh?**
+> **A:** Tùy character TYPE và TIER chọn — bảng dưới liệt kê chính xác.
+
+| Character | Type | Flat L1 (E-only, side) | Multi-dir L1 (E+N+S) | + L2 elbow/knee | Notes |
+|---|---|---|---|---|---|
+| **Player** (`Art/Characters/player/`) | bipedal puppet | **6** | **18** | +4 (E only) / +12 (multi-dir) | head + torso + 2 arms + 2 legs |
+| **Wolf** (`Art/Characters/wolf/`) | quadruped puppet | **7** | **21** | n/a | + tail (L2 chỉ áp dụng player-shaped puppet) |
+| **FoxSpirit** (`Art/Characters/fox_spirit/`) | quadruped puppet | **7** | **21** | n/a | + tail (hero feature ở N back-view) |
+| **Rabbit / Boar / Deer / Crow / Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — không cần puppet |
+| **Boss — Hắc Vương** | single-sprite | **3** | n/a | n/a | Phase 1 + Phase 2 enraged + death decay (xem §4.7-4.9) |
+
+**Per-tier breakdown cho Player (bipedal):**
+
+| Tier | E (side) | N (back) | S (front) | W | Total | Style ref |
+|---|---|---|---|---|---|---|
+| Flat L1 | 6 | — | — | mirror E (free) | **6** | Vampire Survivors / Soulstone |
+| Multi-dir L1 | 6 | 6 | 6 | mirror E (free) | **18** | Don't Starve / Stardew (DST style) |
+| Multi-dir L1 + L2 | 10 | 10 | 10 | mirror E (free) | **30** | Hades / Cuphead polish |
+
+**Per-tier cho Wolf / FoxSpirit (+ tail):**
+
+| Tier | E | N | S | Total |
+|---|---|---|---|---|
+| Flat L1 | 7 | — | — | **7** |
+| Multi-dir L1 | 7 | 7 | 7 | **21** |
+
+> **Q: Đủ rồi sẽ chuyển động mượt mà không?**
+> **A:** **Yes — ngay cả Flat L1 (6 PNG) cũng mượt.** PuppetAnimController là **procedural animation** — controller rotate / offset transforms theo time + velocity ở runtime (walk bob, arm swing, leg swing, idle breath, lunge, crouch). Anh **KHÔNG cần gen walk frames** (kiểu sprite sheet 8 frame/cycle). Tăng tier chỉ cải thiện chất lượng visual, không phải fluidity:
+> - **Multi-dir (E+N+S)** = nhân vật **xoay theo hướng đi** (DST feel — đi lên thấy lưng, đi xuống thấy mặt) thay vì luôn nhìn ngang.
+> - **L2 elbow/knee** = tay / chân **gập tự nhiên** khi attack hoặc crouch (Hades polish) thay vì rigid limb thẳng.
+>
+> **Single-sprite mob** (Rabbit/Crow/Boar/etc.) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG.
+
+**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player, 7 cho Wolf/Fox, 1 mỗi single-sprite mob = 6 PNG cho 6 mob đơn) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
+
+**Required minimum để puppet build pass:** chỉ cần `head.png` + `torso.png` ở East/flat. Thiếu → fallback single-sprite (puppet không spawn). Limbs / tail optional — controller tự skip slot null.
 
 ### 3.1 Player — Cultivation Hero (`Art/Characters/player/`)
 
