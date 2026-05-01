@@ -39,6 +39,7 @@ namespace WildernessCultivation.EditorTools
 
             var palette = PuppetPlaceholderSpec.PaletteFor(characterId);
             var dict = new Dictionary<CharacterArtSpec.PuppetRole, Sprite>();
+            bool wroteAny = false;
 
             foreach (var role in PuppetPlaceholderSpec.DefaultRoles(includeTail))
             {
@@ -49,12 +50,37 @@ namespace WildernessCultivation.EditorTools
                 if (!File.Exists(path))
                 {
                     WriteRectPng(path, w, h, color);
+                    wroteAny = true;
                 }
+            }
+
+            // Refresh AssetDatabase một lần sau khi đã ghi mọi file mới — Unity cần biết về
+            // file mới qua Refresh trước khi GetAtPath trả về importer hợp lệ. Trước fix này
+            // first-run gen có thể fail (importer null → textureType giữ Default → LoadAsset
+            // trả null → puppet không có sprite → Player invisible).
+            if (wroteAny) AssetDatabase.Refresh();
+
+            foreach (var role in PuppetPlaceholderSpec.DefaultRoles(includeTail))
+            {
+                string path = $"{folder}/{RoleToFilename(role)}.png";
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
                 ApplySpriteImport(path);
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite != null) dict[role] = sprite;
+                if (sprite != null)
+                {
+                    dict[role] = sprite;
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"[PuppetPlaceholderGenerator] Failed to load sprite for {characterId}/{role} at {path}. " +
+                        "Skeleton sẽ thiếu body part này.");
+                }
             }
+
+            Debug.Log(
+                $"[PuppetPlaceholderGenerator] {characterId}: loaded {dict.Count}/{PuppetPlaceholderSpec.DefaultRoles(includeTail).Count} placeholder sprites at {folder}/");
+
             return dict;
         }
 

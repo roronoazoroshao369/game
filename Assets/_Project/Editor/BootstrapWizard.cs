@@ -739,6 +739,34 @@ namespace WildernessCultivation.EditorTools
             return set;
         }
 
+        // Hard-fail nếu puppet sprite set rỗng. Trước fix này, sprite load failure trong
+        // PuppetPlaceholderGenerator silent → BuildPuppetHierarchy không tạo SpriteRenderer
+        // child nào → Player/Wolf/Fox invisible khi run scene + không có error rõ ràng.
+        // Throw ở đây giúp BootstrapWizard.Bootstrap catch + show "Bootstrap FAILED" dialog
+        // với details, user biết exact root cause (Console).
+        static void AssertPuppetSpritesLoaded(string characterId,
+            CharacterArtImporter.CharacterSpriteSet puppetSet)
+        {
+            var east = puppetSet?.EastSprites;
+            if (east == null || east.Count == 0)
+            {
+                throw new System.InvalidOperationException(
+                    $"Puppet sprite set cho '{characterId}' rỗng — không có sprite nào load được. " +
+                    $"Check Console warnings từ [PuppetPlaceholderGenerator] và verify folder " +
+                    $"Assets/_Project/Sprites/puppet/{characterId}/ tồn tại + có .png files. " +
+                    $"Có thể cần xoá Library/ + reopen Unity nếu AssetDatabase corrupt.");
+            }
+            // Minimum required cho puppet hierarchy: head + torso. Other parts optional
+            // (PuppetAnimController null-skips missing parts).
+            if (!east.ContainsKey(CharacterArtSpec.PuppetRole.Head) ||
+                !east.ContainsKey(CharacterArtSpec.PuppetRole.Torso))
+            {
+                throw new System.InvalidOperationException(
+                    $"Puppet sprite set cho '{characterId}' thiếu Head hoặc Torso (mandatory). " +
+                    $"Loaded: [{string.Join(", ", east.Keys)}]. Skeleton sẽ render rỗng — abort Bootstrap.");
+            }
+        }
+
         // PR J — L3+ multi-direction wire.
         // Khi user gen folder layout E/N/S/ → CharacterSpriteSet.isMultiDirectional=true.
         // Populate per-role sprite arrays trên PuppetAnimController để runtime swap khi đổi
@@ -974,6 +1002,7 @@ namespace WildernessCultivation.EditorTools
             // PR J: dual layout support — flat (legacy) hoặc E/N/S subfolder (multi-dir).
             var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("player", placeholderHeightPx: 32)
                 ?? BuildPlaceholderSpriteSet("player", includeTail: false);
+            AssertPuppetSpritesLoaded("player", puppetSet);
             SpriteRenderer sr = null;
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 5,
@@ -1128,6 +1157,7 @@ namespace WildernessCultivation.EditorTools
             // PR M: no real PNG → placeholder 13-joint skeleton (motion demo runs ngay).
             var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("wolf", placeholderHeightPx: 32)
                 ?? BuildPlaceholderSpriteSet("wolf", includeTail: true);
+            AssertPuppetSpritesLoaded("wolf", puppetSet);
             SpriteRenderer sr = null;
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
@@ -1187,6 +1217,7 @@ namespace WildernessCultivation.EditorTools
             // PR M: no real PNG → placeholder skeleton (motion demo runs ngay).
             var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("fox_spirit", placeholderHeightPx: 32)
                 ?? BuildPlaceholderSpriteSet("fox_spirit", includeTail: true);
+            AssertPuppetSpritesLoaded("fox_spirit", puppetSet);
             SpriteRenderer sr = null;
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
