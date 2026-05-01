@@ -33,6 +33,7 @@ namespace WildernessCultivation.Core
         public const string RabbitId = "rabbit";
         public const string BoarId = "boar";
         public const string DeerSpiritId = "deer_spirit";
+        public const string BossId = "boss";
 
         /// <summary>
         /// Default palette per character ID. Unknown id → fallback "neutral" gray. Distinct
@@ -98,6 +99,18 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.55f, 0.45f, 0.30f),
                         shin = new Color(0.38f, 0.30f, 0.20f),
                         tail = new Color(0.96f, 0.93f, 0.86f),
+                    };
+                case BossId:
+                    // Boss Hắc Vương — humanoid villain overlord. Black robe with crimson trim
+                    // (menacing dark palette → contrast with player blue tunic). Pale ivory skin
+                    // (regal/imperious). Tail unused (humanoid). Mirror Player limb structure.
+                    return new Palette
+                    {
+                        skin = new Color(0.88f, 0.82f, 0.74f),
+                        tunic = new Color(0.18f, 0.10f, 0.14f),
+                        trousers = new Color(0.12f, 0.06f, 0.10f),
+                        shin = new Color(0.08f, 0.04f, 0.06f),
+                        tail = new Color(0.55f, 0.10f, 0.14f),
                     };
                 default:
                     return new Palette

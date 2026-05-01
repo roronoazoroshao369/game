@@ -143,6 +143,31 @@ namespace WildernessCultivation.Tests.EditMode
         }
 
         [Test]
+        public void PaletteFor_Boss_HasDarkVillainRobe()
+        {
+            // Boss Hắc Vương — humanoid villain. Tunic must be very dark (menacing overlord
+            // silhouette, contrast với player blue tunic). Brightness < 0.2 → much darker
+            // than Boar (< 0.4) để Boss đứng trên cùng visual threat hierarchy.
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.BossId);
+            float tunicBrightness = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+            Assert.Less(tunicBrightness, 0.2f,
+                "Boss robe should be very dark (apex menace silhouette).");
+        }
+
+        [Test]
+        public void PaletteFor_Boss_TunicDistinctFromPlayer()
+        {
+            // Boss tunic must clearly differ from Player blue tunic — same blue dominance =
+            // visual confusion lúc spawn boss vs player. Boss = dark crimson/black, NOT blue.
+            var boss = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.BossId);
+            var player = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.PlayerId);
+            Assert.LessOrEqual(boss.tunic.b, boss.tunic.r,
+                "Boss tunic should NOT be blue-dominant (player owns that palette).");
+            Assert.Greater(player.tunic.b, boss.tunic.b,
+                "Boss tunic blue channel should be much lower than player blue robe.");
+        }
+
+        [Test]
         public void PaletteFor_UnknownId_FallsBackToNeutralGray()
         {
             var p = PuppetPlaceholderSpec.PaletteFor("doesnt_exist");
@@ -163,7 +188,8 @@ namespace WildernessCultivation.Tests.EditMode
                 PuppetPlaceholderSpec.FoxSpiritId,
                 PuppetPlaceholderSpec.RabbitId,
                 PuppetPlaceholderSpec.BoarId,
-                PuppetPlaceholderSpec.DeerSpiritId
+                PuppetPlaceholderSpec.DeerSpiritId,
+                PuppetPlaceholderSpec.BossId
             })
             {
                 var p = PuppetPlaceholderSpec.PaletteFor(id);

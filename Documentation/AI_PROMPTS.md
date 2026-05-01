@@ -96,9 +96,9 @@ no lens flare, no ground beneath subject for body parts.
 | **Boar** (`Art/Characters/boar/`) | quadruped puppet (heavy) | **7** | **21** | n/a | + bristly stub tail + tusks (head sprite) — §3.3.6 master + §3.6.5 bundle (Phase 2B) |
 | **Deer Spirit** (`Art/Characters/deer_spirit/`) | quadruped puppet (graceful) | **7** | **21** | n/a | + white tail flick + antlers (head sprite, hero feature) — §3.3.7 master + §3.6.6 bundle (Phase 2B) |
 | **Crow / Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 3/4) |
-| **Boss — Hắc Vương** | single-sprite | **3** | n/a | n/a | Phase 1 + Phase 2 enraged + death decay (xem §4.7-4.9) |
+| **Boss — Hắc Vương** (`Art/Characters/boss/`) | bipedal puppet (humanoid villain) | **6** | **18** | +4 (E only) / +12 (multi-dir) | head + torso + 2 arms + 2 legs (mirror Player rig, NO tail) — §3.3.8 master + §3.6.7 bundle (Phase 2C) |
 
-**Per-tier breakdown cho Player (bipedal):**
+**Per-tier breakdown cho Player + Boss (bipedal humanoid):**
 
 | Tier | E (side) | N (back) | S (front) | W | Total | Style ref |
 |---|---|---|---|---|---|---|
@@ -729,6 +729,117 @@ black #1a1a1a outline.
 Composition: 96x128 px (small tail, slightly taller than wide due
 to upturned angle), isolated tail on transparent, root edge LEFT
 (pivot point at hip attachment), NO body.
+```
+
+### 3.3.8 Boss — Hắc Vương (Black King) Cursed Overlord (`Art/Characters/boss/`)
+
+> **Concept:** end-game humanoid villain — Asian wuxia DARK CULTIVATOR overlord, tall imposing male figure (older than Player, ~40s), long ink-black hair flowing past shoulders with single SILVER STREAK at temple (cursed power leak), pale ivory skin with faint scar across left eye, cold imperious expression, **black silk robe with crimson blood-red trim** (signature villain palette — antithesis of Player's white-and-blue robe), wide BLACK CLOAK draping behind shoulders, dark obsidian shoulder pauldrons, blood-red waist sash. Hero feature: faint **CRIMSON QI AURA** edge-glow around silhouette (not strong volumetric — just subtle red rim-light). Carries no weapon (boss summons projectiles via raw qi). Mirror Player's L1 puppet structure: head + torso + 2 arms + 2 legs (NO tail — humanoid). Standing tall, NOT crouched.
+>
+> **Scale note:** placeholder rendered taller than Player (40px height vs Player 32px). Real PNG composition same per-part dimensions as Player (256×256 head, 256×384 torso/arm/leg) — only in-game scale increased via prefab transform.
+>
+> **Cross-dir consistency rule (CRITICAL):** Khi gen N + S sau master E, dùng EXACT cùng palette (#1a0a0e black robe, #8c1923 crimson trim, #d8c8a8 ivory skin, #1a1a1a hair với #b8b0a4 silver streak) + cùng silhouette anchor (cloak draping behind, sash around waist, hair below shoulders). Mismatch palette → boss biến hình khi xoay direction → silhouette mismatch lộ rõ.
+
+```
+=== boss/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia dark cultivation aesthetic,
+limited color palette, clean readable silhouette, 1.5 to 2 pixel
+mid-tone outline (dark crimson tone, NOT pure black).
+
+Subject: side view of an older Asian male DARK CULTIVATOR
+overlord HEAD ONLY, profile facing right, cold imperious
+expression with narrow eyes, long ink-black hair flowing past
+shoulder line with **SILVER STREAK at temple** (signature cursed-
+power visual), pale ivory skin with faint diagonal SCAR across
+left brow, faint crimson qi shimmer at temple, isolated single
+body part on fully transparent background. NO neck visible below
+jawline (clean cut).
+
+Palette (use ONLY these): pale ivory skin #d8c8a8 base, deep
+shadow #8a6f47 mid-tone, ink black #1a1a1a hair main, silver
+streak #b8b0a4 hair highlight at temple, crimson qi #8c1923 faint
+glow on temple, scar shadow #5a3520 brow line.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, hair must NOT crop at top edge
+(allow full silhouette), NO body parts below jaw, NO shoulders,
+NO neck, NO ground, NO shadow.
+```
+
+```
+=== boss/torso.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia dark cultivation aesthetic.
+
+Subject: side view of an older male DARK CULTIVATOR overlord
+TORSO ONLY, profile facing right, neutral imperious standing pose,
+wearing flowing **BLACK SILK ROBE with crimson blood-red trim** at
+collar and waist sash, **wide BLACK CLOAK draping behind shoulders**
+(visible in profile as silhouette extending behind torso), dark
+obsidian shoulder pauldron at top, blood-red waist sash tied at side,
+robe falls to mid-thigh, NO head NO arms NO legs visible (clean
+cuts at shoulders, hips, neck).
+
+Palette: black robe #1a0a0e base, deep shadow #0a0408 fold shadow,
+crimson trim #8c1923 collar and sash accent, obsidian #2a1a2c
+shoulder pauldron, blood-red sash highlight #b82838, silver thread
+trim #5a4a48 minimal embroidery.
+
+Composition: 256x384 px (vertical), isolated single torso on fully
+transparent background, **CLOAK silhouette CAN extend slightly
+beyond standard torso width** (cloak is part of torso), NO head,
+NO limbs, NO ground, NO shadow. Top edge clean horizontal at
+shoulder line (puppet rig pivot).
+```
+
+```
+=== boss/arm_left.png === / === boss/arm_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia dark.
+
+Subject: side view of an older male dark cultivator's LEFT (or
+RIGHT) arm, hanging straight down in neutral imperious pose,
+wearing flowing BLACK SILK ROBE sleeve with CRIMSON CUFF trim,
+hand visible at bottom (hand resting open with long fingers
+slightly curled — sinister but composed), arm length proportional
+to mid-thigh, NO body, NO head.
+
+Palette: black robe sleeve #1a0a0e base, deep shadow #0a0408 fold
+shadow, pale ivory #d8c8a8 skin tone for hand, crimson cuff trim
+#8c1923 narrow band at wrist, silver thread #5a4a48 minimal
+embroidery line.
+
+Composition: 256x384 px (vertical), isolated single arm on fully
+transparent background, top edge clean horizontal at shoulder
+(pivot point), bottom edge at fingertips, NO body, NO ground.
+
+# NOTE: gen 1 lần rồi flip horizontal trong Photopea/GIMP cho arm_right.
+# Hoặc gen 2 lần với prompt "right arm" để có asymmetry tự nhiên.
+```
+
+```
+=== boss/leg_left.png === / === boss/leg_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia dark.
+
+Subject: side view of an older male dark cultivator's LEFT (or
+RIGHT) leg, straight imperious standing pose, wearing BLACK SILK
+robe pant flowing to ankle, **dark obsidian boot** with subtle
+crimson stitching (not cloth wrap like Player — boss wears stiff
+boots), NO body, NO foot ground contact (foot just hovering in
+neutral pose).
+
+Palette: black robe pant #1a0a0e base, deep shadow #0a0408 fabric
+fold, dark obsidian boot #2a1a2c, crimson stitching #8c1923 narrow
+boot accent.
+
+Composition: 256x384 px (vertical), isolated single leg on fully
+transparent background, top edge clean horizontal at hip (pivot
+point), bottom edge at sole of boot, NO body, NO ground, NO shadow.
+
+# NOTE: same arm pattern — gen 1 lần flip cho phần đối xứng OK.
 ```
 
 ### 3.4 Multi-Direction (L3+) Variants
@@ -1758,6 +1869,180 @@ transparent, root TOP pivot, NO body.
 # Skip recommended → controller fallback East sprite cho slot này.
 
 Skip recommended.
+```
+
+#### 3.4.7 Boss — N (Back View) + S (Front View)
+
+> **Cross-dir consistency rule (CRITICAL):** giữ EXACT palette E (#1a0a0e black robe, #8c1923 crimson trim, #d8c8a8 ivory skin, #1a1a1a hair với #b8b0a4 silver streak) + cùng silhouette anchor (cloak draping behind, sash around waist). Hero feature **CLOAK** is most dramatic from N back-view (cloak swept across full back), most subdued from S front-view (cloak peeks from behind shoulders). Hair flowing visible from BOTH N and S (long enough to fall past shoulder line in both views).
+
+```
+=== boss/N/head.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: BACK view of an older male dark cultivator overlord HEAD
+ONLY, viewer behind subject, **long flowing ink-black hair** falls
+past shoulder line covering most of head silhouette (signature back-
+view feature), **silver streak at TEMPLE visible from behind** as
+single lighter strand on right side of hair mass, NO face features
+visible (back of head only), nape ~70% covered by hair.
+
+Palette: ink black #1a1a1a hair main, silver streak #b8b0a4 single
+strand right side, pale ivory #d8c8a8 small visible neck nape skin,
+deep shadow #5a3520 hair shadow under shoulder.
+
+Composition: 256x256 px, head on transparent, hair MUST NOT crop at
+side edges (full hair silhouette flows past shoulder line), NO face,
+NO body, NO ground.
+```
+
+```
+=== boss/N/torso.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: BACK view of an older male dark cultivator overlord
+TORSO ONLY, viewer behind subject, **wide BLACK CLOAK draped across
+full back** (hero feature dramatic from N — cloak is the dominant
+visual mass), crimson trim visible at collar back-of-neck and at
+waist sash tied behind, dark obsidian shoulder pauldrons visible at
+top corners, robe seams down center spine, NO head, NO arms, NO
+legs (clean cuts).
+
+Palette: black robe + cloak #1a0a0e dominant base, deep shadow
+#0a0408 cloak fold shadow, crimson trim #8c1923 collar nape + sash
+back-knot, obsidian pauldrons #2a1a2c, blood-red sash #b82838 knot
+highlight at lower back.
+
+Composition: 256x384 px (vertical), torso on transparent, **CLOAK
+fully visible across BACK** (do NOT crop cloak — extends slightly
+beyond standard torso width), top edge clean shoulder line, NO
+head, NO limbs, NO ground.
+```
+
+```
+=== boss/N/arm_left.png === / === boss/N/arm_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: BACK view of an older male dark cultivator's LEFT (or
+RIGHT) arm, viewer behind subject, hanging straight down, BLACK
+SILK robe sleeve visible from behind with **crimson cuff trim** at
+wrist, hand silhouette at bottom shows back of hand (knuckles
+visible — NOT palm), arm length proportional, NO body, NO head.
+
+Palette: black robe sleeve #1a0a0e base, deep shadow #0a0408 fold
+shadow, pale ivory #d8c8a8 skin tone for back-of-hand, crimson cuff
+#8c1923 narrow band at wrist.
+
+Composition: 256x384 px (vertical), arm on transparent, top edge
+clean shoulder pivot, bottom edge at fingertips/knuckles, NO body.
+```
+
+```
+=== boss/N/leg_left.png === / === boss/N/leg_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: BACK view of an older male dark cultivator's LEFT (or
+RIGHT) leg, viewer behind subject, straight imperious standing pose,
+BLACK SILK robe pant from behind, dark obsidian boot at bottom
+(boot back visible — heel + back seam, NOT toe), crimson stitching
+narrow band at boot top, NO body, NO foot ground contact.
+
+Palette: black robe pant #1a0a0e base, deep shadow #0a0408 fabric
+fold, dark obsidian #2a1a2c boot, crimson stitching #8c1923 narrow
+boot accent.
+
+Composition: 256x384 px (vertical), leg on transparent, top edge
+clean hip pivot, bottom edge at boot heel, NO body, NO ground.
+```
+
+```
+=== boss/S/head.png === (FRONT VIEW — face-on)
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: FRONT view of an older Asian male DARK CULTIVATOR
+overlord HEAD ONLY, face-on toward viewer, cold imperious
+expression with narrow eyes (face symmetric front-on), thin lips,
+**SCAR diagonal across LEFT eyebrow** (visible from front as
+signature feature), pale ivory skin, ink-black hair parted center
+flowing past shoulders on BOTH sides, **silver streaks at BOTH
+temples** (front view shows streaks symmetric — small detail), faint
+crimson qi shimmer at temples.
+
+Palette: pale ivory skin #d8c8a8 base, deep shadow #8a6f47 cheek
+shadow, ink black #1a1a1a hair, silver streak #b8b0a4 temple
+highlights both sides, crimson qi #8c1923 faint glow temples, scar
+shadow #5a3520 brow line on left.
+
+Composition: 256x256 px, head on transparent, vertically centered
++ horizontally centered, hair MUST NOT crop at side edges, NO body
+parts below jaw, NO neck, NO shoulders, NO ground.
+```
+
+```
+=== boss/S/torso.png === (FRONT VIEW — face-on)
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: FRONT view of an older male DARK CULTIVATOR overlord
+TORSO ONLY, face-on toward viewer, neutral imperious standing
+pose, BLACK SILK ROBE with **CRIMSON BLOOD-RED collar V-neck trim**
+front-and-center, **blood-red waist sash tied with knot front-
+center** (knot bow visible face-on), dark obsidian shoulder
+pauldrons at top corners, **black cloak peeks from BEHIND shoulders**
+as 2 narrow vertical strips (cloak is mostly hidden in front view),
+NO head, NO arms, NO legs.
+
+Palette: black robe #1a0a0e front base, deep shadow #0a0408 fold,
+crimson collar V #8c1923, blood-red sash highlight #b82838 front-
+center knot, obsidian pauldrons #2a1a2c shoulder corners, silver
+thread #5a4a48 minimal embroidery on collar.
+
+Composition: 256x384 px (vertical), torso on transparent,
+horizontally symmetric body silhouette, **cloak narrow strips
+visible behind shoulders**, top edge clean shoulder line, NO head,
+NO limbs, NO ground.
+```
+
+```
+=== boss/S/arm_left.png === / === boss/S/arm_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: FRONT view of an older male dark cultivator's LEFT (or
+RIGHT) arm, face-on toward viewer, hanging straight down, BLACK
+SILK robe sleeve face-on with crimson cuff trim at wrist, hand
+silhouette at bottom shows palm-down face-on (back of hand toward
+viewer for natural arm pose), NO body, NO head.
+
+Palette: black robe sleeve #1a0a0e base, deep shadow #0a0408 fold,
+pale ivory #d8c8a8 skin tone for back-of-hand, crimson cuff #8c1923
+narrow band wrist.
+
+Composition: 256x384 px (vertical), arm on transparent, top edge
+clean shoulder pivot, bottom edge at fingertips, NO body.
+```
+
+```
+=== boss/S/leg_left.png === / === boss/S/leg_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: FRONT view of an older male dark cultivator's LEFT (or
+RIGHT) leg, face-on toward viewer, straight imperious standing pose,
+BLACK SILK robe pant face-on, **dark obsidian boot toe visible**
+at bottom (boot front face — toe + arch + crimson stitching trim),
+NO body, NO foot ground contact.
+
+Palette: black robe pant #1a0a0e base, deep shadow #0a0408 fold,
+dark obsidian #2a1a2c boot front, crimson stitching #8c1923 narrow
+boot accent.
+
+Composition: 256x384 px (vertical), leg on transparent, top edge
+clean hip pivot, bottom edge at boot toe, NO body, NO ground.
 ```
 
 ---
@@ -3863,6 +4148,324 @@ no lens flare, no ground beneath subject for body parts, no flower
 crown decoration.
 ```
 
+#### 3.6.7 Boss — Hắc Vương Full DST Set (12 prompts → 18 PNG)
+
+> **Concept lock:** end-game humanoid villain (mirror Player rig, NO tail) — older Asian male DARK CULTIVATOR overlord, long ink-black hair with silver streak at temple, pale ivory skin, scar across left brow, **black silk robe with crimson trim + black cloak draping behind**, dark obsidian boots, blood-red waist sash. Hero feature: **CLOAK** dramatic from N back-view (full back coverage), peeks behind shoulders from S front-view. Antithesis of Player's white-and-blue robe — visual threat reads instantly.
+>
+> **Cross-dir consistency rule:** EXACT cùng palette + cùng silhouette anchor (cloak, sash, hair length past shoulder line) khắp 3 dir E/N/S. Mismatch palette = boss "đổi hình" khi xoay direction → break visual identity.
+>
+> **Pipeline:** copy block prompt → paste vào GPT Image 2.0 (hoặc Stable Diffusion XL / Midjourney) → save PNG vào path nằm trong header `=== Save to: ... ===` → next block. **12 prompts → 18 PNG output (6 parts × 3 dirs).** W mirror tự động qua `PuppetAnimController.spriteRoot.localScale` runtime — KHÔNG cần gen W.
+
+##### E (East / side view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/E/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia dark cultivation aesthetic,
+limited color palette, clean readable silhouette, 1.5 to 2 pixel
+mid-tone outline (dark crimson tone, NOT pure black).
+
+Subject: side view of an older Asian male DARK CULTIVATOR
+overlord HEAD ONLY, profile facing right, cold imperious
+expression with narrow eyes, long ink-black hair flowing past
+shoulder line with **SILVER STREAK at temple** (signature cursed-
+power visual), pale ivory skin with faint diagonal SCAR across
+left brow, faint crimson qi shimmer at temple, isolated single
+body part on fully transparent background. NO neck visible below
+jawline (clean cut).
+
+Palette (use ONLY these): pale ivory skin #d8c8a8 base, deep
+shadow #8a6f47 mid-tone, ink black #1a1a1a hair main, silver
+streak #b8b0a4 hair highlight at temple, crimson qi #8c1923 faint
+glow on temple, scar shadow #5a3520 brow line.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, hair must NOT crop at top edge
+(allow full silhouette), NO body parts below jaw, NO shoulders,
+NO neck, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/E/torso.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia dark cultivation aesthetic.
+
+Subject: side view of an older male DARK CULTIVATOR overlord
+TORSO ONLY, profile facing right, neutral imperious standing pose,
+wearing flowing **BLACK SILK ROBE with crimson blood-red trim** at
+collar and waist sash, **wide BLACK CLOAK draping behind shoulders**
+(visible in profile as silhouette extending behind torso), dark
+obsidian shoulder pauldron at top, blood-red waist sash tied at side,
+robe falls to mid-thigh, NO head NO arms NO legs visible (clean
+cuts at shoulders, hips, neck).
+
+Palette: black robe #1a0a0e base, deep shadow #0a0408 fold shadow,
+crimson trim #8c1923 collar and sash accent, obsidian #2a1a2c
+shoulder pauldron, blood-red sash highlight #b82838, silver thread
+trim #5a4a48 minimal embroidery.
+
+Composition: 256x384 px (vertical), isolated single torso on fully
+transparent background, **CLOAK silhouette CAN extend slightly
+beyond standard torso width** (cloak is part of torso), NO head,
+NO limbs, NO ground, NO shadow. Top edge clean horizontal at
+shoulder line (puppet rig pivot).
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/E/arm_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/boss/E/arm_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia dark.
+
+Subject: side view of an older male dark cultivator's LEFT arm,
+hanging straight down in neutral imperious pose, wearing flowing
+BLACK SILK ROBE sleeve with CRIMSON CUFF trim, hand visible at
+bottom (hand resting open with long fingers slightly curled —
+sinister but composed), arm length proportional to mid-thigh,
+NO body, NO head.
+
+Palette: black robe sleeve #1a0a0e base, deep shadow #0a0408 fold
+shadow, pale ivory #d8c8a8 skin tone for hand, crimson cuff trim
+#8c1923 narrow band at wrist, silver thread #5a4a48 minimal
+embroidery line.
+
+Composition: 256x384 px (vertical), isolated single arm on fully
+transparent background, top edge clean horizontal at shoulder
+(pivot point), bottom edge at fingertips, NO body, NO ground.
+
+# Workflow: gen 1 lần → save vào E/arm_left.png → flip horizontal
+# (Photopea/GIMP: Image → Transform → Flip Horizontal) → save copy
+# vào E/arm_right.png. Hoặc gen 2 lần với prompt "right arm" để có
+# asymmetry tự nhiên.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/E/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/boss/E/leg_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia dark.
+
+Subject: side view of an older male dark cultivator's LEFT leg,
+straight imperious standing pose, wearing BLACK SILK robe pant
+flowing to ankle, **dark obsidian boot** with subtle crimson
+stitching (not cloth wrap like Player — boss wears stiff boots),
+NO body, NO foot ground contact (foot just hovering in neutral
+pose).
+
+Palette: black robe pant #1a0a0e base, deep shadow #0a0408 fabric
+fold, dark obsidian boot #2a1a2c, crimson stitching #8c1923 narrow
+boot accent.
+
+Composition: 256x384 px (vertical), isolated single leg on fully
+transparent background, top edge clean horizontal at hip (pivot
+point), bottom edge at sole of boot, NO body, NO ground, NO shadow.
+
+# Workflow: same arm pattern — gen 1 lần flip cho leg_right.png.
+```
+
+##### N (North / back view) — 4 prompts → 6 PNG (hero direction!)
+
+> **Why hero direction:** boss CLOAK fully visible across back from N — most dramatic visual reveal. Long flowing hair also dominant from back-view (covers most of head silhouette).
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/N/head.png ===
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: BACK view of an older male dark cultivator overlord HEAD
+ONLY, viewer behind subject, **long flowing ink-black hair** falls
+past shoulder line covering most of head silhouette (signature back-
+view feature), **silver streak at TEMPLE visible from behind** as
+single lighter strand on right side of hair mass, NO face features
+visible (back of head only), nape ~70% covered by hair.
+
+Palette: ink black #1a1a1a hair main, silver streak #b8b0a4 single
+strand right side, pale ivory #d8c8a8 small visible neck nape skin,
+deep shadow #5a3520 hair shadow under shoulder.
+
+Composition: 256x256 px, head on transparent, hair MUST NOT crop at
+side edges (full hair silhouette flows past shoulder line), NO face,
+NO body, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/N/torso.png ===
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: BACK view of an older male dark cultivator overlord
+TORSO ONLY, viewer behind subject, **wide BLACK CLOAK draped across
+full back** (hero feature dramatic from N — cloak is the dominant
+visual mass), crimson trim visible at collar back-of-neck and at
+waist sash tied behind, dark obsidian shoulder pauldrons visible at
+top corners, robe seams down center spine, NO head, NO arms, NO
+legs (clean cuts).
+
+Palette: black robe + cloak #1a0a0e dominant base, deep shadow
+#0a0408 cloak fold shadow, crimson trim #8c1923 collar nape + sash
+back-knot, obsidian pauldrons #2a1a2c, blood-red sash #b82838 knot
+highlight at lower back.
+
+Composition: 256x384 px (vertical), torso on transparent, **CLOAK
+fully visible across BACK** (do NOT crop cloak — extends slightly
+beyond standard torso width), top edge clean shoulder line, NO
+head, NO limbs, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/N/arm_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/boss/N/arm_right.png ===
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: BACK view of an older male dark cultivator's LEFT arm,
+viewer behind subject, hanging straight down, BLACK SILK robe
+sleeve visible from behind with **crimson cuff trim** at wrist,
+hand silhouette at bottom shows back of hand (knuckles visible —
+NOT palm), arm length proportional, NO body, NO head.
+
+Palette: black robe sleeve #1a0a0e base, deep shadow #0a0408 fold
+shadow, pale ivory #d8c8a8 skin tone for back-of-hand, crimson cuff
+#8c1923 narrow band at wrist.
+
+Composition: 256x384 px (vertical), arm on transparent, top edge
+clean shoulder pivot, bottom edge at fingertips/knuckles, NO body.
+
+# Workflow: gen 1 lần → flip horizontal → arm_right.png.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/N/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/boss/N/leg_right.png ===
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: BACK view of an older male dark cultivator's LEFT leg,
+viewer behind subject, straight imperious standing pose, BLACK SILK
+robe pant from behind, dark obsidian boot at bottom (boot back
+visible — heel + back seam, NOT toe), crimson stitching narrow band
+at boot top, NO body, NO foot ground contact.
+
+Palette: black robe pant #1a0a0e base, deep shadow #0a0408 fabric
+fold, dark obsidian #2a1a2c boot, crimson stitching #8c1923 narrow
+boot accent.
+
+Composition: 256x384 px (vertical), leg on transparent, top edge
+clean hip pivot, bottom edge at boot heel, NO body, NO ground.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG (face-on imperious confrontation)
+
+> **Boss S front-view is the COMBAT framing**: when player runs UP toward boss, they see boss face-on with scar + cold eyes + cloak peeking from behind shoulders. Most intimidating visual.
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/S/head.png ===
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: FRONT view of an older Asian male DARK CULTIVATOR
+overlord HEAD ONLY, face-on toward viewer, cold imperious
+expression with narrow eyes (face symmetric front-on), thin lips,
+**SCAR diagonal across LEFT eyebrow** (visible from front as
+signature feature), pale ivory skin, ink-black hair parted center
+flowing past shoulders on BOTH sides, **silver streaks at BOTH
+temples** (front view shows streaks symmetric — small detail), faint
+crimson qi shimmer at temples.
+
+Palette: pale ivory skin #d8c8a8 base, deep shadow #8a6f47 cheek
+shadow, ink black #1a1a1a hair, silver streak #b8b0a4 temple
+highlights both sides, crimson qi #8c1923 faint glow temples, scar
+shadow #5a3520 brow line on left.
+
+Composition: 256x256 px, head on transparent, vertically centered
++ horizontally centered, hair MUST NOT crop at side edges, NO body
+parts below jaw, NO neck, NO shoulders, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/S/torso.png ===
+
+hand-painted painterly, asian wuxia dark cultivation.
+
+Subject: FRONT view of an older male DARK CULTIVATOR overlord
+TORSO ONLY, face-on toward viewer, neutral imperious standing
+pose, BLACK SILK ROBE with **CRIMSON BLOOD-RED collar V-neck trim**
+front-and-center, **blood-red waist sash tied with knot front-
+center** (knot bow visible face-on), dark obsidian shoulder
+pauldrons at top corners, **black cloak peeks from BEHIND shoulders**
+as 2 narrow vertical strips (cloak is mostly hidden in front view),
+NO head, NO arms, NO legs.
+
+Palette: black robe #1a0a0e front base, deep shadow #0a0408 fold,
+crimson collar V #8c1923, blood-red sash highlight #b82838 front-
+center knot, obsidian pauldrons #2a1a2c shoulder corners, silver
+thread #5a4a48 minimal embroidery on collar.
+
+Composition: 256x384 px (vertical), torso on transparent,
+horizontally symmetric body silhouette, **cloak narrow strips
+visible behind shoulders**, top edge clean shoulder line, NO head,
+NO limbs, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/S/arm_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/boss/S/arm_right.png ===
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: FRONT view of an older male dark cultivator's LEFT arm,
+face-on toward viewer, hanging straight down, BLACK SILK robe
+sleeve face-on with crimson cuff trim at wrist, hand silhouette at
+bottom shows palm-down face-on (back of hand toward viewer for
+natural arm pose), NO body, NO head.
+
+Palette: black robe sleeve #1a0a0e base, deep shadow #0a0408 fold,
+pale ivory #d8c8a8 skin tone for back-of-hand, crimson cuff #8c1923
+narrow band wrist.
+
+Composition: 256x384 px (vertical), arm on transparent, top edge
+clean shoulder pivot, bottom edge at fingertips, NO body.
+
+# Workflow: gen 1 lần → flip horizontal → arm_right.png.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/boss/S/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/boss/S/leg_right.png ===
+
+hand-painted painterly, asian wuxia dark.
+
+Subject: FRONT view of an older male dark cultivator's LEFT leg,
+face-on toward viewer, straight imperious standing pose, BLACK SILK
+robe pant face-on, **dark obsidian boot toe visible** at bottom
+(boot front face — toe + arch + crimson stitching trim), NO body,
+NO foot ground contact.
+
+Palette: black robe pant #1a0a0e base, deep shadow #0a0408 fold,
+dark obsidian #2a1a2c boot front, crimson stitching #8c1923 narrow
+boot accent.
+
+Composition: 256x384 px (vertical), leg on transparent, top edge
+clean hip pivot, bottom edge at boot toe, NO body, NO ground.
+```
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi boss generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi cute boy,
+no shounen hero overlord, no mecha armor, no full plate knight, no
+spiky devil horns, no skull mask, no demon claws, no fluffy mascot,
+no pure black outline, no smooth airbrush gradient, no drop shadow
+on transparent background, no text, no watermark, no signature, no
+border, single subject only, no duplicate, no grid lines, no UI
+elements, no caption, no logo, no lens flare, no ground beneath
+subject for body parts, no weapon (no sword, no staff — boss is
+unarmed apex), no bright colors (no green/blue/yellow tunic — boss
+is BLACK + CRIMSON only).
+```
+
 ---
 
 ## 4. Single-Sprite Mobs
@@ -4001,7 +4604,9 @@ Composition: 256x192 px (horizontal — wingspan wider than tall),
 isolated bat on transparent, NO ground.
 ```
 
-### 4.7 Boss Mob — Hắc Vương (Cursed Desert, end-game) — Phase 1
+### 4.7 Boss Mob — Hắc Vương (Cursed Desert, end-game) — Phase 1 — **DEPRECATED → §3.3.8 / §3.6.7 puppet**
+
+> **Phase 2C migration:** Boss đã upgrade lên multi-piece humanoid puppet (mirror Player rig, NO tail). Master prompts ở §3.3.8, full DST quick-copy bundle ở §3.6.7 (12 prompts → 18 PNG cho E + N + S 3 directions). Single-sprite "spirit boar boss" prompt dưới giữ làm reference cho concept fallback (hoặc nếu user muốn boss biến thân thành dạng quái thú phase 2 — giữ cho biến hình special-case). Default flow: dùng puppet bundle §3.6.7.
 
 ```
 === boss_mob ===
@@ -5996,15 +6601,16 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Rabbit puppet E (Phase 2A — 7 parts incl. cottontail) | 7 | 28 | $0.56 |
 | Boar puppet E (Phase 2B — 7 parts incl. bristly stub tail) | 7 | 28 | $0.56 |
 | Deer Spirit puppet E (Phase 2B — 7 parts incl. white tail flick) | 7 | 28 | $0.56 |
-| Single-sprite mobs (Crow, Snake, Bat, Boss Phase 1) | 4 | 16 | $0.32 |
+| Boss puppet E (Phase 2C — 6 parts humanoid mirror Player rig, NO tail) | 6 | 24 | $0.48 |
+| Single-sprite mobs (Crow, Snake, Bat) | 3 | 12 | $0.24 |
 | Resources (12 nodes) | 12 | 48 | $0.96 |
 | Item icons (22) | 22 | 88 | $1.76 |
 | Tiles (12 seamless: 3 biome × 4 var) | 12 | 48 | $0.96 |
-| **Phase 1 subtotal** | **91** | **~364** | **~$7.28** |
+| **Phase 1 subtotal** | **96** | **~384** | **~$7.68** |
 
 ### Phase 2 — Multi-direction (L3 NSEW)
 
-> Add-on cho 6 puppet character (Player + Wolf + Fox + Rabbit + Boar + Deer Spirit). Mob single-sprite + resources + tiles KHÔNG cần.
+> Add-on cho 7 puppet character (Player + Wolf + Fox + Rabbit + Boar + Deer Spirit + Boss). Mob single-sprite + resources + tiles KHÔNG cần.
 
 | Group | Asset count | Image gen (4 var) | Baseline cost |
 |---|---|---|---|
@@ -6014,7 +6620,8 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Rabbit N + S (Phase 2A — skip S/tail → 13) | 13 | 52 | $1.04 |
 | Boar N + S (Phase 2B — skip S/tail → 13) | 13 | 52 | $1.04 |
 | Deer Spirit N + S (Phase 2B — skip S/tail → 13) | 13 | 52 | $1.04 |
-| **Phase 2 subtotal** | **77** | **308** | **~$6.16** |
+| Boss N + S (Phase 2C — humanoid 6 × 2, NO tail skip needed) | 12 | 48 | $0.96 |
+| **Phase 2 subtotal** | **89** | **356** | **~$7.12** |
 
 ### Phase 3 — L2 elbow/knee (forearm + shin)
 
@@ -6072,11 +6679,11 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 
 | Scope | Asset count | Baseline cost | Realistic w/ 3× iter |
 |---|---|---|---|
-| **Phase 1 only (MVP side-only)** | 73 | ~$5.84 | ~$15-20 |
-| Phase 1 + 2 (multi-dir) | 111 | ~$8.88 | ~$25-35 |
-| Phase 1 + 2 + 3 (L3+ full puppet) | 139 | ~$11.12 | ~$30-50 |
-| Phase 1-6 (combat + VFX + weather) | 167 | ~$13.36 | ~$40-60 |
-| **Phase 1-8 (FULL game asset coverage incl. NPC + environment)** | **199** (all NPC variants: **243**) | **~$15.96** (with all NPC: **~$19.72**) | **~$60-100** |
+| **Phase 1 only (MVP side-only)** | 96 | ~$7.68 | ~$20-25 |
+| Phase 1 + 2 (multi-dir) | 185 | ~$14.80 | ~$40-55 |
+| Phase 1 + 2 + 3 (L3+ full puppet) | 213 | ~$17.04 | ~$45-65 |
+| Phase 1-6 (combat + VFX + weather) | 241 | ~$19.28 | ~$55-80 |
+| **Phase 1-8 (FULL game asset coverage incl. NPC + environment)** | **273** (all NPC variants: **317**) | **~$21.84** (with all NPC: **~$25.36**) | **~$70-130** |
 
 > **Recommendation:** ship Phase 1-3 first (MVP playtest), Phase 4-5 với balance pass, Phase 6-8 polish pass.
 > Tổng prompt count trong file này: ~310 (counting each direction + state variant + NPC variant separately).

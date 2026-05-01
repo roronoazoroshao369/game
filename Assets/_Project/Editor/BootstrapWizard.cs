@@ -626,7 +626,7 @@ namespace WildernessCultivation.EditorTools
             public GameObject Player, Tree, Rock, Rabbit, Wolf, FoxSpirit, Campfire,
                 WaterSpring, StorageChest, Workbench, Projectile,
                 Boar, DeerSpirit, Crow,
-                Snake, Bat,
+                Snake, Bat, Boss,
                 LinhMushroom, BerryBush, Cactus, DeathLily, LinhBamboo, MineralRock,
                 GrassTile;
         }
@@ -974,6 +974,7 @@ namespace WildernessCultivation.EditorTools
             bundle.Crow = BuildCrowPrefab(sprites["crow"], items["feather"]);
             bundle.Snake = BuildSnakePrefab(sprites["snake"], items["snake_skin"], items["venom_gland"], statusEffects["Poison"]);
             bundle.Bat = BuildBatPrefab(sprites["bat"], items["bat_wing"], statusEffects["Bleed"]);
+            bundle.Boss = BuildBossPrefab();
             // Flora — wild plants (PR C)
             bundle.LinhMushroom = BuildLinhMushroomPrefab(sprites["linh_mushroom"], items["linh_mushroom"]);
             bundle.BerryBush    = BuildBerryBushPrefab(sprites["berry_bush"], items["berry"]);
@@ -1518,6 +1519,64 @@ namespace WildernessCultivation.EditorTools
             AttachMobHitFx(go, knockbackImpulse: 1.5f);
             AttachMobAnim(go, walkBobFreq: 7.5f, maxTiltDeg: 4f, walkBobAmp: 0.03f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Bat.prefab");
+        }
+
+        static GameObject BuildBossPrefab()
+        {
+            var go = new GameObject("Boss");
+            // Puppet path: Art/Characters/boss/ humanoid (mirror Player rig — no tail).
+            // Tunings: heavy menacing overlord — slowest stride (2.5Hz), dramatic arm swing
+            // (32°), modest leg swing (16° — boss walks deliberate, not prancing).
+            // referenceSpeed 2.0 (matches BossMobAI.moveSpeed default). placeholderHeightPx 40
+            // → tallest silhouette in roster (apex threat). PR M placeholder skeleton fallback
+            // nếu user chưa drop real PNG.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("boss", placeholderHeightPx: 40)
+                ?? BuildPlaceholderSpriteSet("boss", includeTail: false);
+            AssertPuppetSpritesLoaded("boss", puppetSet);
+            SpriteRenderer sr = null;
+            {
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 4,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
+                puppet.walkFrequency = 2.5f;
+                puppet.armSwingDeg = 32f;
+                puppet.legSwingDeg = 16f;
+                puppet.referenceSpeed = 2.0f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
+            }
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.5f;
+            var ai = go.AddComponent<BossMobAI>();
+            ai.spriteRenderer = sr;  // null — puppet handles flipping
+            ai.maxHP = 200f;
+            ai.HP = 200f;
+            ai.moveSpeed = 2.0f;
+            ai.damage = 12f;
+            ai.attackRange = 1.0f;
+            ai.attackCooldown = 1.5f;
+            ai.aggroRange = 8f;
+            ai.xpReward = 80f;
+            ai.playerMask = ~0;
+            AttachDropShadow(go);
+            AttachMobHitFx(go, knockbackImpulse: 0.5f);
+            return SaveAsPrefab(go, $"{PrefabsDir}/Boss.prefab");
         }
 
         // ========== Flora (wild plants) — PR C ==========
