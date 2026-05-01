@@ -295,5 +295,104 @@ namespace WildernessCultivation.Tests.EditMode
                 CharacterArtSpec.ComputeDistanceFromBoundary(45f, CharacterArtSpec.PuppetDirection.East),
                 0.001f);
         }
+
+        // ---------- PR K (L2) — Forearm + shin parsing ----------
+
+        [Test]
+        public void TryParseRole_ForearmShin_AllRecognized()
+        {
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.ForearmLeft, CharacterArtSpec.TryParseRole("forearm_left"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.ForearmRight, CharacterArtSpec.TryParseRole("forearm_right"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.ShinLeft, CharacterArtSpec.TryParseRole("shin_left"));
+            Assert.AreEqual(CharacterArtSpec.PuppetRole.ShinRight, CharacterArtSpec.TryParseRole("shin_right"));
+        }
+
+        [Test]
+        public void IsRequiredForPuppet_ForearmShin_AreOptional()
+        {
+            // Joint upgrade — missing PNG fallback to legacy 7-joint behavior.
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.ForearmLeft));
+            Assert.IsFalse(CharacterArtSpec.IsRequiredForPuppet(CharacterArtSpec.PuppetRole.ShinRight));
+        }
+
+        // ---------- PR K — ComputeWalkKneeBend ----------
+
+        [Test]
+        public void WalkKneeBend_BackSwing_BendsForward()
+        {
+            // Positive sin (leg swinging back) → shin bends forward (positive deg).
+            Assert.AreEqual(12f, PuppetAnimController.ComputeWalkKneeBend(1f, 12f), 0.0001f);
+            Assert.AreEqual(6f, PuppetAnimController.ComputeWalkKneeBend(0.5f, 12f), 0.0001f);
+        }
+
+        [Test]
+        public void WalkKneeBend_ForwardSwing_NoBend()
+        {
+            // Negative sin (leg forward) → shin straight (clamped at 0, knee không hyper-extend).
+            Assert.AreEqual(0f, PuppetAnimController.ComputeWalkKneeBend(-1f, 12f), 0.0001f);
+            Assert.AreEqual(0f, PuppetAnimController.ComputeWalkKneeBend(-0.5f, 12f), 0.0001f);
+        }
+
+        [Test]
+        public void WalkKneeBend_ZeroSin_NoBend()
+        {
+            Assert.AreEqual(0f, PuppetAnimController.ComputeWalkKneeBend(0f, 12f), 0.0001f);
+        }
+
+        // ---------- PR K — ComputeCrouchKneeBend ----------
+
+        [Test]
+        public void CrouchKneeBend_FullCrouch_FullBend()
+        {
+            Assert.AreEqual(35f, PuppetAnimController.ComputeCrouchKneeBend(1f, 35f), 0.0001f);
+        }
+
+        [Test]
+        public void CrouchKneeBend_HalfCrouch_HalfBend()
+        {
+            Assert.AreEqual(17.5f, PuppetAnimController.ComputeCrouchKneeBend(0.5f, 35f), 0.0001f);
+        }
+
+        [Test]
+        public void CrouchKneeBend_Standing_NoBend()
+        {
+            Assert.AreEqual(0f, PuppetAnimController.ComputeCrouchKneeBend(0f, 35f), 0.0001f);
+        }
+
+        [Test]
+        public void CrouchKneeBend_OutOfRange_Clamped()
+        {
+            // crouchAmount > 1 clamped to 1; < 0 clamped to 0.
+            Assert.AreEqual(35f, PuppetAnimController.ComputeCrouchKneeBend(1.5f, 35f), 0.0001f);
+            Assert.AreEqual(0f, PuppetAnimController.ComputeCrouchKneeBend(-0.5f, 35f), 0.0001f);
+        }
+
+        // ---------- PR K — ComputeLungeElbowBend ----------
+
+        [Test]
+        public void LungeElbowBend_AtStart_Zero()
+        {
+            Assert.AreEqual(0f, PuppetAnimController.ComputeLungeElbowBend(0f, 40f), 0.0001f);
+        }
+
+        [Test]
+        public void LungeElbowBend_AtMid_Peak()
+        {
+            // Bell curve: u=0.5 → sin(π/2)=1 → maxDeg.
+            Assert.AreEqual(40f, PuppetAnimController.ComputeLungeElbowBend(0.5f, 40f), 0.0001f);
+        }
+
+        [Test]
+        public void LungeElbowBend_AtEnd_Zero()
+        {
+            Assert.AreEqual(0f, PuppetAnimController.ComputeLungeElbowBend(1f, 40f), 0.0001f);
+        }
+
+        [Test]
+        public void LungeElbowBend_OutOfRange_Clamped()
+        {
+            Assert.AreEqual(0f, PuppetAnimController.ComputeLungeElbowBend(1.5f, 40f), 0.0001f);
+            Assert.AreEqual(0f, PuppetAnimController.ComputeLungeElbowBend(-0.5f, 40f), 0.0001f);
+        }
     }
 }

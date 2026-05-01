@@ -661,7 +661,11 @@ namespace WildernessCultivation.EditorTools
             out Transform armRight,
             out Transform legLeft,
             out Transform legRight,
-            out Transform tail)
+            out Transform tail,
+            out Transform forearmLeft,
+            out Transform forearmRight,
+            out Transform shinLeft,
+            out Transform shinRight)
         {
             var rootGo = new GameObject("SpriteRoot");
             rootGo.transform.SetParent(root.transform, false);
@@ -683,6 +687,26 @@ namespace WildernessCultivation.EditorTools
                 sortingOrderBase + 1, new Vector3(0.10f, -0.30f, 0f));
             tail = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.Tail,
                 sortingOrderBase + 0, new Vector3(-0.25f, -0.05f, 0f));
+
+            // PR K (L2): nest forearm under arm, shin under leg. Optional — missing PNG
+            // → AddPuppetPart returns null → PuppetAnimController null-skips bend logic.
+            // Local offset = end of parent (arm sprite ~0.25u tall pivot top, leg ~0.30u).
+            forearmLeft = armLeft != null
+                ? AddPuppetPart(armLeft, sprites, CharacterArtSpec.PuppetRole.ForearmLeft,
+                    sortingOrderBase + 4, new Vector3(0f, -0.25f, 0f))
+                : null;
+            forearmRight = armRight != null
+                ? AddPuppetPart(armRight, sprites, CharacterArtSpec.PuppetRole.ForearmRight,
+                    sortingOrderBase + 4, new Vector3(0f, -0.25f, 0f))
+                : null;
+            shinLeft = legLeft != null
+                ? AddPuppetPart(legLeft, sprites, CharacterArtSpec.PuppetRole.ShinLeft,
+                    sortingOrderBase + 1, new Vector3(0f, -0.30f, 0f))
+                : null;
+            shinRight = legRight != null
+                ? AddPuppetPart(legRight, sprites, CharacterArtSpec.PuppetRole.ShinRight,
+                    sortingOrderBase + 1, new Vector3(0f, -0.30f, 0f))
+                : null;
         }
 
         static Transform AddPuppetPart(Transform parent,
@@ -717,6 +741,10 @@ namespace WildernessCultivation.EditorTools
             puppet.legLeftSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.LegLeft);
             puppet.legRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.LegRight);
             puppet.tailSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.Tail);
+            puppet.forearmLeftSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ForearmLeft);
+            puppet.forearmRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ForearmRight);
+            puppet.shinLeftSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ShinLeft);
+            puppet.shinRightSpritesByDir = ExtractRoleArray(set, CharacterArtSpec.PuppetRole.ShinRight);
         }
 
         static Sprite[] ExtractRoleArray(
@@ -937,7 +965,8 @@ namespace WildernessCultivation.EditorTools
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 5,
                     out var spriteRoot, out var torsoT, out var headT,
-                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -947,6 +976,10 @@ namespace WildernessCultivation.EditorTools
                 puppet.legLeft = legLT;
                 puppet.legRight = legRT;
                 puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
                 // Player tunings — slower step than mob, less aggressive swing.
                 puppet.walkFrequency = 3f;
                 puppet.armSwingDeg = 28f;
@@ -1092,7 +1125,8 @@ namespace WildernessCultivation.EditorTools
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
-                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1102,6 +1136,10 @@ namespace WildernessCultivation.EditorTools
                 puppet.legLeft = legLT;
                 puppet.legRight = legRT;
                 puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
                 puppet.walkFrequency = 4.5f;
                 puppet.armSwingDeg = 32f;
                 puppet.legSwingDeg = 28f;
@@ -1154,7 +1192,8 @@ namespace WildernessCultivation.EditorTools
             {
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
-                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT);
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1164,6 +1203,10 @@ namespace WildernessCultivation.EditorTools
                 puppet.legLeft = legLT;
                 puppet.legRight = legRT;
                 puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
                 puppet.walkFrequency = 5.5f;
                 puppet.armSwingDeg = 35f;
                 puppet.legSwingDeg = 26f;
