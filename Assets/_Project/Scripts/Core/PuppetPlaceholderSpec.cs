@@ -31,6 +31,8 @@ namespace WildernessCultivation.Core
         public const string WolfId = "wolf";
         public const string FoxSpiritId = "fox_spirit";
         public const string RabbitId = "rabbit";
+        public const string BoarId = "boar";
+        public const string DeerSpiritId = "deer_spirit";
 
         /// <summary>
         /// Default palette per character ID. Unknown id → fallback "neutral" gray. Distinct
@@ -75,6 +77,27 @@ namespace WildernessCultivation.Core
                         trousers = new Color(0.55f, 0.42f, 0.30f),
                         shin = new Color(0.36f, 0.28f, 0.20f),
                         tail = new Color(0.95f, 0.92f, 0.85f),
+                    };
+                case BoarId:
+                    // Wild boar — bristly dark brown coarse fur, ivory tusks (hero), heavy mob.
+                    return new Palette
+                    {
+                        skin = new Color(0.45f, 0.36f, 0.28f),
+                        tunic = new Color(0.30f, 0.22f, 0.16f),
+                        trousers = new Color(0.22f, 0.16f, 0.12f),
+                        shin = new Color(0.14f, 0.10f, 0.08f),
+                        tail = new Color(0.18f, 0.14f, 0.10f),
+                    };
+                case DeerSpiritId:
+                    // Spirit deer — cream fawn fur with subtle warm tones, white tail flick, antler
+                    // ivory rendered ở head sprite (Tail color không phải antler — Tail = stub flick).
+                    return new Palette
+                    {
+                        skin = new Color(0.92f, 0.85f, 0.72f),
+                        tunic = new Color(0.72f, 0.60f, 0.42f),
+                        trousers = new Color(0.55f, 0.45f, 0.30f),
+                        shin = new Color(0.38f, 0.30f, 0.20f),
+                        tail = new Color(0.96f, 0.93f, 0.86f),
                     };
                 default:
                     return new Palette
