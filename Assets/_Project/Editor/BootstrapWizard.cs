@@ -798,6 +798,23 @@ namespace WildernessCultivation.EditorTools
             yield return CharacterArtSpec.PuppetRole.LegRight;
         }
 
+        /// <summary>
+        /// Phase 3 PR #114 — Bat anatomy: 6 roles (head, torso, wing×2, leg×2). Mammal body
+        /// plan: wings = leathery membrane stretched giữa elongated finger bones, legs short
+        /// hindlimbs (Bat hangs upside down khi rest, but flying pose tucked under torso).
+        /// Same role count as Crow — placeholder hierarchy identical, art differs (warm
+        /// dark-brown fur vs Crow cool jet-black plumage).
+        /// </summary>
+        static IEnumerable<CharacterArtSpec.PuppetRole> BatAnatomyRoles()
+        {
+            yield return CharacterArtSpec.PuppetRole.Head;
+            yield return CharacterArtSpec.PuppetRole.Torso;
+            yield return CharacterArtSpec.PuppetRole.WingLeft;
+            yield return CharacterArtSpec.PuppetRole.WingRight;
+            yield return CharacterArtSpec.PuppetRole.LegLeft;
+            yield return CharacterArtSpec.PuppetRole.LegRight;
+        }
+
         // Hard-fail nếu puppet sprite set rỗng. Trước fix này, sprite load failure trong
         // PuppetPlaceholderGenerator silent → BuildPuppetHierarchy không tạo SpriteRenderer
         // child nào → Player/Wolf/Fox invisible khi run scene + không có error rõ ràng.
@@ -1602,9 +1619,57 @@ namespace WildernessCultivation.EditorTools
         static GameObject BuildBatPrefab(Sprite sprite, ItemSO wing, StatusEffectSO bleed)
         {
             var go = new GameObject("Bat");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 4;
+            // Phase 3 PR #114 puppet path — Bat flying mammal với wing rig:
+            //   Anatomy: head + torso + wing×2 + leg×2 (6 roles, same as Crow). Wings = leathery
+            //   membrane stretched giữa finger bones, distinct visual (warm dark-brown vs Crow's
+            //   cool jet-black). Legs short hindlimbs tucked under torso khi flying.
+            //   Flap math: PuppetAnimController.flapAlwaysOn=true (Bat hover constantly even idle),
+            //   flapFrequency=7.5Hz (faster than Crow 6Hz — smaller wingspan = faster beats),
+            //   wingFlapAmplitudeDeg=55° (slightly bigger than Crow 50° — leathery membrane
+            //   stretches more at extremes than feathered wing).
+            //   Walk math: armSwing=0 (no arms), legSwing=0 (legs tucked), tailSway=0 (no tail).
+            //   Bat aggressive (bleed + attack vs Crow passive patrol) — AI logic untouched,
+            //   puppet là visual layer only.
+            // PR M fallback: no real PNG → placeholder 6-role skeleton dùng custom anatomy
+            //   list (BatAnatomyRoles). Real PNG drop → CharacterArtImporter loads only 6 PNGs
+            //   (head/torso/wing_left/wing_right/leg_left/leg_right) → AddPuppetPart skip arms/
+            //   forearms/shins/tail (sprite missing → returns null) → silhouette clean.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("bat", placeholderHeightPx: 18)
+                ?? BuildPlaceholderSpriteSet("bat", BatAnatomyRoles());
+            AssertPuppetSpritesLoaded("bat", puppetSet);
+            SpriteRenderer sr = null;
+            {
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 4,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                AddPuppetWings(spriteRoot, puppetSet.EastSprites, sortingOrderBase: 4,
+                    out var wingLT, out var wingRT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
+                puppet.wingLeft = wingLT;
+                puppet.wingRight = wingRT;
+                puppet.walkFrequency = 4f;
+                puppet.armSwingDeg = 0f;
+                puppet.legSwingDeg = 0f;
+                puppet.tailSwayDeg = 0f;
+                puppet.flapFrequency = 7.5f;
+                puppet.wingFlapAmplitudeDeg = 55f;
+                puppet.flapAlwaysOn = true;
+                puppet.referenceSpeed = 2f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
+            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -1625,10 +1690,10 @@ namespace WildernessCultivation.EditorTools
             ai.xpReward = 6f;
             ai.drops = new[] { new ResourceNode.Drop { item = wing, min = 1, max = 1 } };
             ai.playerMask = ~0;
-            // Bat bay → shadow thấp hơn.
+            // Bat bay → shadow thấp hơn (offsetY -0.5, narrower scale than Crow để tinier silhouette).
             AttachDropShadow(go, offsetY: -0.5f, scaleX: 0.6f, scaleY: 0.22f);
             AttachMobHitFx(go, knockbackImpulse: 1.5f);
-            AttachMobAnim(go, walkBobFreq: 7.5f, maxTiltDeg: 4f, walkBobAmp: 0.03f);
+            // PR M: PuppetAnimController active (placeholder fallback) → MobAnimController retired.
             return SaveAsPrefab(go, $"{PrefabsDir}/Bat.prefab");
         }
 

@@ -135,6 +135,7 @@ namespace WildernessCultivation.Tests.EditMode
                 PuppetPlaceholderSpec.DeerSpiritId,
                 PuppetPlaceholderSpec.BossId,
                 PuppetPlaceholderSpec.CrowId,
+                PuppetPlaceholderSpec.BatId,
             })
             {
                 var p = PuppetPlaceholderSpec.PaletteFor(id);
@@ -282,6 +283,32 @@ namespace WildernessCultivation.Tests.EditMode
                 Assert.Less(crowTunic, tunic,
                     $"Crow plumage should be darker than {id} (jet-black silhouette).");
             }
+        }
+
+        [Test]
+        public void PaletteFor_Bat_HasLeatheryDarkBrownFur()
+        {
+            // Bat — warm dark brown mammal (NOT cool jet black like Crow). Tunic brightness
+            // dưới 0.25 (dark fur). r > b để đảm bảo warm hue (red-brown), distinct visual
+            // identity vs Crow's cool palette.
+            var p = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.BatId);
+            float tunicBrightness = (p.tunic.r + p.tunic.g + p.tunic.b) / 3f;
+            Assert.Less(tunicBrightness, 0.25f, "Bat fur should be dark.");
+            Assert.Greater(p.tunic.r, p.tunic.b,
+                "Bat fur should have warm red-brown hue (r > b), distinct from Crow's cool palette.");
+        }
+
+        [Test]
+        public void PaletteFor_Bat_DistinctFromCrow()
+        {
+            // 2 flying mob: Bat warm brown vs Crow cool jet-black. Player phải phân biệt được
+            // mà không cần label. Đối chiếu wing color hue (Bat r > b, Crow b > r).
+            var bat = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.BatId);
+            var crow = PuppetPlaceholderSpec.PaletteFor(PuppetPlaceholderSpec.CrowId);
+            Assert.Greater(bat.wing.r, crow.wing.r + 0.05f,
+                "Bat wing membrane should be redder/warmer than Crow's cool feathers.");
+            Assert.Greater(crow.wing.b, bat.wing.b,
+                "Crow wing should be cooler (more blue) than Bat's warm membrane.");
         }
 
         [Test]

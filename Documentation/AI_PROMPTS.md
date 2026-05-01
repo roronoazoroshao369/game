@@ -95,8 +95,9 @@ no lens flare, no ground beneath subject for body parts.
 | **Rabbit** (`Art/Characters/rabbit/`) | quadruped puppet (small) | **7** | **21** | n/a | + puffy white tail (hero feature) — §3.3.5 master + §3.6.4 bundle (Phase 2A) |
 | **Boar** (`Art/Characters/boar/`) | quadruped puppet (heavy) | **7** | **21** | n/a | + bristly stub tail + tusks (head sprite) — §3.3.6 master + §3.6.5 bundle (Phase 2B) |
 | **Deer Spirit** (`Art/Characters/deer_spirit/`) | quadruped puppet (graceful) | **7** | **21** | n/a | + white tail flick + antlers (head sprite, hero feature) — §3.3.7 master + §3.6.6 bundle (Phase 2B) |
-| **Crow** (`Art/Characters/crow/`) | flying puppet (corvid) | **6** | **18** | n/a | head + torso + wing×2 + leg×2 (no arms, no tail — bird body plan) — §3.3.9 master + §3.6.8 bundle (Phase 3) |
-| **Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 3 Bat / Phase 4 Snake) |
+| **Crow** (`Art/Characters/crow/`) | flying puppet (corvid) | **6** | **18** | n/a | head + torso + wing×2 + leg×2 (no arms, no tail — bird body plan) — §3.3.9 master + §3.6.8 bundle (Phase 3 PR #113) |
+| **Bat** (`Art/Characters/bat/`) | flying puppet (mammal) | **6** | **18** | n/a | head + torso + wing×2 + leg×2 (leathery membrane wings, mammal body plan) — §3.3.10 master + §3.6.9 bundle (Phase 3 PR #114) |
+| **Snake** | single-sprite | **1** | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 4 serpentine rig deferred) |
 | **Boss — Hắc Vương** (`Art/Characters/boss/`) | bipedal puppet (humanoid villain) | **6** | **18** | +4 (E only) / +12 (multi-dir) | head + torso + 2 arms + 2 legs (mirror Player rig, NO tail) — §3.3.8 master + §3.6.7 bundle (Phase 2C) |
 
 **Per-tier breakdown cho Player + Boss (bipedal humanoid):**
@@ -114,14 +115,19 @@ no lens flare, no ground beneath subject for body parts.
 | Flat L1 | 7 | — | — | **7** |
 | Multi-dir L1 | 7 | 7 | 7 | **21** |
 
-**Per-tier cho Crow (flying puppet — head + torso + wing×2 + leg×2, no tail):**
+**Per-tier cho Crow / Bat (flying puppet — head + torso + wing×2 + leg×2, no tail):**
 
 | Tier | E | N | S | Total |
 |---|---|---|---|---|
 | Flat L1 | 6 | — | — | **6** |
 | Multi-dir L1 | 6 | 6 | 6 | **18** |
 
-> **Crow flap math (Phase 3):** PuppetAnimController.flapAlwaysOn=true → wing flap continuous (Crow hover + cruise đều vỗ cánh, independent of walk speed). flapFrequency=6Hz, wingFlapAmplitudeDeg=50°. Both wings flap **in-phase** (vỗ xuống cùng → đẩy lên — physics flying creature, vs arm opposite-phase swing).
+> **Flap math (Phase 3):** PuppetAnimController.flapAlwaysOn=true → wing flap continuous (hover + cruise đều vỗ cánh, independent of walk speed). Both wings flap **in-phase** (vỗ xuống cùng → đẩy lên — physics flying creature, vs arm opposite-phase swing). Tunings:
+>
+> - **Crow** (PR #113): flapFrequency=6Hz, wingFlapAmplitudeDeg=50° — corvid feathered wings, slower deeper stroke.
+> - **Bat** (PR #114): flapFrequency=7.5Hz, wingFlapAmplitudeDeg=55° — leathery membrane wings, faster + slightly larger amplitude (smaller wingspan = faster beats, membrane stretches more).
+>
+> Single shared math (`PuppetAnimController.ComputeFlapAngle`) — palette + tunings differentiate visual identity.
 
 > **S/tail skip note (real-world output):** front view (S) cho quadruped tail thường bị che bởi torso → optional, controller fallback East sprite cho slot null. Bundle §3.6.x dùng 14 prompts → 20 PNG (skip `S/tail.png`) thay vì 21 lý thuyết.
 
@@ -130,13 +136,13 @@ no lens flare, no ground beneath subject for body parts.
 > - **Multi-dir (E+N+S)** = nhân vật **xoay theo hướng đi** (DST feel — đi lên thấy lưng, đi xuống thấy mặt) thay vì luôn nhìn ngang.
 > - **L2 elbow/knee** = tay / chân **gập tự nhiên** khi attack hoặc crouch (Hades polish) thay vì rigid limb thẳng.
 >
-> **Single-sprite mob** (Snake/Bat) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG. **Phase 3 PR #114** sẽ upgrade Bat (mirror Crow wing rig); **Phase 4** = Snake serpentine.
+> **Single-sprite mob** (Snake) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG. **Phase 4** sẽ upgrade Snake với serpentine S-curve rig (4 body segments).
 
-**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player + Boss + Crow, 7 cho Wolf/Fox/Rabbit/Boar/Deer, 1 mỗi single-sprite mob = 2 PNG cho 2 mob đơn còn legacy = Snake + Bat) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
+**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player + Boss + Crow + Bat, 7 cho Wolf/Fox/Rabbit/Boar/Deer, 1 cho Snake) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
 
 **Required minimum để puppet build pass:** chỉ cần `head.png` + `torso.png` ở East/flat. Thiếu → fallback single-sprite (puppet không spawn). Limbs / tail optional — controller tự skip slot null.
 
-> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character. Hiện có: §3.6.1 Player (12 prompts → 18 PNG), §3.6.2 Wolf (14 → 20), §3.6.3 FoxSpirit (14 → 20), §3.6.4 Rabbit (14 → 20), §3.6.5 Boar (14 → 20), §3.6.6 Deer Spirit (14 → 20), §3.6.7 Boss (12 → 18), §3.6.8 Crow (12 → 18). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
+> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character. Hiện có: §3.6.1 Player (12 prompts → 18 PNG), §3.6.2 Wolf (14 → 20), §3.6.3 FoxSpirit (14 → 20), §3.6.4 Rabbit (14 → 20), §3.6.5 Boar (14 → 20), §3.6.6 Deer Spirit (14 → 20), §3.6.7 Boss (12 → 18), §3.6.8 Crow (12 → 18), §3.6.9 Bat (12 → 18). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
 
 ### 3.1 Player — Cultivation Hero (`Art/Characters/player/`)
 
@@ -972,6 +978,130 @@ fully transparent background, top edge clean horizontal at hip
 NO shadow.
 
 # NOTE: same wing/arm pattern — gen 1 lần flip cho phần đối xứng OK.
+```
+
+### 3.3.10 Bat — Dơi Đêm Leathery Mammal Cave Dweller (`Art/Characters/bat/`)
+
+> **Concept:** small **flying mammal cave dweller** — dark-brown leathery wing membranes (NOT feathered), warm dark-brown fur covering body, prominent pointed ears (sound location), small red eyes glowing in the dark, small fanged mouth. Mammal body plan: **leathery membrane wings** stretched giữa elongated finger bones (NOT feathered like Crow), short hindlegs tucked under torso khi flying. Aggressive — bleed bite + chase player. Anatomy: **6 parts** = head + torso + wing×2 + leg×2 (same role count as Crow, distinct visual identity through palette + wing texture).
+>
+> **Pose lock:** neutral standing (idle hovering pose) — torso level, head facing right (E), wings extended outward HORIZONTALLY (mid-flap neutral pose, NOT folded), legs short tucked under body. PuppetAnimController flap math (sin oscillation 55° amplitude @ 7.5Hz — faster + larger than Crow) rotate wings runtime around shoulder pivot — KHÔNG vẽ wings dynamic mid-flap trong sprite, vẽ neutral horizontal extended pose.
+>
+> **Cross-dir consistency rule (CRITICAL):** Khi gen N + S sau master E, dùng EXACT cùng palette (#3a2a20 dark fur, #2e1d20 deeper fur shadow, #1c0e0e wing membrane, #5a2820 inner ear pink, #c83030 red eye) + cùng silhouette anchor (torso ovoid bigger than Crow, head with prominent ears + fanged snout, wings broad with finger-bone struts visible). Mismatch palette → Bat biến hình khi xoay direction.
+>
+> **Distinct from Crow:** Bat khác Crow visually qua (1) wing texture: leathery membrane with finger-bone struts visible, NOT feathered fan; (2) palette: warm dark-brown fur (r > b) vs Crow cool jet-black (b > r); (3) head: prominent ears + open fanged mouth vs Crow's sharp beak + closed face; (4) eyes: small red glowing dots vs Crow's intelligent yellow.
+
+```
+=== bat/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical aesthetic adapted for
+cave-dwelling bat, limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline (deep brown tone, NOT pure black).
+
+Subject: side view of a BAT (small fruit bat / vespertilionid) HEAD
+ONLY, profile facing right, **prominent pointed EAR** at top
+(triangular, ~40% head height — sound location hero feature),
+small fanged MOUTH slightly open showing tiny upper canines, small
+glowing RED EYE (cave-dweller, dim light adaptation), short pug-
+like snout (NOT pointed beak), warm dark-brown fur covering skull,
+isolated single body part on fully transparent background. NO neck
+visible below jawline (clean cut horizontal).
+
+Palette (use ONLY these): warm dark-brown fur #3a2a20 base, deep
+shadow #2e1d20 fold shadow, ear inner pink #5a2820 (warm, blood-
+suffused membrane visible inside ear), fang white #d4c8b0 small
+canine tip, red eye #c83030 iris, black pupil #1a0a0a center.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, ear must NOT crop at top edge
+(allow full triangular silhouette), NO body parts below jaw,
+NO shoulders, NO neck, NO ground, NO shadow.
+```
+
+```
+=== bat/torso.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical aesthetic adapted for bat.
+
+Subject: side view of a BAT TORSO ONLY (small mammal body, ovoid
+silhouette), profile facing right, neutral hovering pose, warm
+dark-brown furry pelt covering chest and back, **subtle lighter
+fur tuft at chest** (mammal mid-line fluff), short ribcage hint
+brush stroke, NO head NO wings NO legs visible (clean cuts at
+neck, shoulders, hips). NO tail rendered (vespertilionid bats
+have small interfemoral tail folded into membrane — out of scope
+for torso sprite).
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+fold shadow at belly + flanks, chest fluff highlight #4a3530
+minimal lighter strokes at center chest.
+
+Composition: 256x384 px (vertical), isolated single torso (ovoid
+furry body) on fully transparent background, NO head, NO wings,
+NO legs, NO ground, NO shadow. Top edge clean horizontal at
+shoulder line (puppet rig pivot for wing attach), bottom edge
+clean at hip line (leg attach).
+```
+
+```
+=== bat/wing_left.png === / === bat/wing_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+bat.
+
+Subject: side view of a BAT LEFT (or RIGHT) WING ONLY, extended
+HORIZONTALLY OUTWARD in mid-flap neutral pose (NOT folded against
+body), **leathery membrane** stretched giữa elongated FINGER BONES
+visible as 4 dark struts radiating from wing root (NOT feathered —
+mammal anatomy: arm + 4 elongated digits + thumb claw at top edge),
+membrane translucent dark-brown with subtle red-brown blood vessel
+hints showing through, wing root attaches at top-right corner of
+sprite (shoulder pivot), wing tip extends to bottom-left, small
+thumb claw visible at top edge mid-wing, NO body, NO head visible.
+
+Palette: leathery membrane #1c0e0e base, finger-bone strut
+#3a2a20 darker line (4 struts visible), membrane translucent
+shadow #100808 between struts, blood vessel hint #5a2820 minimal
+warm undertone, thumb claw #d4c8b0 sharp tip.
+
+Composition: 256x384 px (HORIZONTAL aspect — wing wider than tall
+when extended; render as 384x256 if engine prefers, or vertical
+with wing extending diagonally), isolated single wing on fully
+transparent background, top-right edge = shoulder pivot (clean
+horizontal cut), wing extends outward / downward, NO body, NO
+ground.
+
+# NOTE: gen 1 lần flip horizontal trong Photopea/GIMP cho wing_right.
+# Wing aspect: extended horizontal pose key — flap math rotates around
+# shoulder pivot 55° amplitude, neutral pose extended sideways.
+```
+
+```
+=== bat/leg_left.png === / === bat/leg_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+bat.
+
+Subject: side view of a BAT LEFT (or RIGHT) LEG, **short**
+mammalian hindleg (much shorter than Crow's tall bird tarsus —
+bats have weak vestigial legs used for hanging, not standing),
+warm dark-brown fur covering thigh + lower leg, small clawed foot
+at bottom with **5 toes splaying outward** (mammal pentadactyl,
+each toe ending in sharp curved hanging-claw), NO body, NO foot
+ground contact.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+joint shadow (knee + ankle), claw curved #1a0a0a sharp dark tip
+(hanging-claw — bats rest upside down), foot pad pink-brown
+#5a3530 underside hint.
+
+Composition: 256x384 px (vertical), isolated single bat leg on
+fully transparent background, top edge clean horizontal at hip
+(pivot point), bottom edge at clawtip, NO body, NO ground,
+NO shadow.
+
+# NOTE: same wing pattern — gen 1 lần flip cho phần đối xứng OK.
 ```
 
 ### 3.4 Multi-Direction (L3+) Variants
@@ -2347,6 +2477,188 @@ sharp small claws, NO body, NO ground.
 Palette: charcoal gray scale #1a1a1f base, deep shadow #0a0a0d
 joint shadow, claw black #08080a sharp tip, scale highlight
 #25252b minimal sheen.
+
+Composition: 256x384 px (vertical), front-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+
+# NOTE: same pattern — gen 1 lần flip cho phần đối xứng OK.
+```
+
+#### 3.4.9 Bat — N (Back View) + S (Front View)
+
+> **Pipeline:** drop side prompts §3.3.10 vào `bat/E/{part}.png`, plus N + S variants below. Anatomy 6 parts: head + torso + wing×2 + leg×2.
+>
+> **Wing N+S note:** wings ở back-view (N) folded slightly behind body (Bat seen from behind = wings semi-tucked, finger-bone struts visible against back). Front-view (S) wings extended outward symmetric — animator vẫn flap rotate 55° around shoulder pivot trong runtime.
+
+```
+=== bat/N/head.png === (BACK VIEW)
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT HEAD ONLY (viewer looks at back of
+bat's head), face NOT visible (turned away from viewer), back of
+skull rounded with warm dark-brown fur, **two prominent pointed
+ears** flanking back of head (triangular silhouette readable from
+behind — hero feature back-view), NO eye visible (back of head),
+isolated single body part on transparent.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+along upper crown + neck nape, ear back surface #4a3530 lighter
+fur on ear back (catches more light from behind).
+
+Composition: 256x256 px, isolated single head on transparent,
+vertically centered, ears MUST NOT crop at top (allow full
+triangular silhouette), NO snout extending forward (clean rounded
+back-of-skull), NO body parts, NO shoulders.
+```
+
+```
+=== bat/N/torso.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT TORSO ONLY, viewer looks at back of
+ovoid mammal body, warm dark-brown fur covering full back surface
+visible, **subtle darker brown fur ridge along central spine**
+(back-view detail — slight dorsal stripe visible), fur texture
+brush hint along back, NO head NO wings NO legs visible.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+at flanks, dorsal ridge stripe #2a1d18 along central spine, fur
+highlight #4a3530 minimal at upper shoulder.
+
+Composition: 256x384 px (vertical), back-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground.
+```
+
+```
+=== bat/N/wing_left.png === / === bat/N/wing_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT LEFT (or RIGHT) WING, viewer sees wing
+folded slightly backward against body silhouette (back-view posture
+— wings semi-tucked when not actively flapping), **finger-bone
+struts visible as 4 dark radiating lines** from wing root, leathery
+membrane stretched between struts (translucent dark-brown), wing
+root attaches at top-inner corner (shoulder pivot), wing extends
+slightly outward + backward.
+
+Palette: leathery membrane #1c0e0e base, finger-bone strut
+#3a2a20 darker line, membrane translucent shadow #100808 between
+struts, blood vessel hint #5a2820 minimal warm undertone.
+
+Composition: 256x384 px (vertical), back-view single wing on
+transparent, top-inner edge = shoulder pivot, NO body, NO ground.
+
+# NOTE: gen 1 lần flip horizontal cho wing_right.
+```
+
+```
+=== bat/N/leg_left.png === / === bat/N/leg_right.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT LEFT (or RIGHT) LEG, viewer sees back
+of mammal hindleg — short stout leg, warm dark-brown fur, **5 toes
+splaying outward** with curved hanging-claws visible from behind,
+NO body, NO ground.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+joint shadow, claw curved #1a0a0a sharp dark tip, foot pad pink-
+brown #5a3530 underside hint.
+
+Composition: 256x384 px (vertical), back-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+
+# NOTE: same pattern — gen 1 lần flip cho phần đối xứng OK.
+```
+
+```
+=== bat/S/head.png === (FRONT VIEW — face-on)
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT HEAD ONLY (viewer faces bat head on),
+**short pug-like snout pointing toward viewer** (foreshortened —
+small forward stub silhouette with fanged mouth slightly open
+showing tiny upper canines), TWO red glowing eyes visible flanking
+snout (binocular front view), **two prominent pointed EARS at top
+flanking head** (triangular silhouette, hero feature reads strongly
+front-view), warm dark-brown fur covering skull, isolated single
+body part on transparent.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+fold shadow, ear inner pink #5a2820 visible inside both ears
+(blood-suffused membrane), fang white #d4c8b0 small canine tip,
+red eye #c83030 iris (×2), black pupil #1a0a0a center.
+
+Composition: 256x256 px, isolated single head on transparent,
+vertically centered, ears MUST NOT crop at top, snout NOT cropped
+at front (allow short forward stub), TWO eyes visible symmetric,
+NO body, NO neck.
+```
+
+```
+=== bat/S/torso.png === (FRONT VIEW — face-on)
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT TORSO ONLY, viewer faces bat chest
+on, ovoid furry body silhouette face-on, warm dark-brown fur
+covering chest, slight chest-line fur tuft brush hint at center
+(mammal mid-line fluff), NO head NO wings NO legs visible.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20 at
+chest sides, chest fluff highlight #4a3530 minimal at center.
+
+Composition: 256x384 px (vertical), front-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground. Top edge
+clean shoulder line, bottom edge clean hip line.
+```
+
+```
+=== bat/S/wing_left.png === / === bat/S/wing_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT LEFT (or RIGHT) WING, viewer faces
+bat head on — wing extended outward HORIZONTALLY from body to
+viewer's left (or right) side, **finger-bone struts visible as 4
+dark radiating lines** from shoulder pivot, leathery membrane
+stretched between struts (translucent dark-brown), thumb claw
+visible at top edge mid-wing, wing root attaches at top-inner edge
+(shoulder pivot adjacent to torso center), wing tip extends outward
+toward viewer's side.
+
+Palette: leathery membrane #1c0e0e base, finger-bone strut
+#3a2a20 darker line, membrane translucent shadow #100808 between
+struts, blood vessel hint #5a2820 minimal warm undertone, thumb
+claw #d4c8b0 sharp tip.
+
+Composition: 256x384 px (vertical, can be 384x256 horizontal if
+engine prefers), front-view single wing on transparent, top-inner
+edge = shoulder pivot, wing extends outward, NO body, NO ground.
+
+# NOTE: gen 1 lần flip horizontal cho wing_right.
+```
+
+```
+=== bat/S/leg_left.png === / === bat/S/leg_right.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT LEFT (or RIGHT) LEG, viewer faces bat
+head on — short mammal hindleg, warm dark-brown fur, **5 toes
+splaying forward** with curved hanging-claws fully visible from
+front, NO body, NO ground.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+joint shadow, claw curved #1a0a0a sharp dark tip, foot pad pink-
+brown #5a3530 underside hint at toe base.
 
 Composition: 256x384 px (vertical), front-view leg on transparent,
 top edge clean horizontal at hip pivot, bottom edge at clawtip,
@@ -5082,6 +5394,313 @@ predator hawk silhouette (crow is mid-sized scavenger, not raptor).
 
 ---
 
+#### 3.6.9 Bat — Dơi Đêm Full DST Set (12 prompts → 18 PNG)
+
+> **Concept lock:** small flying mammal cave dweller — warm dark-brown fur, leathery wing membranes (NOT feathered) stretched giữa elongated finger bones, prominent pointed ears, small red glowing eyes, fanged snout. Mammal body plan: 6 parts = head + torso + wing×2 + leg×2 (NO arms / forearms / shins / tail visible). Hover continuous (`flapAlwaysOn=true`, flap 55° amplitude @ 7.5Hz independent of move speed). Aggressive — bleed bite + chase player (vs Crow passive patrol).
+>
+> **Cross-dir consistency rule:** EXACT cùng palette (`#3a2a20` warm dark-brown fur, `#2e1d20` fur shadow, `#1c0e0e` wing membrane, `#5a2820` ear inner pink, `#c83030` red eye) + cùng silhouette anchor (ovoid torso, pointed ears, fanged snout, wings broad with finger-bone struts visible) khắp 3 dir E/N/S. Wings ở N folded behind body silhouette; ở S extended outward symmetric.
+>
+> **Distinct from Crow (CRITICAL):** Bat warm brown (r > b) vs Crow cool jet-black (b > r); Bat wing = leathery membrane with 4 dark finger-bone struts vs Crow = feathered fan; Bat head = ears + open fang vs Crow = beak + eye. Player must read 2 flying mob distinctly without label.
+>
+> **Pipeline:** copy block prompt → paste vào GPT Image 2.0 (hoặc Stable Diffusion XL / Midjourney) → save PNG vào path nằm trong header `=== Save to: ... ===` → next block. **12 prompts → 18 PNG output (6 parts × 3 dirs).** W mirror tự động qua `PuppetAnimController.spriteRoot.localScale` runtime — KHÔNG cần gen W.
+
+##### E (East / side view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/E/head.png ===
+
+hand-painted painterly digital illustration, visible brush strokes,
+soft cel-shading, asian wuxia mystical aesthetic adapted for
+cave-dwelling bat, limited color palette, clean readable silhouette,
+1.5 to 2 pixel mid-tone outline (deep brown tone, NOT pure black).
+
+Subject: side view of a BAT (small fruit bat / vespertilionid) HEAD
+ONLY, profile facing right, **prominent pointed EAR** at top
+(triangular, ~40% head height — sound location hero feature),
+small fanged MOUTH slightly open showing tiny upper canines, small
+glowing RED EYE (cave-dweller, dim light adaptation), short pug-
+like snout (NOT pointed beak), warm dark-brown fur covering skull,
+isolated single body part on fully transparent background. NO neck
+visible below jawline (clean cut horizontal).
+
+Palette (use ONLY these): warm dark-brown fur #3a2a20 base, deep
+shadow #2e1d20 fold shadow, ear inner pink #5a2820 (warm, blood-
+suffused membrane visible inside ear), fang white #d4c8b0 small
+canine tip, red eye #c83030 iris, black pupil #1a0a0a center.
+
+Composition: 256x256 px, isolated single head on transparent
+background, vertically centered, ear must NOT crop at top edge
+(allow full triangular silhouette), NO body parts below jaw,
+NO shoulders, NO neck, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/E/torso.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+bat.
+
+Subject: side view of a BAT TORSO ONLY (small mammal body, ovoid
+silhouette), profile facing right, neutral hovering pose, warm
+dark-brown furry pelt covering chest and back, **subtle lighter
+fur tuft at chest** (mammal mid-line fluff), short ribcage hint
+brush stroke, NO head NO wings NO legs visible (clean cuts at
+neck, shoulders, hips). NO tail rendered.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+fold shadow at belly + flanks, chest fluff highlight #4a3530
+minimal lighter strokes at center chest.
+
+Composition: 256x384 px (vertical), isolated single torso (ovoid
+furry body) on fully transparent background, NO head, NO wings,
+NO legs, NO ground, NO shadow. Top edge clean horizontal at
+shoulder line (puppet rig pivot for wing attach), bottom edge
+clean at hip line (leg attach).
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/E/wing_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/bat/E/wing_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+bat.
+
+Subject: side view of a BAT LEFT WING ONLY, extended HORIZONTALLY
+OUTWARD in mid-flap neutral pose (NOT folded against body),
+**leathery membrane** stretched giữa elongated FINGER BONES visible
+as 4 dark struts radiating from wing root (NOT feathered — mammal
+anatomy: arm + 4 elongated digits + thumb claw at top edge),
+membrane translucent dark-brown with subtle red-brown blood vessel
+hints showing through, wing root attaches at top-right corner of
+sprite (shoulder pivot), wing tip extends to bottom-left, small
+thumb claw visible at top edge mid-wing, NO body, NO head visible.
+
+Palette: leathery membrane #1c0e0e base, finger-bone strut
+#3a2a20 darker line (4 struts visible), membrane translucent
+shadow #100808 between struts, blood vessel hint #5a2820 minimal
+warm undertone, thumb claw #d4c8b0 sharp tip.
+
+Composition: 256x384 px (vertical), isolated single wing on fully
+transparent background, top-right edge = shoulder pivot (clean
+horizontal cut), wing extends outward / downward, NO body, NO
+ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/E/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/bat/E/leg_right.png ===
+
+hand-painted painterly, visible brush strokes, asian wuxia mystical
+bat.
+
+Subject: side view of a BAT LEFT LEG, **short** mammalian hindleg
+(much shorter than Crow's tall bird tarsus — bats have weak
+vestigial legs used for hanging, not standing), warm dark-brown
+fur covering thigh + lower leg, small clawed foot at bottom with
+**5 toes splaying outward** (mammal pentadactyl, each toe ending
+in sharp curved hanging-claw), NO body, NO foot ground contact.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+joint shadow (knee + ankle), claw curved #1a0a0a sharp dark tip
+(hanging-claw — bats rest upside down), foot pad pink-brown
+#5a3530 underside hint.
+
+Composition: 256x384 px (vertical), isolated single bat leg on
+fully transparent background, top edge clean horizontal at hip
+(pivot point), bottom edge at clawtip, NO body, NO ground,
+NO shadow.
+```
+
+##### N (North / back view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/N/head.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT HEAD ONLY (viewer looks at back of
+bat's head), face NOT visible (turned away from viewer), back of
+skull rounded with warm dark-brown fur, **two prominent pointed
+ears** flanking back of head (triangular silhouette readable from
+behind — hero feature back-view), NO eye visible (back of head),
+isolated single body part on transparent.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+along upper crown + neck nape, ear back surface #4a3530 lighter
+fur on ear back (catches more light from behind).
+
+Composition: 256x256 px, isolated single head on transparent,
+vertically centered, ears MUST NOT crop at top, NO snout extending
+forward (clean rounded back-of-skull), NO body parts, NO shoulders.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/N/torso.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT TORSO ONLY, viewer looks at back of
+ovoid mammal body, warm dark-brown fur covering full back surface
+visible, **subtle darker brown fur ridge along central spine**
+(back-view detail — slight dorsal stripe visible), fur texture
+brush hint along back, NO head NO wings NO legs visible.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+at flanks, dorsal ridge stripe #2a1d18 along central spine, fur
+highlight #4a3530 minimal at upper shoulder.
+
+Composition: 256x384 px (vertical), back-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/N/wing_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/bat/N/wing_right.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT LEFT WING, viewer sees wing folded
+slightly backward against body silhouette (back-view posture —
+wings semi-tucked when not actively flapping), **finger-bone struts
+visible as 4 dark radiating lines** from wing root, leathery
+membrane stretched between struts (translucent dark-brown), wing
+root attaches at top-inner corner (shoulder pivot), wing extends
+slightly outward + backward.
+
+Palette: leathery membrane #1c0e0e base, finger-bone strut
+#3a2a20 darker line, membrane translucent shadow #100808 between
+struts, blood vessel hint #5a2820 minimal warm undertone.
+
+Composition: 256x384 px (vertical), back-view single wing on
+transparent, top-inner edge = shoulder pivot, NO body, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/N/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/bat/N/leg_right.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: BACK view of a BAT LEFT LEG, viewer sees back of mammal
+hindleg — short stout leg, warm dark-brown fur, **5 toes splaying
+outward** with curved hanging-claws visible from behind, NO body,
+NO ground.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+joint shadow, claw curved #1a0a0a sharp dark tip, foot pad pink-
+brown #5a3530 underside hint.
+
+Composition: 256x384 px (vertical), back-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/S/head.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT HEAD ONLY (viewer faces bat head on),
+**short pug-like snout pointing toward viewer** (foreshortened —
+small forward stub silhouette with fanged mouth slightly open
+showing tiny upper canines), TWO red glowing eyes visible flanking
+snout (binocular front view), **two prominent pointed EARS at top
+flanking head** (triangular silhouette, hero feature reads strongly
+front-view), warm dark-brown fur covering skull, isolated single
+body part on transparent.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+fold shadow, ear inner pink #5a2820 visible inside both ears
+(blood-suffused membrane), fang white #d4c8b0 small canine tip,
+red eye #c83030 iris (×2), black pupil #1a0a0a center.
+
+Composition: 256x256 px, isolated single head on transparent,
+vertically centered, ears MUST NOT crop at top, snout NOT cropped
+at front, TWO eyes visible symmetric, NO body, NO neck.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/S/torso.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT TORSO ONLY, viewer faces bat chest
+on, ovoid furry body silhouette face-on, warm dark-brown fur
+covering chest, slight chest-line fur tuft brush hint at center
+(mammal mid-line fluff), NO head NO wings NO legs visible.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20 at
+chest sides, chest fluff highlight #4a3530 minimal at center.
+
+Composition: 256x384 px (vertical), front-view torso ovoid silhouette
+on transparent, NO head, NO wings, NO legs, NO ground. Top edge
+clean shoulder line, bottom edge clean hip line.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/S/wing_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/bat/S/wing_right.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT LEFT WING, viewer faces bat head on
+— wing extended outward HORIZONTALLY from body to viewer's left
+side, **finger-bone struts visible as 4 dark radiating lines** from
+shoulder pivot, leathery membrane stretched between struts
+(translucent dark-brown), thumb claw visible at top edge mid-wing,
+wing root attaches at top-inner edge (shoulder pivot adjacent to
+torso center), wing tip extends outward toward viewer's side.
+
+Palette: leathery membrane #1c0e0e base, finger-bone strut
+#3a2a20 darker line, membrane translucent shadow #100808 between
+struts, blood vessel hint #5a2820 minimal warm undertone, thumb
+claw #d4c8b0 sharp tip.
+
+Composition: 256x384 px (vertical), front-view single wing on
+transparent, top-inner edge = shoulder pivot, wing extends outward,
+NO body, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/bat/S/leg_left.png ===
+=== Then mirror horizontally → Save to: Assets/_Project/Art/Characters/bat/S/leg_right.png ===
+
+hand-painted painterly, asian wuxia mystical bat.
+
+Subject: FRONT view of a BAT LEFT LEG, viewer faces bat head on
+— short mammal hindleg, warm dark-brown fur, **5 toes splaying
+forward** with curved hanging-claws fully visible from front, NO
+body, NO ground.
+
+Palette: warm dark-brown fur #3a2a20 base, deep shadow #2e1d20
+joint shadow, claw curved #1a0a0a sharp dark tip, foot pad pink-
+brown #5a3530 underside hint at toe base.
+
+Composition: 256x384 px (vertical), front-view leg on transparent,
+top edge clean horizontal at hip pivot, bottom edge at clawtip,
+NO body, NO ground, NO shadow.
+```
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi bat generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi cute bat,
+no shounen mascot bat, no cartoon vampire cape, no fluffy plush,
+no smooth airbrush gradient, no drop shadow on transparent background,
+no text, no watermark, no signature, no border, single subject only,
+no duplicate, no grid lines, no UI elements, no caption, no logo,
+no lens flare, no ground beneath subject for body parts, no bright
+colors (no purple/blue/green fur — bat is WARM DARK-BROWN only),
+no feathered wings (bat uses leathery membrane with finger-bone
+struts), no humanoid arm (bat wing IS the arm + finger), no large
+fluffy tail (bat has minimal tail), no demon horns / vampire fangs
+(bat fangs small canine subtle).
+```
+
+---
+
 ## 4. Single-Sprite Mobs
 
 > **Pipeline:** Drop single PNG `Sprites/{mobId}.png` (legacy gen_sprites.py path) hoặc Art/Mobs/{mobId}/sprite.png (sau khi MobArtImporter merge — chưa có).
@@ -7217,15 +7836,16 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Deer Spirit puppet E (Phase 2B — 7 parts incl. white tail flick) | 7 | 28 | $0.56 |
 | Boss puppet E (Phase 2C — 6 parts humanoid mirror Player rig, NO tail) | 6 | 24 | $0.48 |
 | Crow puppet E (Phase 3 PR #113 — 6 parts flying corvid: head, torso, wing×2, leg×2) | 6 | 24 | $0.48 |
-| Single-sprite mobs (Snake, Bat) | 2 | 8 | $0.16 |
+| Bat puppet E (Phase 3 PR #114 — 6 parts flying mammal: head, torso, wing×2, leg×2) | 6 | 24 | $0.48 |
+| Single-sprite mobs (Snake) | 1 | 4 | $0.08 |
 | Resources (12 nodes) | 12 | 48 | $0.96 |
 | Item icons (22) | 22 | 88 | $1.76 |
 | Tiles (12 seamless: 3 biome × 4 var) | 12 | 48 | $0.96 |
-| **Phase 1 subtotal** | **101** | **~404** | **~$8.08** |
+| **Phase 1 subtotal** | **106** | **~424** | **~$8.48** |
 
 ### Phase 2 — Multi-direction (L3 NSEW)
 
-> Add-on cho 8 puppet character (Player + Wolf + Fox + Rabbit + Boar + Deer Spirit + Boss + Crow). Mob single-sprite (Snake/Bat) + resources + tiles KHÔNG cần.
+> Add-on cho 9 puppet character (Player + Wolf + Fox + Rabbit + Boar + Deer Spirit + Boss + Crow + Bat). Mob single-sprite (Snake) + resources + tiles KHÔNG cần.
 
 | Group | Asset count | Image gen (4 var) | Baseline cost |
 |---|---|---|---|
@@ -7237,7 +7857,8 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Deer Spirit N + S (Phase 2B — skip S/tail → 13) | 13 | 52 | $1.04 |
 | Boss N + S (Phase 2C — humanoid 6 × 2, NO tail skip needed) | 12 | 48 | $0.96 |
 | Crow N + S (Phase 3 PR #113 — flying 6 × 2, NO tail skip needed) | 12 | 48 | $0.96 |
-| **Phase 2 subtotal** | **101** | **404** | **~$8.08** |
+| Bat N + S (Phase 3 PR #114 — flying 6 × 2, NO tail skip needed) | 12 | 48 | $0.96 |
+| **Phase 2 subtotal** | **113** | **452** | **~$9.04** |
 
 ### Phase 3 — L2 elbow/knee (forearm + shin)
 
@@ -7295,11 +7916,11 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 
 | Scope | Asset count | Baseline cost | Realistic w/ 3× iter |
 |---|---|---|---|
-| **Phase 1 only (MVP side-only)** | 101 | ~$8.08 | ~$22-28 |
-| Phase 1 + 2 (multi-dir) | 202 | ~$16.16 | ~$45-60 |
-| Phase 1 + 2 + 3 (L3+ full puppet) | 230 | ~$18.40 | ~$50-70 |
-| Phase 1-6 (combat + VFX + weather) | 258 | ~$20.64 | ~$60-85 |
-| **Phase 1-8 (FULL game asset coverage incl. NPC + environment)** | **290** (all NPC variants: **334**) | **~$23.20** (with all NPC: **~$26.72**) | **~$75-135** |
+| **Phase 1 only (MVP side-only)** | 106 | ~$8.48 | ~$23-30 |
+| Phase 1 + 2 (multi-dir) | 219 | ~$17.52 | ~$48-65 |
+| Phase 1 + 2 + 3 (L3+ full puppet) | 247 | ~$19.76 | ~$55-75 |
+| Phase 1-6 (combat + VFX + weather) | 275 | ~$22.00 | ~$65-90 |
+| **Phase 1-8 (FULL game asset coverage incl. NPC + environment)** | **307** (all NPC variants: **351**) | **~$24.56** (with all NPC: **~$28.08**) | **~$80-140** |
 
 > **Recommendation:** ship Phase 1-3 first (MVP playtest), Phase 4-5 với balance pass, Phase 6-8 polish pass.
 > Tổng prompt count trong file này: ~310 (counting each direction + state variant + NPC variant separately).
