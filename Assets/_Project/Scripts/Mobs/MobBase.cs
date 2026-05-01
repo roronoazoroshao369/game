@@ -54,6 +54,10 @@ namespace WildernessCultivation.Mobs
         // mỗi hit (mob bị beat liên tục bởi player ⇒ hot path).
         ReactiveOnHit reactiveFx;
         HitKnockback knockback;
+        MobAnimController anim;
+
+        /// <summary>R7: state classes (cùng assembly) đọc anim controller để hook crouch/lunge.</summary>
+        internal MobAnimController Anim => anim;
 
         // Cache player ref tránh ServiceLocator.Get fallback mỗi frame trên mọi mob.
         // Reset mỗi frame để pickup khi player respawn / scene reload.
@@ -68,6 +72,7 @@ namespace WildernessCultivation.Mobs
             HP = maxHP;
             reactiveFx = GetComponent<ReactiveOnHit>();
             knockback = GetComponent<HitKnockback>();
+            anim = GetComponent<MobAnimController>();
         }
 
         /// <summary>

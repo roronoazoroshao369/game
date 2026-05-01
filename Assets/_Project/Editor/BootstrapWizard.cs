@@ -735,6 +735,21 @@ namespace WildernessCultivation.EditorTools
         }
 
         /// <summary>
+        /// Procedural mob animation — walk bob (Y scale modulation theo speed) + tilt theo direction
+        /// + idle breathing + hooks lunge/squash/crouch driven bởi FSM state. Tham số tuỳ mob size:
+        /// rabbit nhanh nhẹ (freq 6, tilt 6°), wolf trung (freq 4.5, tilt 5°), boar chậm (freq 3, tilt 3°),
+        /// crow/bat bay (freq 7, tilt 4°).
+        /// </summary>
+        static void AttachMobAnim(GameObject go, float walkBobFreq = 5f, float maxTiltDeg = 5f,
+            float walkBobAmp = 0.05f)
+        {
+            var a = go.AddComponent<MobAnimController>();
+            a.walkBobFrequency = walkBobFreq;
+            a.maxTiltDeg = maxTiltDeg;
+            a.walkBobAmplitude = walkBobAmp;
+        }
+
+        /// <summary>
         /// Rock progressive crack overlay — alpha tăng khi HP giảm. Caller truyền
         /// rock-tint (xám / nâu) tuỳ variant.
         /// </summary>
@@ -906,6 +921,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.25f, scaleX: 0.65f, scaleY: 0.3f);
             AttachMobHitFx(go, knockbackImpulse: 1.5f);
+            AttachMobAnim(go, walkBobFreq: 6f, maxTiltDeg: 6f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Rabbit.prefab");
         }
 
@@ -934,6 +950,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.95f, scaleY: 0.35f);
             AttachMobHitFx(go, knockbackImpulse: 2.5f);
+            AttachMobAnim(go, walkBobFreq: 4.5f, maxTiltDeg: 5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Wolf.prefab");
         }
 
@@ -962,6 +979,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.3f, scaleX: 0.85f, scaleY: 0.32f);
             AttachMobHitFx(go, knockbackImpulse: 2.0f);
+            AttachMobAnim(go, walkBobFreq: 5.5f, maxTiltDeg: 6f);
             return SaveAsPrefab(go, $"{PrefabsDir}/FoxSpirit.prefab");
         }
 
@@ -994,6 +1012,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.35f, scaleX: 1.1f, scaleY: 0.4f);
             AttachMobHitFx(go, knockbackImpulse: 3.5f);
+            AttachMobAnim(go, walkBobFreq: 3f, maxTiltDeg: 3f, walkBobAmp: 0.04f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Boar.prefab");
         }
 
@@ -1022,6 +1041,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.35f, scaleX: 0.9f, scaleY: 0.35f);
             AttachMobHitFx(go, knockbackImpulse: 2.2f);
+            AttachMobAnim(go, walkBobFreq: 4f, maxTiltDeg: 5f);
             return SaveAsPrefab(go, $"{PrefabsDir}/DeerSpirit.prefab");
         }
 
@@ -1048,6 +1068,7 @@ namespace WildernessCultivation.EditorTools
             // Crow bay → shadow nhỏ, offsetY thấp hơn entity để cảm giác bay trên không.
             AttachDropShadow(go, offsetY: -0.45f, scaleX: 0.55f, scaleY: 0.22f);
             AttachMobHitFx(go, knockbackImpulse: 1.2f);
+            AttachMobAnim(go, walkBobFreq: 7f, maxTiltDeg: 4f, walkBobAmp: 0.03f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Crow.prefab");
         }
 
@@ -1085,6 +1106,7 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.15f, scaleX: 0.7f, scaleY: 0.22f);
             AttachMobHitFx(go, knockbackImpulse: 1.8f);
+            AttachMobAnim(go, walkBobFreq: 5f, maxTiltDeg: 4f, walkBobAmp: 0.04f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Snake.prefab");
         }
 
@@ -1117,6 +1139,7 @@ namespace WildernessCultivation.EditorTools
             // Bat bay → shadow thấp hơn.
             AttachDropShadow(go, offsetY: -0.5f, scaleX: 0.6f, scaleY: 0.22f);
             AttachMobHitFx(go, knockbackImpulse: 1.5f);
+            AttachMobAnim(go, walkBobFreq: 7.5f, maxTiltDeg: 4f, walkBobAmp: 0.03f);
             return SaveAsPrefab(go, $"{PrefabsDir}/Bat.prefab");
         }
 
