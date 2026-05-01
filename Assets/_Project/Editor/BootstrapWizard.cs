@@ -653,6 +653,65 @@ namespace WildernessCultivation.EditorTools
             ws.frequencyHz = frequencyHz;
         }
 
+        // Reactive feedback preset (flash + damped shake + particle burst on hit).
+        // Tuned per resource type — caller chọn preset; nếu cần tinh chỉnh sâu có thể
+        // override field trên prefab Inspector sau khi Bootstrap.
+        enum ReactivePreset
+        {
+            Tree,        // wide rotation shake, leaf-green burst
+            Rock,        // small fast shake, gray dust burst
+            Bush,        // wide bush rustle, green burst (berry bush)
+            Plant,       // mild plant sway, no burst (mushroom / lily)
+            Cactus,      // tight quiver, no burst
+            Bamboo,      // tall bamboo sway
+        }
+
+        static void AttachReactiveOnHit(GameObject go, ReactivePreset preset)
+        {
+            var fx = go.AddComponent<ReactiveOnHit>();
+            switch (preset)
+            {
+                case ReactivePreset.Tree:
+                    fx.shakeAmplitudeDeg = 8f; fx.shakeFrequencyHz = 6f;
+                    fx.shakeDecay = 8f; fx.shakeDuration = 0.5f;
+                    fx.burstCount = 4; fx.burstSpeedMin = 1.5f; fx.burstSpeedMax = 3f;
+                    fx.burstLifetime = 0.7f;
+                    fx.burstColor = new Color(0.45f, 0.70f, 0.30f, 1f); // leaf green
+                    break;
+                case ReactivePreset.Rock:
+                    fx.shakeAmplitudeDeg = 3f; fx.shakeFrequencyHz = 12f;
+                    fx.shakeDecay = 12f; fx.shakeDuration = 0.25f;
+                    fx.burstCount = 5; fx.burstSpeedMin = 2f; fx.burstSpeedMax = 4f;
+                    fx.burstLifetime = 0.5f;
+                    fx.burstColor = new Color(0.60f, 0.58f, 0.52f, 1f); // dust gray
+                    break;
+                case ReactivePreset.Bush:
+                    fx.shakeAmplitudeDeg = 14f; fx.shakeFrequencyHz = 5f;
+                    fx.shakeDecay = 7f; fx.shakeDuration = 0.45f;
+                    fx.burstCount = 3; fx.burstSpeedMin = 1f; fx.burstSpeedMax = 2.2f;
+                    fx.burstLifetime = 0.5f;
+                    fx.burstColor = new Color(0.55f, 0.30f, 0.40f, 1f); // berry purple-red
+                    break;
+                case ReactivePreset.Plant:
+                    fx.shakeAmplitudeDeg = 10f; fx.shakeFrequencyHz = 5f;
+                    fx.shakeDecay = 9f; fx.shakeDuration = 0.35f;
+                    fx.enableBurst = false;
+                    break;
+                case ReactivePreset.Cactus:
+                    fx.shakeAmplitudeDeg = 2f; fx.shakeFrequencyHz = 14f;
+                    fx.shakeDecay = 14f; fx.shakeDuration = 0.2f;
+                    fx.enableBurst = false;
+                    break;
+                case ReactivePreset.Bamboo:
+                    fx.shakeAmplitudeDeg = 6f; fx.shakeFrequencyHz = 4f;
+                    fx.shakeDecay = 6f; fx.shakeDuration = 0.55f;
+                    fx.burstCount = 3; fx.burstSpeedMin = 1f; fx.burstSpeedMax = 2f;
+                    fx.burstLifetime = 0.5f;
+                    fx.burstColor = new Color(0.60f, 0.80f, 0.50f, 1f); // bamboo light green
+                    break;
+            }
+        }
+
         static PrefabBundle CreatePrefabs(Dictionary<string, Sprite> sprites,
             Dictionary<string, ItemSO> items, Dictionary<string, StatusEffectSO> statusEffects)
         {
@@ -759,6 +818,11 @@ namespace WildernessCultivation.EditorTools
             {
                 AttachDropShadow(go, offsetY: -0.6f, scaleX: 1.1f, scaleY: 0.4f);
                 AttachWindSway(go, amplitudeDegrees: 2.0f, frequencyHz: 0.6f);
+                AttachReactiveOnHit(go, ReactivePreset.Tree);
+            }
+            else if (name == "Rock")
+            {
+                AttachReactiveOnHit(go, ReactivePreset.Rock);
             }
             return SaveAsPrefab(go, $"{PrefabsDir}/{name}.prefab");
         }
@@ -1020,6 +1084,7 @@ namespace WildernessCultivation.EditorTools
             // Hand-pick (HP rất thấp); food + low heal đã có trong ItemSO.restoreHunger.
             var go = MakePlantNode("LinhMushroom", sprite, mushroom, maxHP: 1f,
                 dropMin: 1, dropMax: 2, radius: 0.25f);
+            AttachReactiveOnHit(go, ReactivePreset.Plant);
             return SaveAsPrefab(go, $"{PrefabsDir}/LinhMushroom.prefab");
         }
 
@@ -1028,6 +1093,7 @@ namespace WildernessCultivation.EditorTools
             // Bụi berry — hand-pick, drop 2-4 berry.
             var go = MakePlantNode("BerryBush", sprite, berry, maxHP: 1f,
                 dropMin: 2, dropMax: 4, radius: 0.30f);
+            AttachReactiveOnHit(go, ReactivePreset.Bush);
             return SaveAsPrefab(go, $"{PrefabsDir}/BerryBush.prefab");
         }
 
@@ -1039,6 +1105,7 @@ namespace WildernessCultivation.EditorTools
             var node = go.GetComponent<ResourceNode>();
             node.harvestHpDamage = 2f;
             node.harvestThirstRestore = 0f; // restore qua cactus_water item, không qua side-effect
+            AttachReactiveOnHit(go, ReactivePreset.Cactus);
             return SaveAsPrefab(go, $"{PrefabsDir}/Cactus.prefab");
         }
 
@@ -1049,6 +1116,7 @@ namespace WildernessCultivation.EditorTools
                 dropMin: 1, dropMax: 1, radius: 0.25f);
             var node = go.GetComponent<ResourceNode>();
             node.harvestSanityDamage = 5f;
+            AttachReactiveOnHit(go, ReactivePreset.Plant);
             return SaveAsPrefab(go, $"{PrefabsDir}/DeathLily.prefab");
         }
 
@@ -1070,6 +1138,7 @@ namespace WildernessCultivation.EditorTools
                 new ResourceNode.Drop { item = bamboo, min = 1, max = 2 },
                 new ResourceNode.Drop { item = stick,  min = 0, max = 1 },
             };
+            AttachReactiveOnHit(go, ReactivePreset.Bamboo);
             return SaveAsPrefab(go, $"{PrefabsDir}/LinhBamboo.prefab");
         }
 
@@ -1092,6 +1161,7 @@ namespace WildernessCultivation.EditorTools
                 new ResourceNode.Drop { item = ore,   min = 1, max = 2 },
                 new ResourceNode.Drop { item = stone, min = 1, max = 2 },
             };
+            AttachReactiveOnHit(go, ReactivePreset.Rock);
             return SaveAsPrefab(go, $"{PrefabsDir}/MineralRock.prefab");
         }
 
