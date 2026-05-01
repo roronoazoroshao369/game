@@ -29,8 +29,9 @@ namespace WildernessCultivation.Mobs.States
 
     sealed class WolfChase : IState<WolfAI>
     {
-        public void OnEnter(WolfAI w) { }
-        public void OnExit(WolfAI w) { }
+        // Stalking posture — wolf duck thấp khi rượt. SetCrouch sticky trên MobAnimController.
+        public void OnEnter(WolfAI w) { w.Anim?.SetCrouch(true); }
+        public void OnExit(WolfAI w) { w.Anim?.SetCrouch(false); }
         public void OnTick(WolfAI w, float dt)
         {
             if (w.IsDead) { w.Fsm.ChangeState(WolfStates.Dead); return; }
@@ -58,6 +59,9 @@ namespace WildernessCultivation.Mobs.States
             if (Time.time >= w.AttackReadyAt)
             {
                 w.AttackReadyAt = Time.time + w.attackCooldown;
+                // Lunge forward + squash punch đồng pha với đòn damage.
+                Vector2 dir = ((Vector2)w.target.position - (Vector2)w.transform.position).normalized;
+                w.Anim?.TriggerLunge(dir);
                 var dmg = w.target.GetComponent<IDamageable>() ?? w.target.GetComponentInParent<IDamageable>();
                 if (dmg != null) dmg.TakeDamage(w.damage, w.gameObject);
             }
