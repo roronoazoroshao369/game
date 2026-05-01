@@ -123,6 +123,9 @@ namespace WildernessCultivation.EditorTools
                 ("campfire",  32, 32, new Color(0.95f, 0.55f, 0.10f)),
                 ("water",     40, 40, new Color(0.30f, 0.65f, 0.90f)),
                 ("ground",    32, 32, new Color(0.78f, 0.70f, 0.50f)),
+                // Grass-tile decoration — small green clump rabbit ăn được. Distinct màu khỏi
+                // ground (vàng đất) + tree (xanh đậm) → đứng ra trên terrain.
+                ("grass_tile",16, 12, new Color(0.45f, 0.78f, 0.30f)),
                 ("projectile",16, 16, new Color(0.95f, 0.30f, 0.10f)),
                 ("icon_stick",   24, 24, new Color(0.55f, 0.35f, 0.18f)),
                 ("icon_stone",   24, 24, new Color(0.55f, 0.55f, 0.55f)),
@@ -624,7 +627,8 @@ namespace WildernessCultivation.EditorTools
                 WaterSpring, StorageChest, Workbench, Projectile,
                 Boar, DeerSpirit, Crow,
                 Snake, Bat,
-                LinhMushroom, BerryBush, Cactus, DeathLily, LinhBamboo, MineralRock;
+                LinhMushroom, BerryBush, Cactus, DeathLily, LinhBamboo, MineralRock,
+                GrassTile;
         }
 
         // Cache shadow sprite cho mọi BuildXxxPrefab gọi AttachDropShadow tiện hơn
@@ -813,6 +817,7 @@ namespace WildernessCultivation.EditorTools
             bundle.StorageChest = BuildStorageChestPrefab(sprites["chest"]);
             bundle.Workbench = BuildWorkbenchPrefab(sprites["workbench"], items["stick"]);
             bundle.Projectile = BuildProjectilePrefab(sprites["projectile"], statusEffects["Burn"]);
+            bundle.GrassTile = BuildGrassTilePrefab(sprites["grass_tile"]);
             return bundle;
         }
 
@@ -899,6 +904,22 @@ namespace WildernessCultivation.EditorTools
                 AttachProgressiveCrack(go, tint: new Color(0.15f, 0.12f, 0.10f, 1f));
             }
             return SaveAsPrefab(go, $"{PrefabsDir}/{name}.prefab");
+        }
+
+        // Grass-tile decoration — small green clump rabbit ăn được. KHÔNG phải ResourceNode
+        // (no HP/drops). CircleCollider2D trigger để rabbit tìm thấy qua OverlapCircle.
+        static GameObject BuildGrassTilePrefab(Sprite sprite)
+        {
+            var go = new GameObject("GrassTile");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            // SortingOrder thấp hơn resource (2) + mob (>5) để cỏ ở dưới — visible nhưng không che.
+            sr.sortingOrder = 1;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.radius = 0.25f;
+            col.isTrigger = true;
+            go.AddComponent<GrassTile>();
+            return SaveAsPrefab(go, $"{PrefabsDir}/GrassTile.prefab");
         }
 
         static GameObject BuildRabbitPrefab(Sprite sprite, ItemSO meatDrop)
@@ -1474,6 +1495,8 @@ namespace WildernessCultivation.EditorTools
             wg.treePrefab = prefabs.Tree;
             wg.rockPrefab = prefabs.Rock;
             wg.waterSpringPrefab = prefabs.WaterSpring;
+            // Grass-tile decoration: rabbit ăn được, persist harvest qua WorldSaveData.
+            wg.grassTilePrefab = prefabs.GrassTile;
 
             // Tilemap-based ground render: Grid > Ground (Tilemap + TilemapRenderer). Render
             // 1 batch thay vì N×M GameObjects. SortingOrder âm để mob/player/resource đè lên.

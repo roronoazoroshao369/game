@@ -88,6 +88,11 @@ namespace WildernessCultivation.Core
         // skip resource spawn ở các cell này → walk away / walk back vẫn gone.
         // Chunk streaming-safe: chunk unload/reload tôn trọng list này. Save persist.
         public List<Vector2Int> harvestedCells = new();
+        // Cells có grass-tile decoration đã bị mob (rabbit) / player ăn. Track riêng
+        // để không block resource spawn (tree/rock/grass-bush vẫn có thể xuất hiện ở cell này
+        // sau khi grass-tile bị eat). Backward-compat: save cũ không có field → null,
+        // RestoreState handle.
+        public List<Vector2Int> harvestedGrassCells = new();
     }
 
     [Serializable]
