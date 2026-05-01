@@ -1126,9 +1126,40 @@ namespace WildernessCultivation.EditorTools
         static GameObject BuildRabbitPrefab(Sprite sprite, ItemSO meatDrop)
         {
             var go = new GameObject("Rabbit");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 3;
+            // Puppet path: Art/Characters/rabbit/ có Head + Torso PNG → multi-piece quadruped
+            // hierarchy. Tunings: rabbit nimble hopper — fastest step (6Hz match RabbitAI quick
+            // wander), small arm swing (18°) + larger leg swing (24° hopping), tail flick (10°
+            // — short puffy tail). PR J multi-dir support: flat folder (legacy) → East-only;
+            // E/N/S subfolders → full multi-dir. PR M: no real PNG → placeholder skeleton fallback.
+            var puppetSet = CharacterArtImporter.TryLoadCharacterSpriteSet("rabbit", placeholderHeightPx: 24)
+                ?? BuildPlaceholderSpriteSet("rabbit", includeTail: true);
+            AssertPuppetSpritesLoaded("rabbit", puppetSet);
+            SpriteRenderer sr = null;
+            {
+                BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
+                    out var spriteRoot, out var torsoT, out var headT,
+                    out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                var puppet = go.AddComponent<PuppetAnimController>();
+                puppet.spriteRoot = spriteRoot;
+                puppet.torso = torsoT;
+                puppet.head = headT;
+                puppet.armLeft = armLT;
+                puppet.armRight = armRT;
+                puppet.legLeft = legLT;
+                puppet.legRight = legRT;
+                puppet.tail = tailT;
+                puppet.forearmLeft = foreLT;
+                puppet.forearmRight = foreRT;
+                puppet.shinLeft = shinLT;
+                puppet.shinRight = shinRT;
+                puppet.walkFrequency = 6f;
+                puppet.armSwingDeg = 18f;
+                puppet.legSwingDeg = 24f;
+                puppet.tailSwayDeg = 10f;
+                puppet.referenceSpeed = 1.6f;
+                WirePuppetMultiDirSprites(puppet, puppetSet);
+            }
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -1143,7 +1174,8 @@ namespace WildernessCultivation.EditorTools
             ai.playerMask = ~0;
             AttachDropShadow(go, offsetY: -0.25f, scaleX: 0.65f, scaleY: 0.3f);
             AttachMobHitFx(go, knockbackImpulse: 1.5f);
-            AttachMobAnim(go, walkBobFreq: 6f, maxTiltDeg: 6f);
+            // PR M: PuppetAnimController always active (placeholder skeleton fallback). MobAnimController
+            // legacy path retired — IMobAnim resolution picks PuppetAnimController qua GetComponent.
             return SaveAsPrefab(go, $"{PrefabsDir}/Rabbit.prefab");
         }
 

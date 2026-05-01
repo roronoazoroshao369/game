@@ -92,7 +92,8 @@ no lens flare, no ground beneath subject for body parts.
 | **Player** (`Art/Characters/player/`) | bipedal puppet | **6** | **18** | +4 (E only) / +12 (multi-dir) | head + torso + 2 arms + 2 legs |
 | **Wolf** (`Art/Characters/wolf/`) | quadruped puppet | **7** | **21** | n/a | + tail (L2 chỉ áp dụng player-shaped puppet) |
 | **FoxSpirit** (`Art/Characters/fox_spirit/`) | quadruped puppet | **7** | **21** | n/a | + tail (hero feature ở N back-view) |
-| **Rabbit / Boar / Deer / Crow / Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — không cần puppet |
+| **Rabbit** (`Art/Characters/rabbit/`) | quadruped puppet (small) | **7** | **21** | n/a | + puffy white tail (hero feature) — §3.3.5 master + §3.6.4 bundle (Phase 2A) |
+| **Boar / Deer / Crow / Snake / Bat** | single-sprite | **1** mỗi mob | n/a | n/a | MobAnimController bob/tilt procedural — chưa upgrade puppet (Phase 2B/3/4) |
 | **Boss — Hắc Vương** | single-sprite | **3** | n/a | n/a | Phase 1 + Phase 2 enraged + death decay (xem §4.7-4.9) |
 
 **Per-tier breakdown cho Player (bipedal):**
@@ -103,25 +104,27 @@ no lens flare, no ground beneath subject for body parts.
 | Multi-dir L1 | 6 | 6 | 6 | mirror E (free) | **18** | Don't Starve / Stardew (DST style) |
 | Multi-dir L1 + L2 | 10 | 10 | 10 | mirror E (free) | **30** | Hades / Cuphead polish |
 
-**Per-tier cho Wolf / FoxSpirit (+ tail):**
+**Per-tier cho Wolf / FoxSpirit / Rabbit (+ tail):**
 
 | Tier | E | N | S | Total |
 |---|---|---|---|---|
 | Flat L1 | 7 | — | — | **7** |
 | Multi-dir L1 | 7 | 7 | 7 | **21** |
 
+> **S/tail skip note (real-world output):** front view (S) cho quadruped tail thường bị che bởi torso → optional, controller fallback East sprite cho slot null. Bundle §3.6.x dùng 14 prompts → 20 PNG (skip `S/tail.png`) thay vì 21 lý thuyết.
+
 > **Q: Đủ rồi sẽ chuyển động mượt mà không?**
 > **A:** **Yes — ngay cả Flat L1 (6 PNG) cũng mượt.** PuppetAnimController là **procedural animation** — controller rotate / offset transforms theo time + velocity ở runtime (walk bob, arm swing, leg swing, idle breath, lunge, crouch). Anh **KHÔNG cần gen walk frames** (kiểu sprite sheet 8 frame/cycle). Tăng tier chỉ cải thiện chất lượng visual, không phải fluidity:
 > - **Multi-dir (E+N+S)** = nhân vật **xoay theo hướng đi** (DST feel — đi lên thấy lưng, đi xuống thấy mặt) thay vì luôn nhìn ngang.
 > - **L2 elbow/knee** = tay / chân **gập tự nhiên** khi attack hoặc crouch (Hades polish) thay vì rigid limb thẳng.
 >
-> **Single-sprite mob** (Rabbit/Crow/Boar/etc.) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG.
+> **Single-sprite mob** (Boar/Deer/Crow/Snake/Bat) chỉ cần 1 PNG — `MobAnimController` dùng `walkBobAmplitude` + `tiltDeg` + lunge keyframe để tạo motion (xem `Scripts/Vfx/MobAnimController.cs`). Không có puppet hierarchy → không cần multi-part PNG. **Phase 2B/3/4** sẽ upgrade từng nhóm lên puppet (Phase 2B = Boar+Deer cùng pattern Wolf, Phase 3 = Crow/Bat wing rig, Phase 4 = Snake serpentine).
 
-**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player, 7 cho Wolf/Fox, 1 mỗi single-sprite mob = 6 PNG cho 6 mob đơn) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
+**Recommendation budget-conscious:** start tier minimum (Flat L1 = 6 PNG cho Player, 7 cho Wolf/Fox/Rabbit, 1 mỗi single-sprite mob = 5 PNG cho 5 mob đơn còn legacy) — playtest, nếu thấy thiếu "alive" mới upgrade Multi-dir. L2 chỉ làm cuối khi đã hài lòng L1.
 
 **Required minimum để puppet build pass:** chỉ cần `head.png` + `torso.png` ở East/flat. Thiếu → fallback single-sprite (puppet không spawn). Limbs / tail optional — controller tự skip slot null.
 
-> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character (hiện có Player Multi-dir L1 = 12 prompts → 18 PNG). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
+> **Ngại scroll giữa §3.1 + §3.4 + §3.5?** → §3.6 có **Quick-Copy Bundles** gom đủ prompts theo character. Hiện có: §3.6.1 Player (12 prompts → 18 PNG), §3.6.2 Wolf (14 → 20), §3.6.3 FoxSpirit (14 → 20), §3.6.4 Rabbit (14 → 20). Copy tuần tự từ trên xuống là xong, không cần tìm khắp doc.
 
 ### 3.1 Player — Cultivation Hero (`Art/Characters/player/`)
 
@@ -401,6 +404,111 @@ tail is hero feature), sky qi mid #6fb5e0 mid-tone, primary gold
 
 Composition: 320x256 px (horizontal — wider than head), isolated
 tail on transparent, root LEFT pivot, tip RIGHT, NO body.
+```
+
+### 3.3.5 Rabbit — Linh Thố Nimble Hopper (`Art/Characters/rabbit/`)
+
+> **Concept:** small woodland rabbit (linh thố) — warm brown/tan fur, cream belly, **puffy white cottontail** (hero feature), long upright alert ears, dark watchful eyes. Quadruped (small) — torso compact, "arms" = short front legs, "legs" = powerful hindquarters built for hopping. NOT a cute mascot, NOT chibi — feral wilderness creature with wary alert posture.
+>
+> **Scale note:** rabbit ~half the size of wolf (24px placeholder height vs 32px). Sprite resolutions slightly smaller (192×192 head vs 256×256 wolf head) — keeps proportional silhouette in-game.
+
+```
+=== rabbit/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: side view of a small alert woodland rabbit HEAD ONLY,
+profile facing right, long upright ears (slightly back-tilted in
+wary listening pose, NOT floppy), warm brown fur with cream cheek,
+small dark watchful eye, twitching nose, NO body, NO neck below
+jaw.
+
+Palette: tan brown #8b6f47 fur base, warm shadow #5a4a3a deep
+shadow, fur highlight #b89968 ear tip and cheek, cream #e8d5a6
+inner ear and muzzle, dark nose #2a2a2a eye and nose, bone white
+#c2c4ba whisker.
+
+Composition: 192x192 px, isolated head on transparent background,
+NO body, NO ground, NO shadow.
+```
+
+```
+=== rabbit/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: SIDE VIEW of a small rabbit BODY ONLY (no head, no legs,
+no tail), oriented HORIZONTAL with head-end on RIGHT, hip-end on
+LEFT, compact rounded torso with slight hunched back (hopper
+silhouette), warm brown back fur fading to cream belly, neutral
+horizontal pose. Clean cuts at neck (right edge), hips (left edge),
+shoulders/hip joints (bottom edge for legs).
+
+Palette: tan brown #8b6f47 fur base, warm shadow #5a4a3a belly
+shadow, fur highlight #b89968 back ridge highlight, cream #e8d5a6
+belly underside, ink black #1a1a1a outline at fur edges.
+
+Composition: 256x192 px (HORIZONTAL — rabbit body wider than tall),
+isolated body on transparent background, NO head, NO legs, NO tail,
+NO ground.
+```
+
+```
+=== rabbit/arm_left.png === / === rabbit/arm_right.png === (FRONT LEGS)
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a small rabbit's FRONT LEG, straight standing
+pose, short slender forelimb (rabbits are hindquarter-dominant —
+front legs much shorter than back), warm brown fur fading to cream
+paw, small dark claws visible at paw tip, NO body, NO ground.
+
+Palette: tan brown #8b6f47 fur base, warm shadow #5a4a3a leg shadow,
+cream #e8d5a6 paw fur highlight, dark nose #2a2a2a claw, ink black
+#1a1a1a outline.
+
+Composition: 128x192 px (vertical), isolated single front leg on
+transparent, top edge clean at shoulder joint (pivot), bottom at
+paw, NO body.
+```
+
+```
+=== rabbit/leg_left.png === / === rabbit/leg_right.png === (BACK LEGS)
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a small rabbit's BACK LEG, standing pose with
+distinct crouched fold (powerful hindquarter — hopper anatomy with
+long thigh + bent shin folded under body), strong haunch muscle
+visible, warm brown fur, paw with small claws, NO body, NO ground
+contact.
+
+Palette: same rabbit palette — tan brown, warm shadow, cream paw,
+dark claw, ink outline.
+
+Composition: 192x256 px (vertical, taller than front leg — rabbits
+have longer back legs), isolated single back leg, top edge clean at
+hip joint (pivot), bottom at paw, NO body.
+```
+
+```
+=== rabbit/tail.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a small rabbit's puffy COTTONTAIL — short
+round cloud-like tuft (hero feature, much fluffier than wolf/fox
+tail), oriented HORIZONTAL, attaches at LEFT edge (root), tail body
+extends slightly to RIGHT (very short — almost as wide as tall),
+bright cream-white fur with soft shadow underneath, NO body.
+
+Palette: bone bleached #d4d4d4 fur tip (brightest), cream #e8d5a6
+core, warm shadow #5a4a3a underside shadow, ink black #1a1a1a
+outline.
+
+Composition: 128x128 px (square — cottontail nearly round), isolated
+tail on transparent, root edge LEFT (pivot point at hip attachment),
+NO body.
 ```
 
 ### 3.4 Multi-Direction (L3+) Variants
@@ -914,6 +1022,176 @@ NO body.
 === fox_spirit/S/tail.png === (FRONT VIEW tail — usually invisible)
 
 # NOTE: Same as wolf/S/tail.png — front view fox usually hidden tail.
+# Skip recommended → controller fallback East sprite cho slot này.
+
+Skip recommended.
+```
+
+#### 3.4.4 Rabbit — N (Back View) + S (Front View)
+
+> **Cross-dir consistency rule:** Same palette + same brush stroke as §3.3.5 E. Only VIEW changes (subject sentence + composition note).
+>
+> **Hero feature note:** Rabbit's puffy white cottontail is dominant from N (back view) — viewer sees the fluffy white puff prominently when rabbit hops away. From S (front view) the tail is fully hidden behind body → SKIP `S/tail.png` (controller fallback to E sprite).
+
+```
+=== rabbit/N/head.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of a small alert rabbit HEAD ONLY, back of skull
+facing camera, long upright ears prominent (silhouette dominated by
+two erect ears with cream inner-ear edge visible from behind),
+warm brown fur on back of head, tiny tuft of cream fur at nape, NO
+face features (back of head only), NO body.
+
+Palette: same as E (tan brown #8b6f47 fur base, warm shadow #5a4a3a,
+fur highlight #b89968 ear back, cream #e8d5a6 inner ear edge).
+
+Composition: 192x192 px, isolated head, NO body, NO ground.
+```
+
+```
+=== rabbit/S/head.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of small alert rabbit HEAD ONLY, face directly
+facing camera, two long upright ears symmetric on top of head, two
+small dark watchful eyes prominent and symmetric (hero feature),
+twitching nose centered, cream cheek fur framing face, whiskers
+spreading symmetrically, NO body.
+
+Palette: same as E.
+
+Composition: 192x192 px, isolated head, perfectly symmetric front-
+facing, NO body.
+```
+
+```
+=== rabbit/N/torso.png === (BACK VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of small rabbit BODY ONLY, oriented VERTICAL —
+rabbit hopping away from camera, back ridge prominent with warm
+brown fur fading to slightly paler at hindquarter top, compact
+rounded silhouette tapering toward hip area at bottom (where tail
+attaches), NO head, NO legs, NO tail. Clean cuts at neck (top),
+hips (bottom — tail attachment line clean), shoulders/hip joints
+(sides for legs).
+
+Palette: same as E (tan brown back fur dominant, warm shadow at
+fur folds, fur highlight at back ridge).
+
+Composition: 192x256 px (vertical), isolated body on transparent,
+NO head, NO legs, NO tail.
+```
+
+```
+=== rabbit/S/torso.png === (FRONT VIEW)
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of small rabbit BODY ONLY, oriented VERTICAL
+— rabbit facing camera, chest + belly visible from front (cream
+belly dominant from this angle — hero feature), narrow shoulders at
+top, compact rounded torso, NO head, NO legs, NO tail.
+
+Palette: same as E + emphasis on cream #e8d5a6 belly fur (rendered
+~20% larger area than side view since belly is dominant from front).
+
+Composition: 192x256 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== rabbit/N/arm_left.png === / === rabbit/N/arm_right.png === (BACK VIEW front legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of small rabbit FRONT LEG, viewed from behind,
+short slender forelimb (rabbit hindquarter-dominant), fine warm
+brown fur back-of-leg silhouette, small paw with tiny claws visible
+from behind at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 128x192 px (vertical), isolated single front leg, top
+edge at shoulder joint pivot, bottom at paw.
+```
+
+```
+=== rabbit/S/arm_left.png === / === rabbit/S/arm_right.png === (FRONT VIEW front legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of small rabbit FRONT LEG, viewed from front,
+short slender forelimb, warm brown fur, small paw with tiny dark
+claws facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 128x192 px (vertical), isolated single front leg, top
+at shoulder, bottom at paw.
+```
+
+```
+=== rabbit/N/leg_left.png === / === rabbit/N/leg_right.png === (BACK VIEW back legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of small rabbit BACK LEG, viewed from behind,
+powerful haunch with crouched fold from rear angle (long thigh +
+bent shin folded), warm brown fur dominant on back of leg, small
+paw at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 192x256 px (vertical, taller than front leg), isolated
+single back leg, top at hip pivot, bottom at paw.
+```
+
+```
+=== rabbit/S/leg_left.png === / === rabbit/S/leg_right.png === (FRONT VIEW back legs)
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of small rabbit BACK LEG, viewed from front,
+powerful crouched haunch (hopper anatomy visible from front —
+muscular thigh forward), warm brown fur with cream paw highlight,
+small claws facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 192x256 px (vertical), isolated single back leg, top
+at hip, bottom at paw.
+```
+
+```
+=== rabbit/N/tail.png === (BACK VIEW tail — hero feature from rear!)
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of small rabbit puffy COTTONTAIL — short round
+cloud-like tuft (hero feature from rear angle — viewer's eye
+naturally drawn to this fluffy white puff when rabbit hops away),
+oriented with attachment ROOT at TOP (hip back), tail body extends
+slightly DOWN as compact round puff, bright cream-white fur with
+soft shadow underneath, NO body.
+
+Palette: bone bleached #d4d4d4 fur tip dominant (brightest area —
+40% stronger than side view since cottontail is dominant showcase),
+cream #e8d5a6 core, warm shadow #5a4a3a underside shadow.
+
+Composition: 128x128 px (square — cottontail nearly round from any
+angle), isolated tail on transparent, root TOP pivot, NO body.
+```
+
+```
+=== rabbit/S/tail.png === (FRONT VIEW tail — fully hidden)
+
+# NOTE: Same as wolf/S/tail.png and fox_spirit/S/tail.png — front
+# view rabbit body fully hides cottontail behind torso.
 # Skip recommended → controller fallback East sprite cho slot này.
 
 Skip recommended.
@@ -2106,6 +2384,307 @@ elements, no caption, no logo, no lens flare except qi glow,
 no ground beneath subject for body parts.
 ```
 
+#### 3.6.4 Rabbit — Linh Thố Full DST Set (14 prompts → 20 PNG)
+
+> **Setup:** tạo `Assets/_Project/Art/Characters/rabbit/E/`, `rabbit/N/`, `rabbit/S/`. BootstrapWizard sẽ build puppet hierarchy với multi-dir sprite swap khi rabbit di chuyển.
+>
+> **Quadruped pivot map:** giống wolf/fox — torso horizontal E / vertical N+S, arms = front legs, legs = back legs (powerful hindquarter), tail = puffy cottontail.
+>
+> **Hero feature:** puffy white cottontail — **dominant từ N (back view)** vì viewer thấy fluffy white puff khi rabbit hop away. E (side) tail vẫn visible nhưng nhỏ hơn. S (front view) tail bị che → SKIP.
+>
+> **S/tail skip:** giống wolf/fox — front-view body chắn tail. Controller fallback `rabbit/E/tail.png` runtime.
+>
+> **Style anchor:** small nimble feral wilderness rabbit, NOT cute mascot, NOT chibi bunny, NOT floppy-eared domestic pet — alert wary creature with long upright ears + watchful eyes.
+>
+> **W (West):** mirror E lúc runtime — KHÔNG cần gen W folder.
+>
+> **Resolution scale:** rabbit ~half wolf size (192px head / 256px torso vs 256/384 wolf) — keeps proportional silhouette in-game vs ~32px placeholder height of wolf.
+
+##### E (East / side view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/E/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: side view of a small alert woodland rabbit HEAD ONLY,
+profile facing right, long upright ears (slightly back-tilted in
+wary listening pose, NOT floppy), warm brown fur with cream cheek,
+small dark watchful eye, twitching nose, NO body, NO neck below
+jaw.
+
+Palette: tan brown #8b6f47 fur base, warm shadow #5a4a3a deep
+shadow, fur highlight #b89968 ear tip and cheek, cream #e8d5a6
+inner ear and muzzle, dark nose #2a2a2a eye and nose, bone white
+#c2c4ba whisker.
+
+Composition: 192x192 px, isolated head on transparent background,
+NO body, NO ground, NO shadow.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/E/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: SIDE VIEW of a small rabbit BODY ONLY (no head, no legs,
+no tail), oriented HORIZONTAL with head-end on RIGHT, hip-end on
+LEFT, compact rounded torso with slight hunched back (hopper
+silhouette), warm brown back fur fading to cream belly, neutral
+horizontal pose. Clean cuts at neck (right edge), hips (left edge),
+shoulders/hip joints (bottom edge for legs).
+
+Palette: tan brown #8b6f47 fur base, warm shadow #5a4a3a belly
+shadow, fur highlight #b89968 back ridge highlight, cream #e8d5a6
+belly underside, ink black #1a1a1a outline at fur edges.
+
+Composition: 256x192 px (HORIZONTAL — rabbit body wider than tall),
+isolated body on transparent, NO head, NO legs, NO tail, NO ground.
+```
+
+```
+=== Save to: Art/Characters/rabbit/E/arm_left.png  AND  arm_right.png  (FRONT LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a small rabbit's FRONT LEG, straight standing
+pose, short slender forelimb (rabbits are hindquarter-dominant —
+front legs much shorter than back), warm brown fur fading to cream
+paw, small dark claws visible at paw tip, NO body, NO ground.
+
+Palette: tan brown #8b6f47 fur base, warm shadow #5a4a3a leg shadow,
+cream #e8d5a6 paw fur highlight, dark nose #2a2a2a claw, ink black
+#1a1a1a outline.
+
+Composition: 128x192 px (vertical), isolated single front leg, top
+edge clean at shoulder joint (pivot), bottom at paw, NO body.
+
+# NOTE: gen 1 lần rồi flip horizontal cho arm_right (Photopea/GIMP).
+# Hoặc gen 2 lần với prompt "right front leg" cho asymmetry tự nhiên.
+```
+
+```
+=== Save to: Art/Characters/rabbit/E/leg_left.png  AND  leg_right.png  (BACK LEGS) ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a small rabbit's BACK LEG, standing pose with
+distinct crouched fold (powerful hindquarter — hopper anatomy with
+long thigh + bent shin folded under body), strong haunch muscle
+visible, warm brown fur, paw with small claws, NO body, NO ground
+contact.
+
+Palette: same rabbit palette — tan brown, warm shadow, cream paw,
+dark claw, ink outline.
+
+Composition: 192x256 px (vertical, taller than front leg — rabbits
+have longer back legs), isolated single back leg, top edge clean
+at hip joint (pivot), bottom at paw, NO body.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/E/tail.png ===
+
+hand-painted painterly, asian wuxia.
+
+Subject: side view of a small rabbit's puffy COTTONTAIL — short
+round cloud-like tuft (hero feature, much fluffier than wolf/fox
+tail), oriented HORIZONTAL, attaches at LEFT edge (root), tail body
+extends slightly to RIGHT (very short — almost as wide as tall),
+bright cream-white fur with soft shadow underneath, NO body.
+
+Palette: bone bleached #d4d4d4 fur tip (brightest), cream #e8d5a6
+core, warm shadow #5a4a3a underside shadow, ink black #1a1a1a
+outline.
+
+Composition: 128x128 px (square — cottontail nearly round), isolated
+tail on transparent, root edge LEFT (pivot at hip attachment), NO
+body.
+```
+
+##### N (North / back view) — 5 prompts → 7 PNG
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/N/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of a small alert rabbit HEAD ONLY, back of skull
+facing camera, long upright ears prominent (silhouette dominated by
+two erect ears with cream inner-ear edge visible from behind), warm
+brown fur on back of head, tiny tuft of cream fur at nape, NO face
+features (back of head only), NO body.
+
+Palette: same as E (tan brown #8b6f47, warm shadow #5a4a3a, fur
+highlight #b89968, cream #e8d5a6 inner ear edge).
+
+Composition: 192x192 px, isolated head, NO body, NO ground.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/N/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: BACK VIEW of small rabbit BODY ONLY, oriented VERTICAL —
+rabbit hopping away from camera, back ridge prominent with warm
+brown fur fading to slightly paler at hindquarter top, compact
+rounded silhouette tapering toward hip area at bottom (where tail
+attaches), NO head, NO legs, NO tail. Clean cuts at neck (top),
+hips (bottom — tail attachment line clean), shoulders/hip joints
+(sides for legs).
+
+Palette: same as E (tan brown back fur dominant, warm shadow at
+fur folds, fur highlight at back ridge).
+
+Composition: 192x256 px (vertical), isolated body, NO head, NO legs,
+NO tail.
+```
+
+```
+=== Save to: Art/Characters/rabbit/N/arm_left.png  AND  arm_right.png  (BACK VIEW front legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of small rabbit FRONT LEG, viewed from behind,
+short slender forelimb (rabbit hindquarter-dominant), fine warm
+brown fur back-of-leg silhouette, small paw with tiny claws visible
+from behind at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 128x192 px (vertical), isolated single front leg, top
+at shoulder pivot, bottom at paw.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/rabbit/N/leg_left.png  AND  leg_right.png  (BACK VIEW back legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of small rabbit BACK LEG, viewed from behind,
+powerful haunch with crouched fold from rear angle (long thigh +
+bent shin folded), warm brown fur dominant on back of leg, small
+paw at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 192x256 px (vertical, taller than front leg), isolated
+single back leg, top at hip pivot, bottom at paw.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/N/tail.png === (HERO FEATURE)
+
+hand-painted painterly, wilderness creature.
+
+Subject: BACK VIEW of small rabbit puffy COTTONTAIL — short round
+cloud-like tuft (hero feature from rear angle — viewer's eye
+naturally drawn to this fluffy white puff when rabbit hops away),
+oriented with attachment ROOT at TOP (hip back), tail body extends
+slightly DOWN as compact round puff, bright cream-white fur with
+soft shadow underneath, NO body.
+
+Palette: bone bleached #d4d4d4 fur tip dominant (brightest area —
+40% stronger than side view since cottontail is dominant showcase),
+cream #e8d5a6 core, warm shadow #5a4a3a underside shadow.
+
+Composition: 128x128 px (square), isolated tail, root TOP pivot,
+NO body.
+```
+
+##### S (South / front view) — 4 prompts → 6 PNG (skip tail)
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/S/head.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of small alert rabbit HEAD ONLY, face directly
+facing camera, two long upright ears symmetric on top of head, two
+small dark watchful eyes prominent and symmetric (hero feature),
+twitching nose centered, cream cheek fur framing face, whiskers
+spreading symmetrically, NO body.
+
+Palette: same as E.
+
+Composition: 192x192 px, isolated head, perfectly symmetric front-
+facing, NO body.
+```
+
+```
+=== Save to: Assets/_Project/Art/Characters/rabbit/S/torso.png ===
+
+hand-painted painterly, asian wuxia, wilderness creature.
+
+Subject: FRONT VIEW of small rabbit BODY ONLY, oriented VERTICAL —
+rabbit facing camera, chest + belly visible from front (cream belly
+dominant from this angle — hero feature), narrow shoulders at top,
+compact rounded torso, NO head, NO legs, NO tail.
+
+Palette: same as E + emphasis on cream #e8d5a6 belly fur (rendered
+~20% larger area than side view since belly is dominant from front).
+
+Composition: 192x256 px (vertical), isolated body, perfectly
+symmetric front-facing, NO head, NO legs.
+```
+
+```
+=== Save to: Art/Characters/rabbit/S/arm_left.png  AND  arm_right.png  (FRONT VIEW front legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of small rabbit FRONT LEG, viewed from front,
+short slender forelimb, warm brown fur, small paw with tiny dark
+claws facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 128x192 px (vertical), isolated single front leg, top
+at shoulder, bottom at paw.
+
+# NOTE: gen 1 lần flip cho arm_right.
+```
+
+```
+=== Save to: Art/Characters/rabbit/S/leg_left.png  AND  leg_right.png  (FRONT VIEW back legs) ===
+
+hand-painted painterly, wilderness creature.
+
+Subject: FRONT VIEW of small rabbit BACK LEG, viewed from front,
+powerful crouched haunch (hopper anatomy visible from front —
+muscular thigh forward), warm brown fur with cream paw highlight,
+small claws facing camera at bottom, NO body.
+
+Palette: same as E.
+
+Composition: 192x256 px (vertical), isolated single back leg, top
+at hip, bottom at paw.
+
+# NOTE: gen 1 lần flip cho leg_right.
+```
+
+> **S/tail SKIP:** giống wolf/fox — front-view body chắn cottontail. Controller fallback `rabbit/E/tail.png` runtime.
+
+##### Negative prompt (paste vào field "Avoid" / "Negative prompt" mọi rabbit generation)
+
+```
+no pixel art, no photo-realistic, no anime moe, no chibi cute
+bunny mascot, no floppy-eared domestic pet rabbit, no fluffy plush
+toy look, no easter bunny, no cartoon disney rabbit, no pure black
+outline, no smooth airbrush gradient, no drop shadow on transparent
+background, no text, no watermark, no signature, no border, single
+subject only, no duplicate, no grid lines, no UI elements, no
+caption, no logo, no lens flare, no ground beneath subject for body
+parts, no carrot prop.
+```
+
 ---
 
 ## 4. Single-Sprite Mobs
@@ -2117,10 +2696,12 @@ no ground beneath subject for body parts.
 > **Resolution:** 256×256 hoặc 256×192 (depends on aspect).
 > **Style:** match puppet characters per ART_STYLE.md.
 
-### 4.1 Rabbit — Linh Thố (Forest mob, peaceful)
+### 4.1 Rabbit — Linh Thố (Forest mob, peaceful) — **DEPRECATED → §3.3.5 / §3.6.4 puppet**
+
+> **Phase 2A migration:** Rabbit đã upgrade lên multi-piece quadruped puppet (mirror Wolf/Fox pattern). Master prompts ở §3.3.5, quick-copy bundle ở §3.6.4 (14 prompts → 20 PNG). Single-sprite prompt dưới giữ làm reference cho ai chỉ muốn flat fallback (1 PNG drop ở `Art/Characters/rabbit/E/torso.png` — controller fallback skeleton placeholder cho parts còn thiếu).
 
 ```
-=== rabbit ===
+=== rabbit (legacy single-sprite — chỉ dùng nếu skip puppet) ===
 
 hand-painted painterly, asian wuxia, wilderness creature, soft cel-shading,
 visible brush strokes.
@@ -4230,22 +4811,24 @@ Sau khi drop PNG vào folder và Bootstrap → mở Player.prefab trong Unity Ed
 | Player puppet E (6 parts: head, torso, 2 arm, 2 leg) | 6 | 24 | $0.48 |
 | Wolf puppet E (7 parts incl. tail) | 7 | 28 | $0.56 |
 | FoxSpirit puppet E | 7 | 28 | $0.56 |
-| Single-sprite mobs (Rabbit, Boar, Deer Spirit, Crow, Snake, Bat, Boss Phase 1) | 7 | 28 | $0.56 |
+| Rabbit puppet E (Phase 2A — 7 parts incl. cottontail) | 7 | 28 | $0.56 |
+| Single-sprite mobs (Boar, Deer Spirit, Crow, Snake, Bat, Boss Phase 1) | 6 | 24 | $0.48 |
 | Resources (12 nodes) | 12 | 48 | $0.96 |
 | Item icons (22) | 22 | 88 | $1.76 |
 | Tiles (12 seamless: 3 biome × 4 var) | 12 | 48 | $0.96 |
-| **Phase 1 subtotal** | **73** | **~292** | **~$5.84** |
+| **Phase 1 subtotal** | **79** | **~316** | **~$6.32** |
 
 ### Phase 2 — Multi-direction (L3 NSEW)
 
-> Add-on cho 3 puppet character. Mob single-sprite + resources + tiles KHÔNG cần.
+> Add-on cho 4 puppet character (Player + Wolf + Fox + Rabbit). Mob single-sprite + resources + tiles KHÔNG cần.
 
 | Group | Asset count | Image gen (4 var) | Baseline cost |
 |---|---|---|---|
 | Player N + S (6 × 2) | 12 | 48 | $0.96 |
 | Wolf N + S (7 × 2, skip S/tail → 13) | 13 | 52 | $1.04 |
 | FoxSpirit N + S (skip S/tail → 13) | 13 | 52 | $1.04 |
-| **Phase 2 subtotal** | **38** | **152** | **~$3.04** |
+| Rabbit N + S (Phase 2A — skip S/tail → 13) | 13 | 52 | $1.04 |
+| **Phase 2 subtotal** | **51** | **204** | **~$4.08** |
 
 ### Phase 3 — L2 elbow/knee (forearm + shin)
 
