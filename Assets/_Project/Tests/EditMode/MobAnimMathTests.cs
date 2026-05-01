@@ -169,5 +169,127 @@ namespace WildernessCultivation.Tests.EditMode
         {
             Assert.AreEqual(1f, MobAnimController.ComputeSquashFactor(0.1f, 0f, 1.2f), 0.0001f);
         }
+
+        // ---------- Wave shaping ----------
+
+        [Test]
+        public void ShapeWave_Identity_WhenExponentIsOne()
+        {
+            Assert.AreEqual(0.5f, MobAnimController.ShapeWave(0.5f, 1f), 0.0001f);
+            Assert.AreEqual(-0.7f, MobAnimController.ShapeWave(-0.7f, 1f), 0.0001f);
+        }
+
+        [Test]
+        public void ShapeWave_PreservesSign_AndZero()
+        {
+            Assert.AreEqual(0f, MobAnimController.ShapeWave(0f, 0.5f), 0.0001f);
+            // Snappier (exponent < 1): |0.5|^0.5 = √0.5 ≈ 0.7071 → biên độ tăng (gần peak hơn).
+            Assert.That(MobAnimController.ShapeWave(0.5f, 0.5f), Is.GreaterThan(0.5f));
+            // Sign giữ nguyên.
+            Assert.That(MobAnimController.ShapeWave(-0.5f, 0.5f), Is.LessThan(0f));
+        }
+
+        [Test]
+        public void ShapeWave_PowerGreaterThanOne_Softens()
+        {
+            // Softer (exponent > 1): |0.5|^2 = 0.25 → biên độ thấp hơn (gần zero hơn).
+            Assert.That(MobAnimController.ShapeWave(0.5f, 2f), Is.LessThan(0.5f));
+        }
+
+        [Test]
+        public void WalkBobScale_WithShape_DefaultsToPureSinWhenShapeOne()
+        {
+            // 6-arg overload với shape=1 phải = 5-arg overload (back-compat).
+            float a = MobAnimController.ComputeWalkBobScale(0.05f, 2f, 0.05f, 5f, 2f);
+            float b = MobAnimController.ComputeWalkBobScale(0.05f, 2f, 0.05f, 5f, 2f, 1f);
+            Assert.AreEqual(a, b, 0.0001f);
+        }
+
+        // ---------- Lunge with anticipation ----------
+
+        [Test]
+        public void LungeAnticipation_AtStart_ReturnsZero()
+        {
+            float v = MobAnimController.ComputeLungeOffsetWithAnticipation(0f, 0.3f, 0.3f, 0.15f, 0.25f);
+            Assert.AreEqual(0f, v, 0.0001f);
+        }
+
+        [Test]
+        public void LungeAnticipation_InAnticipationPhase_IsNegative()
+        {
+            // u = 0.075/0.3 = 0.25, af = 0.15 → trong anticipation.
+            // Bell pull-back peak ở giữa anticipation phase (u/af = 0.5).
+            float vMid = MobAnimController.ComputeLungeOffsetWithAnticipation(
+                0.0225f, 0.3f, 0.3f, 0.15f, 0.25f);
+            Assert.That(vMid, Is.LessThan(0f));
+            // Magnitude khoảng -0.3 * 0.25 = -0.075.
+            Assert.AreEqual(-0.075f, vMid, 0.001f);
+        }
+
+        [Test]
+        public void LungeAnticipation_AfterAnticipation_IsPositive()
+        {
+            // u = 0.5 (giữa duration), af=0.15 → forward phase.
+            // fu = (0.5 - 0.15) / (1 - 0.15) ≈ 0.4118; sin(π*0.4118) ≈ 0.967.
+            float v = MobAnimController.ComputeLungeOffsetWithAnticipation(
+                0.15f, 0.3f, 0.3f, 0.15f, 0.25f);
+            Assert.That(v, Is.GreaterThan(0f));
+        }
+
+        [Test]
+        public void LungeAnticipation_AtEnd_ReturnsZero()
+        {
+            float v = MobAnimController.ComputeLungeOffsetWithAnticipation(0.3f, 0.3f, 0.3f, 0.15f, 0.25f);
+            Assert.AreEqual(0f, v, 0.001f);
+        }
+
+        [Test]
+        public void LungeAnticipation_ZeroFraction_ReducesToBellCurve()
+        {
+            // af=0 → identical to ComputeLungeOffset.
+            float a = MobAnimController.ComputeLungeOffset(0.1f, 0.3f, 0.3f);
+            float b = MobAnimController.ComputeLungeOffsetWithAnticipation(0.1f, 0.3f, 0.3f, 0f, 0.25f);
+            Assert.AreEqual(a, b, 0.0001f);
+        }
+
+        [Test]
+        public void LungeAnticipation_ZeroDuration_DefensiveReturnsZero()
+        {
+            float v = MobAnimController.ComputeLungeOffsetWithAnticipation(0.1f, 0f, 0.3f, 0.15f, 0.25f);
+            Assert.AreEqual(0f, v, 0.0001f);
+        }
+
+        // ---------- Exponential damping ----------
+
+        [Test]
+        public void ExponentialDamping_ZeroDt_ReturnsTarget()
+        {
+            // dt=0 → defensive snap to target (avoid stuck at intermediate value).
+            Assert.AreEqual(10f, MobAnimController.ApplyExponentialDamping(0f, 10f, 12f, 0f), 0.0001f);
+        }
+
+        [Test]
+        public void ExponentialDamping_LargeDt_ApproachesTarget()
+        {
+            // dt = 1, rate = 12 → alpha ≈ 1 - e^-12 ≈ 0.999994 → very close.
+            float v = MobAnimController.ApplyExponentialDamping(0f, 10f, 12f, 1f);
+            Assert.That(v, Is.GreaterThan(9.9f));
+        }
+
+        [Test]
+        public void ExponentialDamping_SmallDt_LerpsPartial()
+        {
+            // dt = 0.0167 (1 frame at 60fps), rate = 12 → alpha ≈ 1 - e^-0.2 ≈ 0.181.
+            float v = MobAnimController.ApplyExponentialDamping(0f, 10f, 12f, 0.0167f);
+            Assert.That(v, Is.GreaterThan(1.5f));
+            Assert.That(v, Is.LessThan(2.2f));
+        }
+
+        [Test]
+        public void ExponentialDamping_AlreadyAtTarget_NoChange()
+        {
+            float v = MobAnimController.ApplyExponentialDamping(5f, 5f, 12f, 0.016f);
+            Assert.AreEqual(5f, v, 0.0001f);
+        }
     }
 }
