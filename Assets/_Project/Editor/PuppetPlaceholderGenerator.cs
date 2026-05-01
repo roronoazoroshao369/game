@@ -10,14 +10,22 @@ namespace WildernessCultivation.EditorTools
     /// <summary>
     /// PR M (skeleton demo mode): when user chưa drop real PNG vào
     /// <c>Art/Characters/{id}/</c>, BootstrapWizard fallback gọi generator này để sinh 13
-    /// colored-rectangle PNG (head / torso / arm L+R / forearm L+R / leg L+R / shin L+R / tail)
-    /// vào <c>Sprites/puppet/{id}/</c>. PuppetAnimController dùng những placeholder này để
-    /// chạy demo full procedural motion (walk swing + lunge + crouch + 4-dir swap) ngay không
-    /// cần asset.
+    /// colored-rectangle placeholder sprite (head / torso / arm L+R / forearm L+R / leg L+R /
+    /// shin L+R / tail) vào <c>Sprites/puppet/{id}/{role}.asset</c>. PuppetAnimController dùng
+    /// những placeholder này để chạy demo full procedural motion (walk swing + lunge + crouch +
+    /// 4-dir swap) ngay không cần asset.
     ///
     /// Real PNG drop sau này → <see cref="CharacterArtImporter.TryLoadCharacterSpriteSet"/>
     /// trả non-null → BootstrapWizard skip placeholder fallback. Idempotent: chạy lại không
     /// overwrite real art.
+    ///
+    /// PR R (asset bypass): Trước đây flow ghi PNG → AssetDatabase.Refresh → ImportAsset →
+    /// LoadAssetAtPath&lt;Sprite&gt; gặp race conditions trên macOS Unity (importer null,
+    /// LoadAssetAtPath null) → 0 sprite load được → Player invisible. Fix: dùng
+    /// AssetDatabase.CreateAsset trực tiếp với Texture2D in-memory + AddObjectToAsset cho Sprite
+    /// sub-asset → bypass file system PNG + import pipeline hoàn toàn. Asset .asset file là
+    /// binary blob Unity manage internal — không phụ thuộc texture import settings, không có
+    /// async race.
     ///
     /// Pure-data spec (palette + rect + role) sống ở
     /// <see cref="WildernessCultivation.Core.PuppetPlaceholderSpec"/> — testable từ EditMode
@@ -26,10 +34,12 @@ namespace WildernessCultivation.EditorTools
     public static class PuppetPlaceholderGenerator
     {
         public const string PlaceholderRoot = "Assets/_Project/Sprites/puppet";
+        const float PlaceholderPpu = 64f;
 
         /// <summary>
-        /// Ensure placeholder PNGs ở <c>Sprites/puppet/{characterId}/{role}.png</c>. Idempotent:
-        /// nếu file đã tồn tại thì re-import; nếu chưa thì write fresh. Returns dict role → Sprite.
+        /// Ensure placeholder Sprite assets ở <c>Sprites/puppet/{characterId}/{role}.asset</c>.
+        /// Idempotent: re-run reuses existing assets nếu loadable; regenerates broken assets.
+        /// Returns dict role → Sprite.
         /// </summary>
         public static Dictionary<CharacterArtSpec.PuppetRole, Sprite> EnsureSpriteSet(
             string characterId, bool includeTail = true)
@@ -41,25 +51,42 @@ namespace WildernessCultivation.EditorTools
             var dict = new Dictionary<CharacterArtSpec.PuppetRole, Sprite>();
 
             // Materialize IEnumerable một lần — DefaultRoles dùng yield return nên iter
-            // 2 lần (write + load) sẽ enum lại; copy vào List ổn định + cho phép Count.
+            // 2 lần sẽ enum lại; copy vào List ổn định + cho phép Count.
             var roles = new List<CharacterArtSpec.PuppetRole>(
                 PuppetPlaceholderSpec.DefaultRoles(includeTail));
 
-            // Pass 1: write tất cả PNG missing trong batch. StartAssetEditing block defer
-            // mọi import callback đến StopAssetEditing → tránh Unity import từng file riêng
-            // gây timing race với GetAtPath/LoadAssetAtPath.
+            // Cleanup legacy: xoá .png file cũ (PR M-Q approach) nếu còn — đảm bảo không có
+            // 2 asset cùng path conflict.
+            CleanupLegacyPngs(folder, roles);
+
             AssetDatabase.StartAssetEditing();
             try
             {
                 foreach (var role in roles)
                 {
-                    var (w, h) = PuppetPlaceholderSpec.RectFor(role);
-                    var color = PuppetPlaceholderSpec.ColorFor(role, palette);
-                    string path = $"{folder}/{RoleToFilename(role)}.png";
+                    string assetPath = $"{folder}/{RoleToFilename(role)}.asset";
+                    Sprite sprite = null;
 
-                    if (!File.Exists(path))
+                    // Idempotent: nếu .asset đã tồn tại + load được → reuse.
+                    if (File.Exists(assetPath))
                     {
-                        WriteRectPng(path, w, h, color);
+                        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                    }
+
+                    if (sprite == null)
+                    {
+                        sprite = CreateSpriteAsset(assetPath, role, palette);
+                    }
+
+                    if (sprite != null)
+                    {
+                        dict[role] = sprite;
+                    }
+                    else
+                    {
+                        Debug.LogWarning(
+                            $"[PuppetPlaceholderGenerator] Failed to create/load Sprite for {characterId}/{role} at {assetPath}. " +
+                            "Skeleton sẽ thiếu body part này.");
                     }
                 }
             }
@@ -68,64 +95,92 @@ namespace WildernessCultivation.EditorTools
                 AssetDatabase.StopAssetEditing();
             }
 
-            // Force synchronous refresh — đảm bảo tất cả PNG mới ghi đã được Unity register
-            // + import xong hoàn toàn trước khi ta đụng GetAtPath/LoadAssetAtPath. Không có
-            // ForceSynchronousImport, Refresh có thể defer import → race condition giữa
-            // write và load.
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-
-            // Pass 2: configure sprite import settings + load sprite reference. Mỗi file
-            // đảm bảo sync-imported sau khi settings change.
-            foreach (var role in roles)
-            {
-                string path = $"{folder}/{RoleToFilename(role)}.png";
-                if (!File.Exists(path))
-                {
-                    Debug.LogError(
-                        $"[PuppetPlaceholderGenerator] PNG file MISSING after write pass: {path}. " +
-                        "File system write failed silently — check disk space + permissions.");
-                    continue;
-                }
-
-                bool importerOk = ApplySpriteImport(path);
-                if (!importerOk)
-                {
-                    Debug.LogWarning(
-                        $"[PuppetPlaceholderGenerator] AssetImporter.GetAtPath null cho {path} — " +
-                        "AssetDatabase chưa register file. Forcing synchronous re-import...");
-                    AssetDatabase.ImportAsset(path,
-                        ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
-                    importerOk = ApplySpriteImport(path);
-                }
-
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite == null)
-                {
-                    // Last-ditch retry: force sync import + reload.
-                    AssetDatabase.ImportAsset(path,
-                        ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
-                    sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                }
-
-                if (sprite != null)
-                {
-                    dict[role] = sprite;
-                }
-                else
-                {
-                    var obj = AssetDatabase.LoadAssetAtPath<Object>(path);
-                    string objType = obj == null ? "null" : obj.GetType().Name;
-                    Debug.LogWarning(
-                        $"[PuppetPlaceholderGenerator] Failed to load Sprite for {characterId}/{role} at {path}. " +
-                        $"Asset loaded as type '{objType}' (expected Sprite). importerOk={importerOk}. " +
-                        "Skeleton sẽ thiếu body part này.");
-                }
-            }
+            AssetDatabase.SaveAssets();
 
             Debug.Log(
                 $"[PuppetPlaceholderGenerator] {characterId}: loaded {dict.Count}/{roles.Count} placeholder sprites at {folder}/");
 
             return dict;
+        }
+
+        /// <summary>
+        /// Generate Texture2D + Sprite in-memory, save as .asset file (Texture main asset +
+        /// Sprite sub-asset). Bypasses PNG file system + texture import pipeline race.
+        /// </summary>
+        static Sprite CreateSpriteAsset(string assetPath,
+            CharacterArtSpec.PuppetRole role,
+            PuppetPlaceholderSpec.Palette palette)
+        {
+            var (w, h) = PuppetPlaceholderSpec.RectFor(role);
+            var color = PuppetPlaceholderSpec.ColorFor(role, palette);
+
+            var tex = BuildRectTexture(w, h, color);
+            tex.name = $"{RoleToFilename(role)}_tex";
+
+            // Delete existing .asset nếu có (corrupt từ run trước).
+            if (File.Exists(assetPath))
+            {
+                AssetDatabase.DeleteAsset(assetPath);
+            }
+
+            // Save texture as main asset của file .asset.
+            AssetDatabase.CreateAsset(tex, assetPath);
+
+            // Sprite sub-asset cùng file. Pivot center, PPU 64.
+            var sprite = Sprite.Create(
+                tex,
+                new Rect(0, 0, w, h),
+                new Vector2(0.5f, 0.5f),
+                PlaceholderPpu,
+                0,
+                SpriteMeshType.FullRect);
+            sprite.name = RoleToFilename(role);
+            AssetDatabase.AddObjectToAsset(sprite, assetPath);
+
+            // Force save sub-asset reference.
+            EditorUtility.SetDirty(tex);
+            EditorUtility.SetDirty(sprite);
+
+            return sprite;
+        }
+
+        /// <summary>
+        /// Build solid-color Texture2D với 1px darker border. Returns texture in-memory chưa
+        /// save disk — caller phải pass vào AssetDatabase.CreateAsset.
+        /// </summary>
+        static Texture2D BuildRectTexture(int w, int h, Color color)
+        {
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            var pixels = new Color32[w * h];
+            var c32 = (Color32)color;
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = c32;
+            // 1px darker border để skeleton visible khi overlap nhau.
+            Color32 border = new Color32(
+                (byte)(c32.r * 0.5f), (byte)(c32.g * 0.5f), (byte)(c32.b * 0.5f), 255);
+            for (int x = 0; x < w; x++) { pixels[x] = border; pixels[(h - 1) * w + x] = border; }
+            for (int y = 0; y < h; y++) { pixels[y * w] = border; pixels[y * w + (w - 1)] = border; }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
+            return tex;
+        }
+
+        /// <summary>
+        /// Xoá .png file legacy từ PR M-Q approach. Nếu .png .meta dangling → cũng xoá.
+        /// </summary>
+        static void CleanupLegacyPngs(string folder, List<CharacterArtSpec.PuppetRole> roles)
+        {
+            foreach (var role in roles)
+            {
+                string pngPath = $"{folder}/{RoleToFilename(role)}.png";
+                if (File.Exists(pngPath))
+                {
+                    AssetDatabase.DeleteAsset(pngPath);
+                }
+            }
         }
 
         static string RoleToFilename(CharacterArtSpec.PuppetRole role)
@@ -160,56 +215,6 @@ namespace WildernessCultivation.EditorTools
             {
                 AssetDatabase.CreateFolder(parent, leaf);
             }
-        }
-
-        // Solid-color rect with 1px darker border. Reuse pattern from BootstrapWizard.WritePng
-        // (separate file → avoid coupling generator to wizard internals).
-        static void WriteRectPng(string path, int w, int h, Color color)
-        {
-            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            var pixels = new Color32[w * h];
-            var c32 = (Color32)color;
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = c32;
-            // 1px darker border.
-            Color32 border = new Color32(
-                (byte)(c32.r * 0.5f), (byte)(c32.g * 0.5f), (byte)(c32.b * 0.5f), 255);
-            for (int x = 0; x < w; x++) { pixels[x] = border; pixels[(h - 1) * w + x] = border; }
-            for (int y = 0; y < h; y++) { pixels[y * w] = border; pixels[y * w + (w - 1)] = border; }
-            tex.SetPixels32(pixels);
-            tex.Apply(false, false);
-            File.WriteAllBytes(path, tex.EncodeToPNG());
-            Object.DestroyImmediate(tex);
-        }
-
-        // PPU=64 to match world scale (head sprite 40px → 0.625u tall — humanoid scale OK).
-        // Pivot=center default → matches existing real-art assumption (PR G/H/I).
-        // Returns false nếu importer chưa available (AssetDatabase chưa register file) —
-        // caller phải force ImportAsset rồi retry.
-        static bool ApplySpriteImport(string path)
-        {
-            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-            if (importer == null) return false;
-            bool dirty = false;
-            if (importer.textureType != TextureImporterType.Sprite)
-            {
-                importer.textureType = TextureImporterType.Sprite;
-                dirty = true;
-            }
-            if (importer.spritePixelsPerUnit != 64f)
-            {
-                importer.spritePixelsPerUnit = 64f;
-                dirty = true;
-            }
-            if (importer.filterMode != FilterMode.Bilinear)
-            {
-                importer.filterMode = FilterMode.Bilinear;
-                dirty = true;
-            }
-            if (dirty)
-            {
-                importer.SaveAndReimport();
-            }
-            return true;
         }
     }
 }
