@@ -670,7 +670,8 @@ namespace WildernessCultivation.EditorTools
             out Transform forearmLeft,
             out Transform forearmRight,
             out Transform shinLeft,
-            out Transform shinRight)
+            out Transform shinRight,
+            CharacterRigSpec rigSpec = null)
         {
             var rootGo = new GameObject("SpriteRoot");
             rootGo.transform.SetParent(root.transform, false);
@@ -680,6 +681,15 @@ namespace WildernessCultivation.EditorTools
             float torsoHalf = PuppetPlaceholderSpec.WorldHeightFor(CharacterArtSpec.PuppetRole.Torso) * 0.5f;
             float armLen = PuppetPlaceholderSpec.WorldHeightFor(CharacterArtSpec.PuppetRole.ArmLeft);
             float legLen = PuppetPlaceholderSpec.WorldHeightFor(CharacterArtSpec.PuppetRole.LegLeft);
+
+            // Per-character rig overrides. RigSpec missing → fallback constants matching legacy
+            // hardcoded behavior (backwards compat — placeholder skeleton dimensions).
+            float shoulderY = rigSpec != null ? rigSpec.shoulderY : 0.55f;
+            float shoulderX = rigSpec != null ? rigSpec.shoulderX : 0.30f;
+            float hipY = rigSpec != null ? rigSpec.hipY : -0.55f;
+            float hipX = rigSpec != null ? rigSpec.hipX : 0.13f;
+            float elbowOverlap = rigSpec != null ? rigSpec.elbowOverlap : 0.06f;
+            float kneeOverlap = rigSpec != null ? rigSpec.kneeOverlap : 0.10f;
 
             // Torso center pivot at root origin.
             torso = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.Torso,
@@ -693,19 +703,16 @@ namespace WildernessCultivation.EditorTools
                 : null;
 
             // Shoulder joints — top-center pivot at shoulders. Slightly inside torso top
-            // (y = +0.55 thay vì +torsoHalf=+0.625) để vai chỉ ngang với gáy, không nhô lên trên đầu.
-            const float shoulderY = 0.55f;
-            const float shoulderX = 0.30f;
+            // (default y=+0.55 thay vì +torsoHalf=+0.625) để vai chỉ ngang với gáy, không nhô lên
+            // trên đầu. Override per-character qua RigSpec để khớp art kích thước thật.
             armLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmLeft,
                 sortingOrderBase + 3, new Vector3(-shoulderX, shoulderY, 0f));
             armRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmRight,
                 sortingOrderBase + 3, new Vector3(shoulderX, shoulderY, 0f));
 
             // Hip joints — top-center pivot at hips. Slightly above torso bottom
-            // (y = -0.55 thay vì -torsoHalf=-0.625) để chân chui ra dưới hông, không xuất phát từ
-            // mép áo dài — match anatomy "chân nối vào hông, ko phải mép trousers".
-            const float hipY = -0.55f;
-            const float hipX = 0.13f;
+            // (default y=-0.55 thay vì -torsoHalf=-0.625) để chân chui ra dưới hông, không xuất
+            // phát từ mép áo dài. Override per-character qua RigSpec.
             legLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegLeft,
                 sortingOrderBase + 1, new Vector3(-hipX, hipY, 0f));
             legRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegRight,
@@ -724,8 +731,7 @@ namespace WildernessCultivation.EditorTools
             // of part height — thin trouser hem above shoe; thin wrist above cuff trim). Bare
             // -armLen / -legLen offset đặt thin top edge AT joint → visible as thin disconnect.
             // Overlap children up by small amount để thin top hidden behind wider parent bottom.
-            const float elbowOverlap = 0.06f;   // 1/15 của armLen, hides ~10% top taper
-            const float kneeOverlap = 0.10f;    // 1/7.5 của legLen, hides ~22% top (shin trouser hem)
+            // Defaults: elbowOverlap=0.06 (~10% taper hide), kneeOverlap=0.10 (~22% taper hide).
             forearmLeft = armLeft != null
                 ? AddPuppetPart(armLeft, sprites, CharacterArtSpec.PuppetRole.ForearmLeft,
                     sortingOrderBase + 4, new Vector3(0f, -armLen + elbowOverlap, 0f))
@@ -742,6 +748,20 @@ namespace WildernessCultivation.EditorTools
                 ? AddPuppetPart(legRight, sprites, CharacterArtSpec.PuppetRole.ShinRight,
                     sortingOrderBase + 1, new Vector3(0f, -legLen + kneeOverlap, 0f))
                 : null;
+        }
+
+        /// <summary>
+        /// Load <see cref="CharacterRigSpec"/> for character id từ
+        /// <c>Assets/_Project/Data/CharacterRigs/{id}.asset</c>. Missing → null (caller fallback
+        /// hardcoded defaults trong <see cref="BuildPuppetHierarchy"/>). User tạo asset qua
+        /// <c>Assets / Create / Wilderness Cultivation / Character Rig Spec</c> để override
+        /// joint positions / occlusion params per character.
+        /// </summary>
+        static CharacterRigSpec LoadCharacterRigSpec(string characterId)
+        {
+            if (string.IsNullOrEmpty(characterId)) return null;
+            string path = $"Assets/_Project/Data/CharacterRigs/{characterId}.asset";
+            return AssetDatabase.LoadAssetAtPath<CharacterRigSpec>(path);
         }
 
         static Transform AddPuppetPart(Transform parent,
@@ -1124,7 +1144,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 5,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("player"));
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1255,7 +1276,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("rabbit"));
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1311,7 +1333,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("wolf"));
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1371,7 +1394,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("fox_spirit"));
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1432,7 +1456,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("boar"));
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1495,7 +1520,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 3,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("deer_spirit"));
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
@@ -1563,7 +1589,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 4,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("crow"));
                 AddPuppetWings(spriteRoot, puppetSet.EastSprites, sortingOrderBase: 4,
                     out var wingLT, out var wingRT);
                 var puppet = go.AddComponent<PuppetAnimController>();
@@ -1677,7 +1704,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 4,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("bat"));
                 AddPuppetWings(spriteRoot, puppetSet.EastSprites, sortingOrderBase: 4,
                     out var wingLT, out var wingRT);
                 var puppet = go.AddComponent<PuppetAnimController>();
@@ -1749,7 +1777,8 @@ namespace WildernessCultivation.EditorTools
                 BuildPuppetHierarchy(go, puppetSet.EastSprites, sortingOrderBase: 4,
                     out var spriteRoot, out var torsoT, out var headT,
                     out var armLT, out var armRT, out var legLT, out var legRT, out var tailT,
-                    out var foreLT, out var foreRT, out var shinLT, out var shinRT);
+                    out var foreLT, out var foreRT, out var shinLT, out var shinRT,
+                    rigSpec: LoadCharacterRigSpec("boss"));
                 var puppet = go.AddComponent<PuppetAnimController>();
                 puppet.spriteRoot = spriteRoot;
                 puppet.torso = torsoT;
