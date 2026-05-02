@@ -1160,9 +1160,14 @@ namespace WildernessCultivation.EditorTools
                 puppet.shinLeft = shinLT;
                 puppet.shinRight = shinRT;
                 // Player tunings — slower step than mob, less aggressive swing.
+                // PR 4: armSwingDeg dropped 28→14 (keep arm tip close to torso silhouette
+                // trong side view, tránh "paddle gỗ" effect khi vung). Forearm walk-bend +
+                // body torsion bù lifelike feel mà không cần biên độ rộng.
                 puppet.walkFrequency = 3f;
-                puppet.armSwingDeg = 28f;
+                puppet.armSwingDeg = 14f;
                 puppet.legSwingDeg = 18f;
+                puppet.elbowWalkBendDeg = 12f;
+                puppet.bodyTorsionDeg = 3f;
                 WirePuppetMultiDirSprites(puppet, puppetSet);
             }
 

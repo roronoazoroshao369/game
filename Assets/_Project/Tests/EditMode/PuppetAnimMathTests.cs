@@ -703,5 +703,30 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.IsFalse(PuppetAnimController.IsFrontBackView(CharacterArtSpec.PuppetDirection.East));
             Assert.IsFalse(PuppetAnimController.IsFrontBackView(CharacterArtSpec.PuppetDirection.West));
         }
+
+        // ---------- PR 4 — ComputeWalkElbowBend ----------
+
+        [Test]
+        public void WalkElbowBend_ForwardSwing_BendsInward()
+        {
+            // Positive sin (arm swinging forward) → forearm flexes (positive deg).
+            Assert.AreEqual(12f, PuppetAnimController.ComputeWalkElbowBend(1f, 12f), 0.0001f);
+            Assert.AreEqual(6f, PuppetAnimController.ComputeWalkElbowBend(0.5f, 12f), 0.0001f);
+        }
+
+        [Test]
+        public void WalkElbowBend_BackSwing_NoBend()
+        {
+            // Negative sin (arm back-swing) → forearm straight (clamped at 0,
+            // elbow never hyper-extends backward).
+            Assert.AreEqual(0f, PuppetAnimController.ComputeWalkElbowBend(-1f, 12f), 0.0001f);
+            Assert.AreEqual(0f, PuppetAnimController.ComputeWalkElbowBend(-0.5f, 12f), 0.0001f);
+        }
+
+        [Test]
+        public void WalkElbowBend_ZeroSin_NoBend()
+        {
+            Assert.AreEqual(0f, PuppetAnimController.ComputeWalkElbowBend(0f, 12f), 0.0001f);
+        }
     }
 }

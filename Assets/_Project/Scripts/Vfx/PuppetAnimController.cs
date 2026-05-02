@@ -99,6 +99,14 @@ namespace WildernessCultivation.Vfx
         public float kneeCrouchBendDeg = 35f;
         [Tooltip("Max shin bend (deg) khi walk back-swing (foot lift). 0 = disable, 10-20 đẹp.")]
         public float kneeWalkBendDeg = 12f;
+        [Tooltip("Max forearm bend (deg) khi walk forward-swing (PR 4 — anti rời rạc). " +
+                 "Forearm flexes inward khi arm vung tới trước → mất cảm giác que cứng. " +
+                 "0 = disable, 8-15 đẹp cho biped, 0 cho mob 4-leg.")]
+        public float elbowWalkBendDeg = 12f;
+        [Tooltip("Body torsion (deg) — torso counter-rotate vs leg phase trong walk (PR 4). " +
+                 "Tạo kết nối hông-vai opposite giúp body cảm giác lifelike. " +
+                 "0 = disable, 2-5 đẹp cho humanoid biped, 0 cho mob 4-leg.")]
+        public float bodyTorsionDeg = 3f;
 
         [Header("Tail (optional)")]
         [Tooltip("Tail sway tần số.")]
@@ -182,6 +190,7 @@ namespace WildernessCultivation.Vfx
         Quaternion baseWingLeftRot, baseWingRightRot;
         Quaternion baseBodySegment1Rot, baseBodySegment2Rot, baseBodySegment3Rot, baseBodySegment4Rot;
         Vector3 baseTorsoPos, baseHeadPos;
+        Quaternion baseTorsoRot;
         Vector3 baseSpriteRootScale;
 
         // Cached SpriteRenderers từ body part transforms — dung sprite swap khi đổi direction.
@@ -236,7 +245,11 @@ namespace WildernessCultivation.Vfx
             if (bodySegment2 != null) baseBodySegment2Rot = bodySegment2.localRotation;
             if (bodySegment3 != null) baseBodySegment3Rot = bodySegment3.localRotation;
             if (bodySegment4 != null) baseBodySegment4Rot = bodySegment4.localRotation;
-            if (torso != null) baseTorsoPos = torso.localPosition;
+            if (torso != null)
+            {
+                baseTorsoPos = torso.localPosition;
+                baseTorsoRot = torso.localRotation;
+            }
             if (head != null) baseHeadPos = head.localPosition;
             if (spriteRoot != null) baseSpriteRootScale = spriteRoot.localScale;
         }
@@ -374,6 +387,13 @@ namespace WildernessCultivation.Vfx
                     shinLeft.localRotation = baseShinLeftRot * Quaternion.Euler(0f, 0f, ComputeWalkKneeBend(walkSin, kneeWalkBendDeg));
                 if (shinRight != null)
                     shinRight.localRotation = baseShinRightRot * Quaternion.Euler(0f, 0f, ComputeWalkKneeBend(-walkSin, kneeWalkBendDeg));
+
+                // PR 4 — anti rời rạc: forearm flexes inward khi arm vung tới trước.
+                // Left arm forward-swing = walkSin > 0; right arm forward-swing = walkSin < 0.
+                if (forearmLeft != null)
+                    forearmLeft.localRotation = baseForearmLeftRot * Quaternion.Euler(0f, 0f, ComputeWalkElbowBend(walkSin, elbowWalkBendDeg));
+                if (forearmRight != null)
+                    forearmRight.localRotation = baseForearmRightRot * Quaternion.Euler(0f, 0f, -ComputeWalkElbowBend(-walkSin, elbowWalkBendDeg));
             }
             else
             {
@@ -384,12 +404,10 @@ namespace WildernessCultivation.Vfx
                 if (legRight != null) legRight.localRotation = baseLegRightRot;
                 if (shinLeft != null) shinLeft.localRotation = baseShinLeftRot;
                 if (shinRight != null) shinRight.localRotation = baseShinRightRot;
+                // Forearm reset to neutral khi idle — lunge block below overrides for attacking arm.
+                if (forearmLeft != null) forearmLeft.localRotation = baseForearmLeftRot;
+                if (forearmRight != null) forearmRight.localRotation = baseForearmRightRot;
             }
-
-            // Forearm follows arm rigidly during walk (no extra bend). Reset to neutral every
-            // frame — lunge block below overrides for attacking arm.
-            if (forearmLeft != null) forearmLeft.localRotation = baseForearmLeftRot;
-            if (forearmRight != null) forearmRight.localRotation = baseForearmRightRot;
 
             // Torso bob: walking → speed-proportional sin; idle → slow breath.
             float bobY = moving
@@ -428,6 +446,12 @@ namespace WildernessCultivation.Vfx
                     baseTorsoPos.x,
                     baseTorsoPos.y + bobY + currentCrouchY,
                     baseTorsoPos.z);
+                // PR 4 — anti rời rạc: torso counter-rotate vs leg phase tạo body torsion.
+                // Walk legs swing với -walkSin (left) / +walkSin (right) → hip rotates +walkSin
+                // direction. Shoulder counter-rotate ngược lại (-walkSin). Áp lên torso transform
+                // (vai-hông cùng segment) → approximation hợp lý, ít cost.
+                float torsion = moving ? -walkSin * bodyTorsionDeg : 0f;
+                torso.localRotation = baseTorsoRot * Quaternion.Euler(0f, 0f, torsion);
             }
 
             // Head follows torso (already child of torso typically), additional bob optional.
@@ -797,6 +821,17 @@ namespace WildernessCultivation.Vfx
         public static float ComputeWalkKneeBend(float legBackSin, float maxDeg)
         {
             return Mathf.Max(0f, legBackSin) * maxDeg;
+        }
+
+        /// <summary>
+        /// Walk elbow bend (PR 4 — anti rời rạc): forearm flexes inward when arm swings
+        /// forward. Pass arm-specific sin (positive = forward-swing). Returns deg ∈ [0, maxDeg]
+        /// (elbow never hyper-extends — clamped at 0). Caller applies sign based on left/right
+        /// (left = positive Z bend, right = negative Z bend so cả 2 forearms cong vào trong).
+        /// </summary>
+        public static float ComputeWalkElbowBend(float armForwardSin, float maxDeg)
+        {
+            return Mathf.Max(0f, armForwardSin) * maxDeg;
         }
 
         /// <summary>
