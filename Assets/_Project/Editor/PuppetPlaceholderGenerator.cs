@@ -151,11 +151,13 @@ namespace WildernessCultivation.EditorTools
             // Save texture as main asset của file .asset.
             AssetDatabase.CreateAsset(tex, assetPath);
 
-            // Sprite sub-asset cùng file. Pivot center, PPU 64.
+            // Sprite sub-asset cùng file, PPU 64, joint-anchor pivot per role
+            // (head bottom-center, arm/leg top-center, torso center) — match
+            // CharacterArtImporter user-art pivots để placeholder + real art swap-able.
             var sprite = Sprite.Create(
                 tex,
                 new Rect(0, 0, w, h),
-                new Vector2(0.5f, 0.5f),
+                PuppetPlaceholderSpec.PivotFor(role),
                 PlaceholderPpu,
                 0,
                 SpriteMeshType.FullRect);

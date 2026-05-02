@@ -517,5 +517,77 @@ namespace WildernessCultivation.Tests.EditMode
                 Assert.AreNotEqual(Color.magenta, c, $"{role} should not be magenta sentinel");
             }
         }
+
+        // ---------- Joint-anchor pivot system ----------
+
+        [Test]
+        public void PivotFor_Head_BottomCenter()
+        {
+            // Head pivot = bottom-center → khi đặt head transform tại top-of-torso world position,
+            // head sprite hang UP từ neck joint (correct anatomy). Center-pivot legacy bug → head
+            // sprite center ở neck = nửa head buried trong torso top.
+            var p = PuppetPlaceholderSpec.PivotFor(CharacterArtSpec.PuppetRole.Head);
+            Assert.AreEqual(0.5f, p.x, 0.001f);
+            Assert.AreEqual(0f, p.y, 0.001f);
+        }
+
+        [Test]
+        public void PivotFor_Torso_Center()
+        {
+            // Torso không có parent joint riêng — center pivot giữ mass-center ở root origin,
+            // torso bob/breath animations rotate quanh chest center (natural).
+            var p = PuppetPlaceholderSpec.PivotFor(CharacterArtSpec.PuppetRole.Torso);
+            Assert.AreEqual(0.5f, p.x, 0.001f);
+            Assert.AreEqual(0.5f, p.y, 0.001f);
+        }
+
+        [Test]
+        public void PivotFor_AllLimbs_TopCenter()
+        {
+            // Arm/Forearm/Leg/Shin tất cả top-center pivot → sprite hang DOWN từ joint
+            // (shoulder/elbow/hip/knee). Khi PuppetAnimController rotate localRotation ở joint,
+            // limb vung quanh joint (correct anatomy) thay vì spin quanh middle of limb (sai).
+            foreach (var role in new[]
+            {
+                CharacterArtSpec.PuppetRole.ArmLeft,
+                CharacterArtSpec.PuppetRole.ArmRight,
+                CharacterArtSpec.PuppetRole.ForearmLeft,
+                CharacterArtSpec.PuppetRole.ForearmRight,
+                CharacterArtSpec.PuppetRole.LegLeft,
+                CharacterArtSpec.PuppetRole.LegRight,
+                CharacterArtSpec.PuppetRole.ShinLeft,
+                CharacterArtSpec.PuppetRole.ShinRight,
+            })
+            {
+                var p = PuppetPlaceholderSpec.PivotFor(role);
+                Assert.AreEqual(0.5f, p.x, 0.001f, $"{role} pivot.x must be 0.5 (horizontal center)");
+                Assert.AreEqual(1f, p.y, 0.001f, $"{role} pivot.y must be 1.0 (top, joint at top of sprite)");
+            }
+        }
+
+        [Test]
+        public void PivotFor_Tail_RightCenter()
+        {
+            // Tail attaches at rear-of-body. Right-center pivot → tail sprite extends LEFT từ
+            // attachment point (East-facing default flow, mob facing right = tail behind).
+            var p = PuppetPlaceholderSpec.PivotFor(CharacterArtSpec.PuppetRole.Tail);
+            Assert.AreEqual(1f, p.x, 0.001f);
+            Assert.AreEqual(0.5f, p.y, 0.001f);
+        }
+
+        [Test]
+        public void PivotFor_AllRoles_InNormalizedRange()
+        {
+            // Sanity: every role's pivot phải trong [0, 1] để Unity Sprite renderer accept.
+            foreach (CharacterArtSpec.PuppetRole role in System.Enum.GetValues(typeof(CharacterArtSpec.PuppetRole)))
+            {
+                if (role == CharacterArtSpec.PuppetRole.Unknown) continue;
+                var p = PuppetPlaceholderSpec.PivotFor(role);
+                Assert.GreaterOrEqual(p.x, 0f, $"{role} pivot.x out of range");
+                Assert.LessOrEqual(p.x, 1f, $"{role} pivot.x out of range");
+                Assert.GreaterOrEqual(p.y, 0f, $"{role} pivot.y out of range");
+                Assert.LessOrEqual(p.y, 1f, $"{role} pivot.y out of range");
+            }
+        }
     }
 }
