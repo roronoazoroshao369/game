@@ -71,10 +71,10 @@ Tham chiếu: `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` `RectFor(r
 | --- | --- | --- | --- | --- | --- |
 | `head` | 40×40 | 0.625 | 1.00 | center | 1024×1024 |
 | `torso` | 52×80 | 1.250 | 0.65 | center | 1024×1536 |
-| `arm_left` / `arm_right` | 16×56 | 0.875 | 0.29 | top-center (vai) | 600×1800 |
-| `forearm_left` / `forearm_right` | 14×44 | 0.688 | 0.32 | top-center (khuỷu) | 540×1620 |
-| `leg_left` / `leg_right` | 18×60 | 0.938 | 0.30 | top-center (hông) | 660×1980 |
-| `shin_left` / `shin_right` | 16×44 | 0.688 | 0.36 | top-center (gối) | 600×1620 |
+| `arm_left` / `arm_right` | 16×36 | 0.5625 | 0.44 | top-center (vai) | 600×1350 |
+| `forearm_left` / `forearm_right` | 14×28 | 0.4375 | 0.50 | top-center (khuỷu) | 540×1080 |
+| `leg_left` / `leg_right` | 18×48 | 0.75 | 0.38 | top-center (hông) | 660×1760 |
+| `shin_left` / `shin_right` | 16×32 | 0.5 | 0.50 | top-center (gối) | 600×1200 |
 | `tail` | 50×18 | 0.281 | 2.78 | left-center (gốc tail) | 1500×540 |
 | `wing_left` / `wing_right` | 54×28 | 0.438 | 1.93 | left-center (vai cánh) | 1620×840 |
 | `body_seg_1..4` | 38×26 → 26×20 | 0.41 → 0.31 | ~1.5 | left-center | 1140×780 |

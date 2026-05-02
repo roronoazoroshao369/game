@@ -74,9 +74,10 @@ namespace WildernessCultivation.Vfx
         public float movingThreshold = 0.05f;
 
         [Header("Idle breathing")]
-        [Tooltip("Idle torso bob biên độ (subtle breathing).")]
-        public float idleBreathAmplitude = 0.015f;
-        [Tooltip("Idle breath tần số.")]
+        [Tooltip("Idle torso bob biên độ (subtle breathing). 0.025-0.04 = visible chest rise/fall " +
+                 "(DST grade); 0.01 = barely-perceptible.")]
+        public float idleBreathAmplitude = 0.03f;
+        [Tooltip("Idle breath tần số (Hz). 1.0-1.4 = relaxed breathing.")]
         public float idleBreathFrequency = 1.2f;
 
         [Header("Lunge / Attack")]

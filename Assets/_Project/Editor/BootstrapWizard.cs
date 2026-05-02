@@ -719,21 +719,28 @@ namespace WildernessCultivation.EditorTools
             // PR K (L2): nest forearm under arm, shin under leg. Top-center pivot trên both →
             // forearm joint = elbow ở bottom của arm sprite (local y = -armLen). Optional —
             // missing PNG → AddPuppetPart returns null → PuppetAnimController null-skips bend logic.
+            //
+            // Joint OVERLAP: hand-drawn art tapers thin ở top edge của forearm/shin (5-15%
+            // of part height — thin trouser hem above shoe; thin wrist above cuff trim). Bare
+            // -armLen / -legLen offset đặt thin top edge AT joint → visible as thin disconnect.
+            // Overlap children up by small amount để thin top hidden behind wider parent bottom.
+            const float elbowOverlap = 0.06f;   // 1/15 của armLen, hides ~10% top taper
+            const float kneeOverlap = 0.10f;    // 1/7.5 của legLen, hides ~22% top (shin trouser hem)
             forearmLeft = armLeft != null
                 ? AddPuppetPart(armLeft, sprites, CharacterArtSpec.PuppetRole.ForearmLeft,
-                    sortingOrderBase + 4, new Vector3(0f, -armLen, 0f))
+                    sortingOrderBase + 4, new Vector3(0f, -armLen + elbowOverlap, 0f))
                 : null;
             forearmRight = armRight != null
                 ? AddPuppetPart(armRight, sprites, CharacterArtSpec.PuppetRole.ForearmRight,
-                    sortingOrderBase + 4, new Vector3(0f, -armLen, 0f))
+                    sortingOrderBase + 4, new Vector3(0f, -armLen + elbowOverlap, 0f))
                 : null;
             shinLeft = legLeft != null
                 ? AddPuppetPart(legLeft, sprites, CharacterArtSpec.PuppetRole.ShinLeft,
-                    sortingOrderBase + 1, new Vector3(0f, -legLen, 0f))
+                    sortingOrderBase + 1, new Vector3(0f, -legLen + kneeOverlap, 0f))
                 : null;
             shinRight = legRight != null
                 ? AddPuppetPart(legRight, sprites, CharacterArtSpec.PuppetRole.ShinRight,
-                    sortingOrderBase + 1, new Vector3(0f, -legLen, 0f))
+                    sortingOrderBase + 1, new Vector3(0f, -legLen + kneeOverlap, 0f))
                 : null;
         }
 
