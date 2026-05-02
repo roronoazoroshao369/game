@@ -487,6 +487,15 @@ Palette + composition + negative + tool: same as shin_left.
 
 #### §3.1.2 North direction (N = back-view, walking away from camera)
 
+> **Puppet rig convention (PR 3+):** Separate arm + forearm sprites trong N/S views
+> được **auto-hidden** bởi `PuppetAnimController.hideArmsInFrontBackView=true`
+> (theo DST convention — front/back view không articulate cánh tay riêng). Torso PNG
+> nên **bao gồm kimono sleeves baked-in** cho visual completeness — đó là silhouette
+> camera thấy. Có thể vẫn gen N/S arm/forearm sprites (rig fallback East PNG nếu
+> thiếu) nhưng chúng sẽ không render trong N/S — bỏ qua để tiết kiệm compute. Nếu
+> mob của bạn (ví dụ Wolf, FoxSpirit 4-leg) có art tách rời thật sự, set
+> `hideArmsInFrontBackView=false` trong Inspector của prefab đó.
+
 ```text
 === player/N/head.png === (11/30)
 
