@@ -154,7 +154,12 @@ namespace WildernessCultivation.EditorTools
                 // render cùng world size 1u → tỷ lệ character vỡ. Now mỗi part match placeholder.
                 int rolePlaceholderH = PuppetPlaceholderSpec.RectFor(role).h;
                 float ppu = tex.height * PuppetPlaceholderSpec.PuppetPlaceholderPPU / rolePlaceholderH;
-                ResourceArtImporter.ApplySpriteImportSettings(path, ppu);
+                // Per-role joint pivot — head bottom-center, arm/leg top-center, etc. Khi
+                // BootstrapWizard.BuildPuppetHierarchy đặt arm tại shoulder world position, top-pivot
+                // làm sprite hang DOWN từ shoulder (correct anatomy). PR #118 importer dùng default
+                // pivot=Center → arm sprite center ở shoulder, half-arm trồi lên trên shoulder = sai.
+                Vector2 pivot = PuppetPlaceholderSpec.PivotFor(role);
+                ResourceArtImporter.ApplySpriteImportSettings(path, ppu, pivot);
 
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 if (sprite != null) result[role] = sprite;

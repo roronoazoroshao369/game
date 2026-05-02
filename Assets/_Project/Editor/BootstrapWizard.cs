@@ -648,8 +648,13 @@ namespace WildernessCultivation.EditorTools
         //           ├── ArmLeft     (sortingOrder = base+3)
         //           └── ArmRight    (sortingOrder = base+3)
         //
-        // Default body-part offsets ước lượng cho character ~1.5u tall (head 0.4u trên torso, etc.).
-        // User có thể tinh chỉnh trong Inspector sau khi Bootstrap nếu sprite có pivot khác.
+        // Joint-anchor offsets — sprite pivot per role (PuppetPlaceholderSpec.PivotFor) định
+        // điểm khớp; localPosition đặt khớp đó vào world. Math derived từ placeholder spec heights:
+        //   torso 80px → 1.25u tall, half = 0.625u (top/bottom của torso)
+        //   arm 56px → 0.875u tall (full chain length từ shoulder xuống elbow)
+        //   leg 60px → 0.9375u tall (hip → knee)
+        // Shoulder x = ±0.30u (vai sát ngoài torso half-width 0.40u, để đủ "8-12px gap" cho art).
+        // Hip x = ±0.13u (legs hẹp hơn shoulder, hipwidth standard humanoid).
         static void BuildPuppetHierarchy(
             GameObject root,
             Dictionary<CharacterArtSpec.PuppetRole, Sprite> sprites,
@@ -671,41 +676,64 @@ namespace WildernessCultivation.EditorTools
             rootGo.transform.SetParent(root.transform, false);
             spriteRoot = rootGo.transform;
 
+            // Joint distances — derived từ placeholder spec heights / PPU.
+            float torsoHalf = PuppetPlaceholderSpec.WorldHeightFor(CharacterArtSpec.PuppetRole.Torso) * 0.5f;
+            float armLen = PuppetPlaceholderSpec.WorldHeightFor(CharacterArtSpec.PuppetRole.ArmLeft);
+            float legLen = PuppetPlaceholderSpec.WorldHeightFor(CharacterArtSpec.PuppetRole.LegLeft);
+
+            // Torso center pivot at root origin.
             torso = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.Torso,
                 sortingOrderBase + 2, Vector3.zero);
+
+            // Head bottom-center pivot at top of torso (in torso local space).
+            // Head sprite extends UP từ neck → top of head ở y = +torsoHalf + headHeight.
             head = torso != null
                 ? AddPuppetPart(torso, sprites, CharacterArtSpec.PuppetRole.Head,
-                    sortingOrderBase + 5, new Vector3(0f, 0.45f, 0f))
+                    sortingOrderBase + 5, new Vector3(0f, torsoHalf, 0f))
                 : null;
-            armLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmLeft,
-                sortingOrderBase + 3, new Vector3(-0.18f, 0.05f, 0f));
-            armRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmRight,
-                sortingOrderBase + 3, new Vector3(0.18f, 0.05f, 0f));
-            legLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegLeft,
-                sortingOrderBase + 1, new Vector3(-0.10f, -0.30f, 0f));
-            legRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegRight,
-                sortingOrderBase + 1, new Vector3(0.10f, -0.30f, 0f));
-            tail = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.Tail,
-                sortingOrderBase + 0, new Vector3(-0.25f, -0.05f, 0f));
 
-            // PR K (L2): nest forearm under arm, shin under leg. Optional — missing PNG
-            // → AddPuppetPart returns null → PuppetAnimController null-skips bend logic.
-            // Local offset = end of parent (arm sprite ~0.25u tall pivot top, leg ~0.30u).
+            // Shoulder joints — top-center pivot at shoulders. Slightly inside torso top
+            // (y = +0.55 thay vì +torsoHalf=+0.625) để vai chỉ ngang với gáy, không nhô lên trên đầu.
+            const float shoulderY = 0.55f;
+            const float shoulderX = 0.30f;
+            armLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmLeft,
+                sortingOrderBase + 3, new Vector3(-shoulderX, shoulderY, 0f));
+            armRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.ArmRight,
+                sortingOrderBase + 3, new Vector3(shoulderX, shoulderY, 0f));
+
+            // Hip joints — top-center pivot at hips. Slightly above torso bottom
+            // (y = -0.55 thay vì -torsoHalf=-0.625) để chân chui ra dưới hông, không xuất phát từ
+            // mép áo dài — match anatomy "chân nối vào hông, ko phải mép trousers".
+            const float hipY = -0.55f;
+            const float hipX = 0.13f;
+            legLeft = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegLeft,
+                sortingOrderBase + 1, new Vector3(-hipX, hipY, 0f));
+            legRight = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.LegRight,
+                sortingOrderBase + 1, new Vector3(hipX, hipY, 0f));
+
+            // Tail — right-center pivot at rear-of-body (East-facing default flow). Tail sprite
+            // extends LEFT từ joint (rear of mob torso). Z-order behind torso.
+            tail = AddPuppetPart(spriteRoot, sprites, CharacterArtSpec.PuppetRole.Tail,
+                sortingOrderBase + 0, new Vector3(-0.20f, -0.10f, 0f));
+
+            // PR K (L2): nest forearm under arm, shin under leg. Top-center pivot trên both →
+            // forearm joint = elbow ở bottom của arm sprite (local y = -armLen). Optional —
+            // missing PNG → AddPuppetPart returns null → PuppetAnimController null-skips bend logic.
             forearmLeft = armLeft != null
                 ? AddPuppetPart(armLeft, sprites, CharacterArtSpec.PuppetRole.ForearmLeft,
-                    sortingOrderBase + 4, new Vector3(0f, -0.25f, 0f))
+                    sortingOrderBase + 4, new Vector3(0f, -armLen, 0f))
                 : null;
             forearmRight = armRight != null
                 ? AddPuppetPart(armRight, sprites, CharacterArtSpec.PuppetRole.ForearmRight,
-                    sortingOrderBase + 4, new Vector3(0f, -0.25f, 0f))
+                    sortingOrderBase + 4, new Vector3(0f, -armLen, 0f))
                 : null;
             shinLeft = legLeft != null
                 ? AddPuppetPart(legLeft, sprites, CharacterArtSpec.PuppetRole.ShinLeft,
-                    sortingOrderBase + 1, new Vector3(0f, -0.30f, 0f))
+                    sortingOrderBase + 1, new Vector3(0f, -legLen, 0f))
                 : null;
             shinRight = legRight != null
                 ? AddPuppetPart(legRight, sprites, CharacterArtSpec.PuppetRole.ShinRight,
-                    sortingOrderBase + 1, new Vector3(0f, -0.30f, 0f))
+                    sortingOrderBase + 1, new Vector3(0f, -legLen, 0f))
                 : null;
         }
 

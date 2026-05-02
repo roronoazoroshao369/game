@@ -51,8 +51,13 @@ namespace WildernessCultivation.EditorTools
         /// <summary>
         /// Apply texture import settings cho user-provided sprite. Bilinear filter (cao-res
         /// art mượt hơn Point), alphaIsTransparency, no mipmap, clamp wrap.
+        /// <paramref name="pivotNormalized"/> optional: nếu set, sprite import với
+        /// SpriteAlignment.Custom + custom pivot (dùng cho puppet body parts với joint-anchor pivot
+        /// — head bottom-center, arm/leg top-center, etc.). Mặc định null = giữ alignment hiện tại
+        /// của importer (Center Unity default cho legacy resource art).
         /// </summary>
-        public static void ApplySpriteImportSettings(string spriteAssetPath, float ppu)
+        public static void ApplySpriteImportSettings(
+            string spriteAssetPath, float ppu, Vector2? pivotNormalized = null)
         {
             var importer = AssetImporter.GetAtPath(spriteAssetPath) as TextureImporter;
             if (importer == null) return;
@@ -93,6 +98,31 @@ namespace WildernessCultivation.EditorTools
                 importer.wrapMode = TextureWrapMode.Clamp;
                 dirty = true;
             }
+
+            // Sprite pivot — TextureImporter only exposes spriteAlignment + spritePivot via
+            // TextureImporterSettings (read-modify-write). Skip nếu caller không yêu cầu pivot.
+            if (pivotNormalized.HasValue)
+            {
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                bool pivotDirty = false;
+                if (settings.spriteAlignment != (int)SpriteAlignment.Custom)
+                {
+                    settings.spriteAlignment = (int)SpriteAlignment.Custom;
+                    pivotDirty = true;
+                }
+                if ((settings.spritePivot - pivotNormalized.Value).sqrMagnitude > 0.0001f)
+                {
+                    settings.spritePivot = pivotNormalized.Value;
+                    pivotDirty = true;
+                }
+                if (pivotDirty)
+                {
+                    importer.SetTextureSettings(settings);
+                    dirty = true;
+                }
+            }
+
             if (dirty) importer.SaveAndReimport();
         }
 

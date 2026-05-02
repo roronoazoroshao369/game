@@ -33,6 +33,53 @@ namespace WildernessCultivation.Core
         }
 
         /// <summary>
+        /// Joint-anchor sprite pivot (normalized 0..1) per role. Pivot = vị trí khớp trên sprite,
+        /// nơi part attach vào parent (head→neck, arm→shoulder, leg→hip, etc.). Khi part rotate
+        /// quanh transform.localPosition (do PuppetAnimController), pivot quyết định điểm xoay
+        /// thật trên sprite — top-center pivot cho arm = arm vung quanh shoulder (correct anatomy)
+        /// thay vì xoay quanh middle of arm (cây que tự quay, sai).
+        ///
+        /// Pivot scheme:
+        /// - Head: (0.5, 0)   — bottom-center, neck joint
+        /// - Torso: (0.5, 0.5) — center (mass-centered, không có parent joint riêng)
+        /// - Arm/Forearm/Leg/Shin: (0.5, 1) — top-center, hang DOWN từ joint
+        /// - Tail: (1, 0.5)   — right-center, attach ở rear-of-body (East-facing default)
+        /// - Wing: (0.5, 0.5) — center (Phase 3 keep neutral)
+        /// - BodySegment1..4: (1, 0.5) — right-center, snake chain pivot ở head-side junction
+        /// </summary>
+        public static Vector2 PivotFor(CharacterArtSpec.PuppetRole role)
+        {
+            switch (role)
+            {
+                case CharacterArtSpec.PuppetRole.Head:
+                    return new Vector2(0.5f, 0f);
+                case CharacterArtSpec.PuppetRole.Torso:
+                    return new Vector2(0.5f, 0.5f);
+                case CharacterArtSpec.PuppetRole.ArmLeft:
+                case CharacterArtSpec.PuppetRole.ArmRight:
+                case CharacterArtSpec.PuppetRole.ForearmLeft:
+                case CharacterArtSpec.PuppetRole.ForearmRight:
+                case CharacterArtSpec.PuppetRole.LegLeft:
+                case CharacterArtSpec.PuppetRole.LegRight:
+                case CharacterArtSpec.PuppetRole.ShinLeft:
+                case CharacterArtSpec.PuppetRole.ShinRight:
+                    return new Vector2(0.5f, 1f);
+                case CharacterArtSpec.PuppetRole.Tail:
+                    return new Vector2(1f, 0.5f);
+                case CharacterArtSpec.PuppetRole.WingLeft:
+                case CharacterArtSpec.PuppetRole.WingRight:
+                    return new Vector2(0.5f, 0.5f);
+                case CharacterArtSpec.PuppetRole.BodySegment1:
+                case CharacterArtSpec.PuppetRole.BodySegment2:
+                case CharacterArtSpec.PuppetRole.BodySegment3:
+                case CharacterArtSpec.PuppetRole.BodySegment4:
+                    return new Vector2(1f, 0.5f);
+                default:
+                    return new Vector2(0.5f, 0.5f);
+            }
+        }
+
+        /// <summary>
         /// Per-character color palette. Skin / sleeve / trousers / tail riêng.
         /// </summary>
         public struct Palette
