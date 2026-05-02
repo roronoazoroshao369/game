@@ -685,5 +685,23 @@ namespace WildernessCultivation.Tests.EditMode
             // dùng false branch để áp far-limb logic vào right side.
             Assert.IsFalse(PuppetAnimController.LeftIsFarInSideView(CharacterArtSpec.PuppetDirection.West));
         }
+
+        // ---------- Front/back-view arm hiding (PR 3) ----------
+
+        [Test]
+        public void IsFrontBackView_NorthSouth_True()
+        {
+            // N + S = front / back view → arms baked vào torso PNG → tắt separate arm sprites.
+            Assert.IsTrue(PuppetAnimController.IsFrontBackView(CharacterArtSpec.PuppetDirection.North));
+            Assert.IsTrue(PuppetAnimController.IsFrontBackView(CharacterArtSpec.PuppetDirection.South));
+        }
+
+        [Test]
+        public void IsFrontBackView_EastWest_False()
+        {
+            // E + W = side view → arms render separate cho animation swing.
+            Assert.IsFalse(PuppetAnimController.IsFrontBackView(CharacterArtSpec.PuppetDirection.East));
+            Assert.IsFalse(PuppetAnimController.IsFrontBackView(CharacterArtSpec.PuppetDirection.West));
+        }
     }
 }

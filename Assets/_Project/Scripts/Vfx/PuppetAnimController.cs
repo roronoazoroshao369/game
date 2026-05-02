@@ -142,6 +142,11 @@ namespace WildernessCultivation.Vfx
                  "render sau body. -2 default (giữ far limb phía dưới torso bằng cách đẩy " +
                  "sortingOrder về phía trước torso).")]
         public int farLimbSortingOffset = -2;
+        [Tooltip("True (default) → khi direction = N hoặc S (front/back view), tắt render " +
+                 "arm/forearm sprites — để torso PNG (đã có sleeves baked) own silhouette. " +
+                 "Theo DST convention front-view không articulate cánh tay riêng. " +
+                 "False = giữ arm sprites visible cho mob có art tách rời (Wolf, FoxSpirit).")]
+        public bool hideArmsInFrontBackView = true;
 
         [Header("Multi-direction sprites (PR J — L3+)")]
         [Tooltip("Sprite arrays indexed by PuppetDirection enum value (0=E, 1=N, 2=S, 3=W). " +
@@ -208,8 +213,10 @@ namespace WildernessCultivation.Vfx
             if (body == null) body = GetComponent<Rigidbody2D>();
             CacheBasePose();
             CacheRenderers();
-            // Apply once at start để initial side-view depth correct (currentDir defaults East).
+            // Apply once at start để initial side-view depth + arm visibility correct
+            // (currentDir defaults East → arms visible by default).
             ApplySideViewOcclusion(currentDir);
+            ApplyArmVisibility(currentDir);
         }
 
         void CacheBasePose()
@@ -557,6 +564,7 @@ namespace WildernessCultivation.Vfx
             ApplySpriteFromArray(bodySegment3Renderer, bodySegment3SpritesByDir, idx);
             ApplySpriteFromArray(bodySegment4Renderer, bodySegment4SpritesByDir, idx);
             ApplySideViewOcclusion(dir);
+            ApplyArmVisibility(dir);
         }
 
         /// <summary>
@@ -607,6 +615,25 @@ namespace WildernessCultivation.Vfx
         public static bool LeftIsFarInSideView(CharacterArtSpec.PuppetDirection dir)
         {
             return dir == CharacterArtSpec.PuppetDirection.East;
+        }
+
+        /// <summary>
+        /// Pure helper: true nếu direction là N hoặc S (front / back view) — DST convention
+        /// hide separate arm sprites trong các view này vì torso PNG đã có sleeves baked.
+        /// </summary>
+        public static bool IsFrontBackView(CharacterArtSpec.PuppetDirection dir)
+        {
+            return dir == CharacterArtSpec.PuppetDirection.North
+                || dir == CharacterArtSpec.PuppetDirection.South;
+        }
+
+        void ApplyArmVisibility(CharacterArtSpec.PuppetDirection dir)
+        {
+            bool armsVisible = !(hideArmsInFrontBackView && IsFrontBackView(dir));
+            if (armLeftRenderer != null) armLeftRenderer.enabled = armsVisible;
+            if (armRightRenderer != null) armRightRenderer.enabled = armsVisible;
+            if (forearmLeftRenderer != null) forearmLeftRenderer.enabled = armsVisible;
+            if (forearmRightRenderer != null) forearmRightRenderer.enabled = armsVisible;
         }
 
         void ResetLimbsToBase()
