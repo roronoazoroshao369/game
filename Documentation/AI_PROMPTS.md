@@ -103,6 +103,14 @@ Mỗi entity có 4 phần (mỗi part PNG là 1 fenced block tự chứa, copy 1
 
 **Folder:** `Art/Characters/player/`
 
+> **⚠ Atomic-symbol regen pipeline (PR 5+):** vai trò của §3.1 prompts dưới đây bị
+> đè bởi [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md) +
+> [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md). Atomic version enforces
+> "trunk only / no baked sleeves / hand visible in forearm" — mandatory cho rig
+> không bị "rời rạc" effect (4 sleeves overlap khi rig render). Trước khi gen
+> player art, **đọc 2 file kia** + chạy `python3 .agents/scripts/validate_player_art.py`
+> sau khi gen.
+
 **Concept:** young SEA-Asian male qi-cultivator (early 20s, sun-kissed warm complexion), cream-white martial arts robe with bow-knot gold sash at right waist, warm-brown cuff trim at sleeve cuffs, warm-charcoal trousers visible mid-shin, brown cloth shoes with ivory tip stitch line, ink-black topknot bun with cream silk ribbon side-tied (drape trailing), single asymmetric forelock strand falling forward (signature trait), jade pendant + jade cloud sigil on chest. Bipedal humanoid puppet (10 parts × 3 dirs = 30 PNG).
 
 **Palette LOCK (v3 — production-grade after iteration):**
