@@ -130,6 +130,19 @@ namespace WildernessCultivation.Vfx
         [Tooltip("True → serpentine luôn-on (Snake always wiggle). False → chỉ wiggle khi moving.")]
         public bool serpentineAlwaysOn = true;
 
+        [Header("Side-view occlusion (PR 2 — anti rời rạc)")]
+        [Tooltip("True → khi direction = E hoặc W, far-side arm/leg (away-from-camera) " +
+                 "render BEHIND torso + scale.x shrink (perspective depth). False = legacy " +
+                 "co-planar render (cả 2 cánh tay đè side-by-side, cảm giác rời rạc).")]
+        public bool enableSideViewOcclusion = true;
+        [Tooltip("Scale.x cho far limb trong side view. < 1 = thu nhỏ (perspective). 0.92 default. " +
+                 "1.0 = disable scale shrink.")]
+        public float farLimbScale = 0.92f;
+        [Tooltip("SortingOrder offset cho far limb (subtract từ near-side default). Negative = " +
+                 "render sau body. -2 default (giữ far limb phía dưới torso bằng cách đẩy " +
+                 "sortingOrder về phía trước torso).")]
+        public int farLimbSortingOffset = -2;
+
         [Header("Multi-direction sprites (PR J — L3+)")]
         [Tooltip("Sprite arrays indexed by PuppetDirection enum value (0=E, 1=N, 2=S, 3=W). " +
                  "Null entries → fallback East sprite. West dirty render bằng East + flipX. " +
@@ -173,6 +186,13 @@ namespace WildernessCultivation.Vfx
         SpriteRenderer wingLeftRenderer, wingRightRenderer;
         SpriteRenderer bodySegment1Renderer, bodySegment2Renderer, bodySegment3Renderer, bodySegment4Renderer;
 
+        // Cached base sortingOrder + parent scale.x cho side-view occlusion (PR 2).
+        // Lưu giá trị gốc tại Awake (set bởi BootstrapWizard.BuildPuppetHierarchy) → restore
+        // khi direction đổi từ side (E/W) → front/back (N/S).
+        int baseArmLeftOrder, baseArmRightOrder, baseLegLeftOrder, baseLegRightOrder;
+        int baseForearmLeftOrder, baseForearmRightOrder, baseShinLeftOrder, baseShinRightOrder;
+        Vector3 baseArmLeftScale, baseArmRightScale, baseLegLeftScale, baseLegRightScale;
+
         CharacterArtSpec.PuppetDirection currentDir = CharacterArtSpec.PuppetDirection.East;
 
         bool crouching;
@@ -188,6 +208,8 @@ namespace WildernessCultivation.Vfx
             if (body == null) body = GetComponent<Rigidbody2D>();
             CacheBasePose();
             CacheRenderers();
+            // Apply once at start để initial side-view depth correct (currentDir defaults East).
+            ApplySideViewOcclusion(currentDir);
         }
 
         void CacheBasePose()
@@ -231,6 +253,20 @@ namespace WildernessCultivation.Vfx
             if (bodySegment2 != null) bodySegment2Renderer = bodySegment2.GetComponent<SpriteRenderer>();
             if (bodySegment3 != null) bodySegment3Renderer = bodySegment3.GetComponent<SpriteRenderer>();
             if (bodySegment4 != null) bodySegment4Renderer = bodySegment4.GetComponent<SpriteRenderer>();
+
+            // Cache base sortingOrder + scale cho side-view occlusion (PR 2).
+            if (armLeftRenderer != null) baseArmLeftOrder = armLeftRenderer.sortingOrder;
+            if (armRightRenderer != null) baseArmRightOrder = armRightRenderer.sortingOrder;
+            if (legLeftRenderer != null) baseLegLeftOrder = legLeftRenderer.sortingOrder;
+            if (legRightRenderer != null) baseLegRightOrder = legRightRenderer.sortingOrder;
+            if (forearmLeftRenderer != null) baseForearmLeftOrder = forearmLeftRenderer.sortingOrder;
+            if (forearmRightRenderer != null) baseForearmRightOrder = forearmRightRenderer.sortingOrder;
+            if (shinLeftRenderer != null) baseShinLeftOrder = shinLeftRenderer.sortingOrder;
+            if (shinRightRenderer != null) baseShinRightOrder = shinRightRenderer.sortingOrder;
+            if (armLeft != null) baseArmLeftScale = armLeft.localScale;
+            if (armRight != null) baseArmRightScale = armRight.localScale;
+            if (legLeft != null) baseLegLeftScale = legLeft.localScale;
+            if (legRight != null) baseLegRightScale = legRight.localScale;
         }
 
         /// <summary>
@@ -520,6 +556,146 @@ namespace WildernessCultivation.Vfx
             ApplySpriteFromArray(bodySegment2Renderer, bodySegment2SpritesByDir, idx);
             ApplySpriteFromArray(bodySegment3Renderer, bodySegment3SpritesByDir, idx);
             ApplySpriteFromArray(bodySegment4Renderer, bodySegment4SpritesByDir, idx);
+            ApplySideViewOcclusion(dir);
+        }
+
+        /// <summary>
+        /// PR 2 — anti rời rạc. Khi <paramref name="dir"/> = E hoặc W, far limb (cánh tay /
+        /// chân ở phía xa camera) được đẩy sortingOrder về phía trước torso (thay vì cùng
+        /// layer với near limb) + scale.x shrink → perspective depth illusion.
+        ///
+        /// <para>Far-limb side mapping:
+        /// <list type="bullet">
+        ///   <item>E (facing right): left arm/leg is far (back of character)</item>
+        ///   <item>W (facing left): right arm/leg is far (back of character)</item>
+        ///   <item>N/S (front/back view): không apply — reset cả 2 sides về base.</item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para>Forearm/shin (children) cũng được đẩy sortingOrder để match upper limb depth.
+        /// Scale chỉ apply cho parent — children tự inherit qua transform hierarchy.</para>
+        /// </summary>
+        public void ApplySideViewOcclusion(CharacterArtSpec.PuppetDirection dir)
+        {
+            bool sideView = IsSideView(dir);
+            if (!enableSideViewOcclusion || !sideView)
+            {
+                ResetLimbsToBase();
+                return;
+            }
+
+            bool leftIsFar = LeftIsFarInSideView(dir);
+            ApplyLimbOcclusion(leftIsFar);
+        }
+
+        /// <summary>
+        /// Pure helper: true nếu direction là E hoặc W (side view) — chỉ side view có depth
+        /// occlusion vì N/S thấy character từ trước/sau với cả 2 cánh tay đối xứng visible.
+        /// </summary>
+        public static bool IsSideView(CharacterArtSpec.PuppetDirection dir)
+        {
+            return dir == CharacterArtSpec.PuppetDirection.East
+                || dir == CharacterArtSpec.PuppetDirection.West;
+        }
+
+        /// <summary>
+        /// Pure helper: true nếu left limb là far (back-side) trong side view.
+        /// E (facing right) → camera thấy right side → left arm/leg là back (far).
+        /// W (facing left) → camera thấy left side → right arm/leg là back. Caller fallback
+        /// false (right is far) cho W.
+        /// </summary>
+        public static bool LeftIsFarInSideView(CharacterArtSpec.PuppetDirection dir)
+        {
+            return dir == CharacterArtSpec.PuppetDirection.East;
+        }
+
+        void ResetLimbsToBase()
+        {
+            if (armLeftRenderer != null) armLeftRenderer.sortingOrder = baseArmLeftOrder;
+            if (armRightRenderer != null) armRightRenderer.sortingOrder = baseArmRightOrder;
+            if (legLeftRenderer != null) legLeftRenderer.sortingOrder = baseLegLeftOrder;
+            if (legRightRenderer != null) legRightRenderer.sortingOrder = baseLegRightOrder;
+            if (forearmLeftRenderer != null) forearmLeftRenderer.sortingOrder = baseForearmLeftOrder;
+            if (forearmRightRenderer != null) forearmRightRenderer.sortingOrder = baseForearmRightOrder;
+            if (shinLeftRenderer != null) shinLeftRenderer.sortingOrder = baseShinLeftOrder;
+            if (shinRightRenderer != null) shinRightRenderer.sortingOrder = baseShinRightOrder;
+            if (armLeft != null) armLeft.localScale = baseArmLeftScale;
+            if (armRight != null) armRight.localScale = baseArmRightScale;
+            if (legLeft != null) legLeft.localScale = baseLegLeftScale;
+            if (legRight != null) legRight.localScale = baseLegRightScale;
+        }
+
+        void ApplyLimbOcclusion(bool leftIsFar)
+        {
+            // Arm: leftIsFar → push armLeft + forearmLeft behind, restore armRight + forearmRight.
+            if (leftIsFar)
+            {
+                ApplyFarArm(armLeft, armLeftRenderer, baseArmLeftOrder, baseArmLeftScale,
+                    forearmLeftRenderer, baseForearmLeftOrder);
+                ApplyNearArm(armRight, armRightRenderer, baseArmRightOrder, baseArmRightScale,
+                    forearmRightRenderer, baseForearmRightOrder);
+                ApplyFarLeg(legLeft, legLeftRenderer, baseLegLeftOrder, baseLegLeftScale,
+                    shinLeftRenderer, baseShinLeftOrder);
+                ApplyNearLeg(legRight, legRightRenderer, baseLegRightOrder, baseLegRightScale,
+                    shinRightRenderer, baseShinRightOrder);
+            }
+            else
+            {
+                ApplyFarArm(armRight, armRightRenderer, baseArmRightOrder, baseArmRightScale,
+                    forearmRightRenderer, baseForearmRightOrder);
+                ApplyNearArm(armLeft, armLeftRenderer, baseArmLeftOrder, baseArmLeftScale,
+                    forearmLeftRenderer, baseForearmLeftOrder);
+                ApplyFarLeg(legRight, legRightRenderer, baseLegRightOrder, baseLegRightScale,
+                    shinRightRenderer, baseShinRightOrder);
+                ApplyNearLeg(legLeft, legLeftRenderer, baseLegLeftOrder, baseLegLeftScale,
+                    shinLeftRenderer, baseShinLeftOrder);
+            }
+        }
+
+        void ApplyFarArm(Transform arm, SpriteRenderer armR, int baseOrder, Vector3 baseScale,
+            SpriteRenderer forearmR, int forearmBaseOrder)
+        {
+            if (armR != null)
+                armR.sortingOrder = CharacterRigSpec.ComputeFarLimbSortingOrder(baseOrder, farLimbSortingOffset);
+            if (forearmR != null)
+                forearmR.sortingOrder = CharacterRigSpec.ComputeFarLimbSortingOrder(forearmBaseOrder, farLimbSortingOffset);
+            if (arm != null)
+            {
+                float sx = CharacterRigSpec.ComputeFarLimbScaleX(farLimbScale, baseScale.x)
+                    * Mathf.Sign(baseScale.x == 0f ? 1f : baseScale.x);
+                arm.localScale = new Vector3(sx, baseScale.y, baseScale.z);
+            }
+        }
+
+        void ApplyNearArm(Transform arm, SpriteRenderer armR, int baseOrder, Vector3 baseScale,
+            SpriteRenderer forearmR, int forearmBaseOrder)
+        {
+            if (armR != null) armR.sortingOrder = baseOrder;
+            if (forearmR != null) forearmR.sortingOrder = forearmBaseOrder;
+            if (arm != null) arm.localScale = baseScale;
+        }
+
+        void ApplyFarLeg(Transform leg, SpriteRenderer legR, int baseOrder, Vector3 baseScale,
+            SpriteRenderer shinR, int shinBaseOrder)
+        {
+            if (legR != null)
+                legR.sortingOrder = CharacterRigSpec.ComputeFarLimbSortingOrder(baseOrder, farLimbSortingOffset);
+            if (shinR != null)
+                shinR.sortingOrder = CharacterRigSpec.ComputeFarLimbSortingOrder(shinBaseOrder, farLimbSortingOffset);
+            if (leg != null)
+            {
+                float sx = CharacterRigSpec.ComputeFarLimbScaleX(farLimbScale, baseScale.x)
+                    * Mathf.Sign(baseScale.x == 0f ? 1f : baseScale.x);
+                leg.localScale = new Vector3(sx, baseScale.y, baseScale.z);
+            }
+        }
+
+        void ApplyNearLeg(Transform leg, SpriteRenderer legR, int baseOrder, Vector3 baseScale,
+            SpriteRenderer shinR, int shinBaseOrder)
+        {
+            if (legR != null) legR.sortingOrder = baseOrder;
+            if (shinR != null) shinR.sortingOrder = shinBaseOrder;
+            if (leg != null) leg.localScale = baseScale;
         }
 
         static void ApplySpriteFromArray(SpriteRenderer renderer, Sprite[] arr, int idx)
