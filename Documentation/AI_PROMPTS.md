@@ -103,55 +103,152 @@ Mỗi entity có 4 phần (mỗi part PNG là 1 fenced block tự chứa, copy 1
 
 **Folder:** `Art/Characters/player/`
 
-**Concept:** young male qi-cultivation monk, white robe with gold sash, calm focused expression, ink-black hair tied in topknot bun with cream ribbon trail, jade pendant at chest. Bipedal humanoid puppet (10 parts × 3 dirs = 30 PNG).
+**Concept:** young SEA-Asian male qi-cultivator (early 20s, sun-kissed warm complexion), cream-white martial arts robe with bow-knot gold sash at right waist, warm-brown cuff trim at sleeve cuffs, warm-charcoal trousers visible mid-shin, brown cloth shoes with ivory tip stitch line, ink-black topknot bun with cream silk ribbon side-tied (drape trailing), single asymmetric forelock strand falling forward (signature trait), jade pendant + jade cloud sigil on chest. Bipedal humanoid puppet (10 parts × 3 dirs = 30 PNG).
 
-**Palette LOCK:**
-- Skin: light `#e8d5a6` / mid `#b89968` / shadow `#8a6f47`
+**Palette LOCK (v3 — production-grade after iteration):**
+- Skin: warm tan light `#d4a880` / mid `#a87858` / shadow `#5a3d28` (SEA-young-cultivator complexion, NOT pale Chinese-monk cream)
 - Hair: ink black `#1a1a1a` + gloss highlight `#3a3030`
-- Robe: cream `#f0e8d0` / fold `#b89968` / deep fold `#8a6f47`
-- Sash: gold `#d4a64a` / shadow `#a08038`
-- Pendant: jade `#6b8e62` / glow `#a8c69b`
 - Ribbon: cream `#f0e8d0`
-- Shoe: brown `#5a4030` / shadow `#3a2820`
-- Outline: ink `#1a1a1a` (ink-wash texture)
-- Qi-glow rim (Linh Khí signature): jade `#a8c69b` 5 % intensity
+- Robe: cream light `#f0e8d0` / mid `#c8b094` / deep fold `#8a6f47`
+- Cuff trim: warm brown `#8a6f47` / shadow `#5a4030`
+- Sash: gold `#d4a64a` / shadow `#a08038`
+- Pendant + cloud sigil: jade `#6b8e62` + glow `#a8c69b`
+- Trousers: warm charcoal `#3a3530` / shadow `#1a1a1a` (NOT pure black — keeps surface readability at 64×64 game zoom + contrasts with brown shoes)
+- Shoe: brown `#5a4030` / dark `#3a2820` / **ivory tip stitch line `#c8b094`** (separates shoe from trouser dark mass)
+- Outline: ink `#1a1a1a` textured (sumi-e calligraphy, NOT pure `#000`)
+- Qi-glow rim (Linh Khí signature, REQUIRED): faint jade `#a8c69b` 5 % opacity, soft 4–6px outer rim around entire silhouette — almost subliminal but visible on close inspection
 
-#### §3.1.0 STYLE-REF master (gen FIRST, save as `player_style_ref.png`)
+**Anatomy + ornament details (inherit in ALL 30 parts):**
+- Head ratio: 1.4× torso width (DST chibi-adjacent — bigger than anime, smaller than DST extreme). NOT 1.2× anime-leaning.
+- Hair silhouette CLEAN: topknot bun + cream ribbon side-tied + ONE asymmetric forelock falling forward. NO multiple spike strands radiating from bun.
+- Eye: DST round-bead pupil (small filled circle), NOT anime sharp-pointed pupil, NOT anime sparkle.
+- Sash: gold tied in BOW KNOT at right side of waist with ribbon ends draping ~15 % of torso height (NOT horizontal wrap).
+- Sleeve: cream robe + WARM-BROWN CUFF TRIM band at wrist (~8 % of arm length thick).
+- Pendant + sigil: jade pendant + jade cloud sigil positioned on CHEST (upper torso, readable at 64×64 game zoom). NOT lower hem.
+- Trousers: WARM CHARCOAL `#3a3530` (NOT pure black). Visible mid-shin under robe.
+- Shoes: brown cloth with IVORY TIP STITCH line (breaks dark-on-dark trouser/shoe).
+- Outline: UNIFORM 16–24px @ 1024 canvas across head, robe, limbs (no thin areas, no breaks).
+- Pose for STYLE-REF: strict static T-pose (no flutter, no hunched shoulders, no leg-cross, no head tilt).
+
+#### §3.1.0 STYLE-REF master v3 (gen FIRST, save as `player_style_ref.png`)
+
+> v3 enhancement after design review iteration #1: locks SEA-tan skin, bow-knot sash, cuff trim, warm charcoal trouser, ivory tip shoe stitch, qi-glow rim REQUIRED, head ratio 1.4× explicit, T-pose strict (legs hip-width spread, arms with 8–12px gap from torso, elbow + knee visible at midpoints), uniform outline 16–24px, NO airbrush bleed on face, hair silhouette clean (1 forelock + bun + ribbon, no spike strands).
 
 ```text
-Linh Khí Wuxia × DST hand-painted illustration master reference. Klei Don't Starve
-Together visual language adapted for Asian wuxia cultivation theme. Ink-wash thick
-black outline 16-24px (calligraphy sumi-e texture, NOT pure #000, warm-tinted
-#1a1a1a, slight thickness variance and edge feathering). Gouache flat fills with
-3-4 tonal stops per surface, NO airbrush gradient, NO soft shading, visible brush
-strokes. Stylized exaggerated anatomy: head 1.4x torso width.
+Linh Khí Wuxia × DST hand-painted illustration MASTER STYLE REFERENCE for "Player"
+character. Klei Don't Starve Together visual language adapted to Asian wuxia
+cultivation theme with SEA-young-cultivator identity (sun-kissed warm complexion,
+NOT Chinese-monk pale).
 
-Subject: full body T-pose side-view 90° facing right of a young male qi-cultivation
-monk. Calm focused expression, almond eye, straight nose, ink-black hair tied in
-topknot bun with cream silk ribbon trailing, asymmetric forelock strand falling
-forward. Wearing flowing white martial arts robe with gold embroidered sash at
-waist, jade pendant on chest, simple oval arms hanging at 90° straight down with
-clear space between arm and torso silhouette, simple straight legs slightly spread
-(hip-width apart) standing neutral, brown cloth shoes. Robe falls to mid-shin.
-Cultural ornament: jade-green cloud sigil embroidered on robe hem.
+PRODUCTION-GRADE STRICT RULES (all required):
 
-Palette LOCK: skin #e8d5a6/#b89968/#8a6f47, hair #1a1a1a + gloss #3a3030, robe
-#f0e8d0/#b89968/#8a6f47, sash gold #d4a64a/#a08038, pendant jade #6b8e62 + glow
-#a8c69b, ribbon #f0e8d0, shoe #5a4030/#3a2820, outline ink #1a1a1a textured.
-Linh Khí signature: jade #a8c69b 5% rim glow on silhouette.
+POSE — STATIC NEUTRAL T-POSE side-view 90° facing right:
+- Arms hanging STRAIGHT DOWN at sides with CLEAR 8-12px GAP between arm silhouette
+  and torso silhouette (so puppet rig isolates arm cleanly).
+- Legs SLIGHTLY SPREAD hip-width apart (NOT together — back leg silhouette must
+  show ~30% behind front leg). NOT wide stance.
+- Shoulders HORIZONTAL FLAT (not hunched forward, not slumped).
+- Head facing exactly right, NOT tilted forward or down.
+- ELBOW visible at midpoint of arm with subtle bend hint (puppet pivot reference).
+- KNEE visible at midpoint of leg (puppet pivot reference).
+- Ribbon trailing behind topknot RELATIVELY STILL — gentle drape, NOT wind-blown
+  flutter motion. Static reference image.
 
-Composition: 1024x1536 PNG, isolated single character on FULLY transparent
-background, no ground, no shadow, no floor, character vertically centered, T-pose
-exact (arms hanging straight at sides with clear gap from torso, legs slightly
-spread hip-width, head facing right, shoulders horizontal flat).
+OUTLINE (UNIFORM):
+- ALL outlines exactly 16-24px thick at 1024 canvas. Head outline same thickness
+  as robe outline as limb outline. NO thin areas, NO breaks.
+- Ink-wash sumi-e calligraphy texture: NOT pure #000 solid — warm-tinted #1a1a1a
+  with slight thickness variance 1.5-2.5x along stroke, edges slightly feathered.
 
-Negative: photo-realistic, anime moe, chibi extreme proportions, pixel art, smooth
-airbrush, soft shading, ambient occlusion, drop shadow, ground, floor, multiple
-subjects, duplicate, mirror, text, caption, watermark, signature, frame, border,
-realistic anatomy, dynamic action pose, blur, depth of field, expression beyond
-calm, pure-black solid outline, anime sparkle eye, sexualized.
+GOUACHE FILL DISCIPLINE:
+- 3-4 tonal stops per surface: light / mid / shadow / outline. SHARP edge between
+  tone regions. Visible flat-brush texture only.
+- NO airbrush gradient, NO soft shading, NO ambient occlusion. SPECIFICALLY: face
+  is FLAT cream-tan skin with ONE sharp shadow at jaw underside — NO airbrush bleed
+  on cheek, neck, or jaw. Hands FLAT mitten with single thumb shadow only.
 
-Output: 1024x1536 PNG, transparent BG.
+HEAD RATIO 1.4× TORSO WIDTH (DST chibi-adjacent — like Wilson/Wendy from Don't
+Starve). NOT anime 1.2× (head too small). NOT chibi extreme 1.7× (head too big).
+
+SUBJECT: full body T-pose side-view 90° facing right of a young SEA-Asian male
+qi-cultivator (early 20s, sun-kissed warm complexion).
+
+Head:
+- BIG stylized head 1.4× torso width.
+- Calm focused expression, almond eye with DST round-bead pupil (small filled
+  circle, NOT anime sharp-pointed), straight nose tip, closed calm mouth.
+- CLEAN hair silhouette: ink-black topknot bun on top with cream silk ribbon
+  side-tied draping behind (RELATIVELY STILL), ONE clear asymmetric forelock
+  strand falling forward over forehead (signature trait). NO multiple hair spikes
+  radiating from bun — silhouette stays SIMPLE.
+
+Torso:
+- Cream-white martial arts robe with V-neck collar visible.
+- GOLD SASH tied in BOW KNOT at RIGHT SIDE of waist (knot loop visible, ribbon
+  ends drape down ~15% of torso height). NOT horizontal wrap.
+- Jade pendant on cord at CHEST (centered, ~10% of torso height — readable at
+  64×64 game zoom).
+- Jade-green cloud sigil embroidered on UPPER CHEST (NOT lower hem — chest
+  position more readable at game zoom).
+- Subtle gold thread trim on robe collar V-neck.
+- SHOULDERS HORIZONTAL FLAT.
+
+Arms:
+- Simple oval limbs hanging STRAIGHT DOWN with 8-12px clear gap from torso.
+- ELBOW VISIBLE at midpoint with subtle bend hint.
+- WHITE robe sleeve with WARM-BROWN CUFF TRIM band at wrist (~8% of arm length).
+- MITTEN-style hand at end (NO finger detail, just rounded silhouette with
+  subtle thumb hint).
+
+Legs:
+- Simple cylindrical limbs, hip-width apart so back leg silhouette visible 30%
+  behind front leg.
+- KNEE VISIBLE at midpoint.
+- WARM CHARCOAL trousers #3a3530 (NOT pure black — surface detail readable at
+  zoom-out, contrasts with brown shoes).
+- Robe falls to mid-shin showing trouser bottom + shoe.
+
+Shoes:
+- Brown cloth shoes #5a4030 with IVORY TIP STITCH line #c8b094 (separates shoe
+  from dark trouser mass — required for zoom-out readability).
+
+PALETTE LOCK (use ONLY these colors):
+- Skin warm tan #d4a880 light / #a87858 mid / #5a3d28 shadow
+- Hair ink-black #1a1a1a + gloss #3a3030
+- Ribbon cream #f0e8d0
+- Robe cream #f0e8d0 light / #c8b094 mid / #8a6f47 deep fold
+- Cuff trim warm brown #8a6f47 / shadow #5a4030
+- Sash gold #d4a64a / shadow #a08038
+- Pendant + cloud sigil jade #6b8e62 + glow #a8c69b
+- Trouser warm charcoal #3a3530 / shadow #1a1a1a
+- Shoe brown #5a4030 / dark #3a2820 / ivory tip stitch #c8b094
+- Outline ink #1a1a1a textured
+
+LINH KHÍ QI-GLOW RIM (REQUIRED — was missing in previous gens, now mandatory):
+faint jade #a8c69b glow on entire silhouette edge, 5% opacity, soft 4-6px outer
+rim. Almost subliminal but visible on close inspection. NOT a thick halo, NOT
+bright — adds spiritual aura without flashy effect.
+
+COMPOSITION:
+- 1024x1536 PNG portrait orientation, FULLY transparent background.
+- Character vertically centered, occupying 80% of canvas height.
+- NO ground, NO shadow underneath, NO floor, NO scenery, NO backdrop.
+
+NEGATIVE (avoid):
+photo-realistic, anime moe, anime sparkle eye, anime sharp-pointed pupil, chibi
+extreme proportions (head over 1.5× torso), pixel art, smooth airbrush gradient,
+soft shading on cheek/neck/jaw, ambient occlusion, drop shadow, cast shadow,
+ground, floor, dirt, grass, water, multiple subjects, duplicate, mirror, text,
+caption, watermark, signature, logo, frame, border, depth of field, lens flare,
+realistic anatomy, dynamic action pose, expression beyond calm, pure-black solid
+#000 outline, multiple hair spikes radiating from bun, hunched shoulders, slumped
+shoulders, head tilted forward, head down-cast, legs together (back leg fully
+hidden), legs wide stance, ribbon wind-blown extreme flutter, motion-blur ribbon,
+multiple finger detail, individual fingers visible, sexualized, weapon held, item
+in hand, action stance, running, jumping, fighting, sword in hand, scroll in hand.
+
+OUTPUT: 1024x1536 PNG, transparent background, single isolated character master
+reference for use as image guidance for 30 subsequent body-part PNG generations.
 ```
 
 #### §3.1.1 East direction (E = side-view 90° facing right)
