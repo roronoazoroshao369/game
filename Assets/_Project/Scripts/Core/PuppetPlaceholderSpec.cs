@@ -16,6 +16,23 @@ namespace WildernessCultivation.Core
     public static class PuppetPlaceholderSpec
     {
         /// <summary>
+        /// Pixels-per-unit dùng cho placeholder sprite tự sinh + user-provided body-part PNG.
+        /// Phải khớp giữa placeholder generator và CharacterArtImporter để user art render
+        /// world size bằng placeholder (head 40px → 0.625u, torso 80px → 1.25u, etc.).
+        /// </summary>
+        public const float PuppetPlaceholderPPU = 64f;
+
+        /// <summary>
+        /// World height (units) của một role placeholder = RectFor(role).h / PuppetPlaceholderPPU.
+        /// Helper cho importer khi compute auto-PPU per role để user PNG khớp size placeholder.
+        /// </summary>
+        public static float WorldHeightFor(CharacterArtSpec.PuppetRole role)
+        {
+            var rect = RectFor(role);
+            return rect.h / PuppetPlaceholderPPU;
+        }
+
+        /// <summary>
         /// Per-character color palette. Skin / sleeve / trousers / tail riêng.
         /// </summary>
         public struct Palette
