@@ -147,7 +147,13 @@ namespace WildernessCultivation.EditorTools
                 var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (tex == null) continue;
 
-                float ppu = ResourceArtSpec.ComputeAutoPPU(tex.height, placeholderHeightPx);
+                // Per-role auto-PPU: giữ world size mỗi part bằng placeholder rectangle. Dùng
+                // RectFor(role).h × PuppetPlaceholderPPU làm target world height per role
+                // (head 40/64 = 0.625u, torso 80/64 = 1.25u, leg 60/64 = 0.94u…). Trước đây
+                // importer pass placeholderHeightPx duy nhất cho mọi part → head/torso/arm
+                // render cùng world size 1u → tỷ lệ character vỡ. Now mỗi part match placeholder.
+                int rolePlaceholderH = PuppetPlaceholderSpec.RectFor(role).h;
+                float ppu = tex.height * PuppetPlaceholderSpec.PuppetPlaceholderPPU / rolePlaceholderH;
                 ResourceArtImporter.ApplySpriteImportSettings(path, ppu);
 
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);

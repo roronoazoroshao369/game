@@ -34,7 +34,9 @@ namespace WildernessCultivation.EditorTools
     public static class PuppetPlaceholderGenerator
     {
         public const string PlaceholderRoot = "Assets/_Project/Sprites/puppet";
-        const float PlaceholderPpu = 64f;
+        // Single source of truth: PuppetPlaceholderSpec.PuppetPlaceholderPPU. CharacterArtImporter
+        // cũng dùng const này khi compute auto-PPU cho user art (giữ world size khớp placeholder).
+        const float PlaceholderPpu = PuppetPlaceholderSpec.PuppetPlaceholderPPU;
 
         /// <summary>
         /// Ensure placeholder Sprite assets ở <c>Sprites/puppet/{characterId}/{role}.asset</c>.
