@@ -239,14 +239,16 @@ namespace WildernessCultivation.Core
             {
                 case CharacterArtSpec.PuppetRole.Head: return (40, 40);
                 case CharacterArtSpec.PuppetRole.Torso: return (52, 80);
+                // DST chibi proportions: total arm (sleeve+forearm) = shoulder-to-hip distance ~1.0u
+                // → hand rests at hip level (not knee). Total leg ~1.25u → ~5 heads tall character.
                 case CharacterArtSpec.PuppetRole.ArmLeft:
-                case CharacterArtSpec.PuppetRole.ArmRight: return (16, 56);
+                case CharacterArtSpec.PuppetRole.ArmRight: return (16, 36);
                 case CharacterArtSpec.PuppetRole.ForearmLeft:
-                case CharacterArtSpec.PuppetRole.ForearmRight: return (14, 44);
+                case CharacterArtSpec.PuppetRole.ForearmRight: return (14, 28);
                 case CharacterArtSpec.PuppetRole.LegLeft:
-                case CharacterArtSpec.PuppetRole.LegRight: return (18, 60);
+                case CharacterArtSpec.PuppetRole.LegRight: return (18, 48);
                 case CharacterArtSpec.PuppetRole.ShinLeft:
-                case CharacterArtSpec.PuppetRole.ShinRight: return (16, 44);
+                case CharacterArtSpec.PuppetRole.ShinRight: return (16, 32);
                 case CharacterArtSpec.PuppetRole.Tail: return (50, 18);
                 // Phase 3 wings: wide span (54 px) + medium-thin chord (28 px). Rotates quanh
                 // shoulder pivot — amplitude 50° cần silhouette đủ dài để đọc được motion.
