@@ -653,5 +653,37 @@ namespace WildernessCultivation.Tests.EditMode
             Assert.AreEqual(0f, PuppetAnimController.ComputeLungeElbowBend(1.5f, 40f), 0.0001f);
             Assert.AreEqual(0f, PuppetAnimController.ComputeLungeElbowBend(-0.5f, 40f), 0.0001f);
         }
+
+        // ---------- Side-view occlusion direction predicates (PR 2) ----------
+
+        [Test]
+        public void IsSideView_EastWest_True()
+        {
+            Assert.IsTrue(PuppetAnimController.IsSideView(CharacterArtSpec.PuppetDirection.East));
+            Assert.IsTrue(PuppetAnimController.IsSideView(CharacterArtSpec.PuppetDirection.West));
+        }
+
+        [Test]
+        public void IsSideView_NorthSouth_False()
+        {
+            // N/S = front/back view → cả 2 cánh tay symmetric visible, không cần depth swap.
+            Assert.IsFalse(PuppetAnimController.IsSideView(CharacterArtSpec.PuppetDirection.North));
+            Assert.IsFalse(PuppetAnimController.IsSideView(CharacterArtSpec.PuppetDirection.South));
+        }
+
+        [Test]
+        public void LeftIsFarInSideView_East_True()
+        {
+            // E = facing right → camera thấy right side → left arm/leg là back (far).
+            Assert.IsTrue(PuppetAnimController.LeftIsFarInSideView(CharacterArtSpec.PuppetDirection.East));
+        }
+
+        [Test]
+        public void LeftIsFarInSideView_West_False()
+        {
+            // W = facing left → camera thấy left side → right arm/leg là back. Caller
+            // dùng false branch để áp far-limb logic vào right side.
+            Assert.IsFalse(PuppetAnimController.LeftIsFarInSideView(CharacterArtSpec.PuppetDirection.West));
+        }
     }
 }
