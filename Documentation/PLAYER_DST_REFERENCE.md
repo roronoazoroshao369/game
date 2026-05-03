@@ -1,191 +1,214 @@
-# Player DST-Canon Reference Lock
+# Player Soft-DST + Wuxia Reference Lock
 
-100% DST adherence reference for player art regen. Read this before
+Visual signature reference for player art regen. Read this BEFORE
 [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md) — these are the
-visual signature traits AI must match. Without these, output drifts toward generic
-chibi/anime cartoon and loses Klei DST identity.
+style rules AI generation must follow.
 
-> **Klei art studio reference** — Don't Starve Together (2016+) art directed by
-> **Jeff Agala**. Tim Burton-meets-Klei aesthetic: gothic but warm, hand-painted
-> watercolor + ink wash, characters look "drawn in a journal".
+> **Identity decision (May 2026):** After 3 iteration rounds testing strict DST
+> canon prompts (5 head-tall lanky Wilson proportion + variable-width brush
+> outline + smooth gouache fills + face minimalism), generic AI gen tools could
+> only deliver ~25-30% DST canon adherence due to strong anime/chibi training
+> bias. Per user decision, identity locked to **"Chibi Wuxia × Soft-DST"** —
+> chibi proportion accepted, but DST signature traits (muddied palette, brush
+> outline, atomic-rig composition) preserved. This is the game's distinct visual
+> identity, NOT pure DST clone.
 
-## §1 Canon characters & target proportion
+> **Reference image** — see [`Documentation/assets/style_refs/player_E.png`](assets/style_refs/player_E.png).
+> Use this as image guidance / `--cref` / IP-Adapter input when generating the
+> 30 atomic body parts. The 30 parts must match this reference's: chibi
+> proportion, ink outline, hair silhouette (topknot bun + cream ribbon), wuxia
+> outfit (cream kimono + brown cuff + jade pendant + sash + leather boot).
 
-| Character | Role | Proportion | Closest match for our cultivator |
-|---|---|---|---|
-| **Wilson Percival Higgsbury** | Default scientist hero | ~5.5 head-tall lanky adult, narrow shoulders, long limbs | ✓ **Primary reference** — adult young scientist→young adult cultivator |
-| **Maxwell** | Antagonist / unlockable | ~6 head-tall taller lanky | partial — too tall for early cultivator |
-| **Webber** | Spider boy | ~4 head-tall youthful chibi-leaning | partial — too short, too child |
-| **Wendy** | Solemn twin | ~4.5 head-tall pre-teen | partial |
+## §1 Identity = "Chibi Wuxia × Soft-DST"
 
-**Lock for Player:** ~5 head-tall young-adult (between Wilson and Webber).
-NOT ~3-4 head-tall chibi (current style ref is too chibi). Long arms reaching
-mid-thigh, long legs (hip→knee = knee→ankle ≈ 1:1).
+What we **keep** from DST canon:
+- Hand-painted aesthetic (NOT pixel art / NOT 3D / NOT vector cel-shaded)
+- Bold outline silhouette readable at distance
+- Atomic body part decomposition for puppet rig
+- Muddied palette overlay (≤30% saturation cap)
+- Klei-style ink outline tinted toward sepia-ink (not pure black)
+- No anime sparkle / no kawaii expression / no detailed iris drawing
 
-```
-Head height : Total body height = 1 : 5
+What we **adapt** to chibi:
+- Proportion ~3.5-4 head-tall (Webber-leaning chibi, NOT Wilson lanky 5-head)
+- Face has small detailed eye OK (almond shape with small black pupil) — but
+  NO highlight star, NO eyelash flutter, NO multi-color iris
+- Hands can be smaller than DST mitten if the gen tool resists oversize
+- Smooth flat fill OK — visible brush strokes nice-to-have but not mandatory
 
-[head]              ←  H
-[neck+shoulders]    ←  ½H
-[torso]             ←  1.5H
-[hip+upper-leg]     ←  1.5H
-[shin+foot]         ←  1.5H
-                    ----
-                    5H total
-```
+What we **lock** from wuxia identity:
+- Cream wuxia kimono robe (V-neck collar, hip-length, NO bell-flow sleeve)
+- Gold sash bow knot at waist (color muted, NOT bright lemon yellow)
+- Jade pendant + cloud sigil on chest
+- Topknot bun with cream silk ribbon trailing
+- Single asymmetric forelock at front
+- Brown leather boots with cream toe / strap
+- Warm-charcoal trousers visible mid-shin
 
-## §2 Klei signature visual traits (mandatory)
+## §2 Klei signature traits (preserved from DST canon)
 
 ### 2.1 Outline
 
-- **Calligraphy ink brush, variable width 4-12px**
-  - Thick (10-12px) on shadow side of limb
-  - Thin (4-6px) on highlight side
-- **Wobbly, hand-drawn quality** — not pixel-perfect digital line
-- Slight overshoot at corners (line extends ~3px past intersection)
-- **Sepia-tinted ink color** `#1a1408` — never pure black `#000000`
+- **Calligraphy ink, sepia-tinted `#1a1408`** (NOT pure black `#000000`)
+- Thickness 8-16px at 1024 canvas. Slight wobble OK. Variable-width nice-to-have
+  but uniform 12px also OK if AI tool resists variable-width.
+- Slight overshoot at corners (~3px past intersection)
 
 ### 2.2 Fill
 
-- **Gouache + watercolor wash** — visible brush strokes inside fills
-- Flat 3-color stops per material (light / mid / dark) with **wash gradient at edge**
-  (lighter color bleeds outward toward outline before edge transition)
-- **Pencil sketch construction lines visible** at edges of fills (~10-20% opacity)
-  — Klei signature, looks like the artist forgot to erase the underdrawing
+- Flat 3-color stops per material (light / mid / shadow) with subtle wash gradient
+- Visible brush strokes inside fills nice-to-have
 - NO smooth airbrush gradient
-- NO solid flat color
+- NO pure flat solid color (must have at least light/mid/shadow tonal stops)
 
-### 2.3 Palette (muddied desaturated)
+### 2.3 Palette LOCK (muddied wuxia, saturation ≤30%)
 
-Klei palette anchor — every color sits in this tonal range:
+| Color | Hex | Notes |
+|---|---|---|
+| Skin highlight | `#c8a884` | warm muddied tan |
+| Skin mid | `#a08868` | sepia overlay |
+| Skin shadow | `#5a4828` | strong sepia |
+| Robe cream highlight | `#e8d8b8` | washed-out, NOT bright cream |
+| Robe cream mid | `#c8b094` | warm tan-cream |
+| Robe fold | `#8a6f47` | strong sepia fold |
+| Sash gold light | `#a8884a` | **muted gold, NOT bright lemon yellow** |
+| Sash gold shadow | `#7a5a30` | dark muted gold |
+| Cuff trim brown | `#8a6f47` / `#5a4030` | warm brown band at wrist |
+| Pendant jade light | `#7a9078` | muddied green |
+| Pendant jade shadow | `#4a5a48` | dark muddied green |
+| Hair ink-black base | `#2a2418` | warm-dark, NOT pure `#000` |
+| Hair highlight | `#4a4030` | subtle sepia gloss |
+| Trousers base | `#3a3530` | dark olive-charcoal |
+| Trousers shadow | `#1a1812` | near-black olive |
+| Boot leather base | `#5a4830` | warm dark brown |
+| Boot strap | `#a89878` | cream-tan |
+| Outline ink | `#1a1408` | sepia-tinted |
+| Cheek blush (optional) | `#c89878` opacity 40% | small round patch |
 
-| Color | DST canon | hex | Notes |
-|---|---|---|---|
-| Highlight cream | Wilson shirt | `#e8d8b8` | NOT `#f0e8d0` (that's brighter than DST) |
-| Mid cream | Wilson shirt mid | `#c8b094` | warm tan-cream, sepia overlay |
-| Deep fold | shadow cream | `#8a6f47` | strong sepia |
-| Skin highlight | Wilson face | `#c8a884` | NOT `#d4a880` orange |
-| Skin mid | Wilson cheek | `#a08868` | muddied warm tan |
-| Skin shadow | jaw under | `#5a4828` | sepia shadow |
-| Robe gold | Wilson bow tie | `#a8884a` | NOT `#d4a64a` (too bright) |
-| Trousers black-brown | Wilson pants | `#3a3530` | dark olive-charcoal |
-| Outline ink | all outlines | `#1a1408` | sepia-tinted black |
-| Ground shadow | drop shadow | `#3a3025` opacity 60% | NOT `#000000` |
-
-**Saturation cap: 30%.** Apply HSL filter `Saturation -30%` mental check on every
-color before locking. If a color looks "too clean" or "too cartoon bright", desaturate.
+**Saturation check**: every color HSL saturation ≤30%. If a color looks "too clean
+cartoon bright" (e.g. lemon yellow `#f0c020`, neon orange `#e48c2e`), desaturate.
 
 ### 2.4 Face
 
-DST faces are **MINIMALIST** — character identity comes from body silhouette + hair,
-NOT face detail.
+Allowed:
+- Small almond eye with single black pupil (`#1a1408`)
+- Single line mouth (`#6a3a28` thin)
+- Tiny angle nose suggestion
+- Expressive single-stroke eyebrow
 
-- **Eyes**: small dots `#1a1408` ~3-5px diameter, OR simple curved-line dashes,
-  OR outlined oval with tiny pupil. NEVER full almond eye with iris detail.
-- **Mouth**: single horizontal line OR small curve, ~1-3px thick.
-- **Nose**: tiny angle line `<` or `^` shape ~5-8px, suggested not detailed.
-- **Eyebrows**: short brush stroke ~10-15px, expressive (worried/curious/neutral).
-- **Cheek blush**: optional subtle round patch `#d8a888` opacity 40%, ~15-20px diameter.
+NOT allowed:
+- Multi-color iris with rim highlight (anime)
+- Sparkle / star / heart in eye (kawaii)
+- Detailed eyelash count >2 (anime)
+- Smile teeth visible (cartoon)
+- Open mouth surprised expression (kawaii)
+- Uniform white sclera filling whole eye area (anime)
 
-### 2.5 Anatomy stylization
+### 2.5 Anatomy stylization (chibi-OK)
 
-- **Hands**: oversized relative to forearm (~1.3× wrist width). Often **mitten-like**
-  (4 fingers fused as one shape, thumb separate). Wilson's hands are giant gloves.
-- **Feet/boots**: oversized soles (clown-foot proportion ×1.3). Long toe direction.
-- **Neck**: thin (~½ head width), short (~1/3 head height).
-- **Shoulders**: NARROW for lanky build, only ~1.2× head width.
-- **Torso**: long rectangular trunk, cinched at waist by sash.
-- **Limbs**: slender cylindrical, slight narrowing at joints (elbow/knee).
+- Proportion: ~3.5-4 head-tall (Webber-leaning chibi)
+- Head: ~25-30% of body height (NOT 1/5 Wilson lanky, but NOT >1/3 super-deformed)
+- Shoulders: narrow (~1.0-1.2× head width)
+- Hands: visible at end of forearm, mitten-style preferred but small fist OK
+- Boots: visible sole, slightly oversized OK but not required clown-foot
 
 ### 2.6 Pose at idle (atomic neutral)
 
-For atomic body part gen, neutral pose = **slight slouch**:
+Neutral pose for atomic body part gen:
+- Slight slouch (curious cultivator pose)
 - Arms hang relaxed at sides, slight gap from torso (~5° away from vertical)
-- Hands open relaxed (mitten silhouette readable) OR closed in casual fist
-- Legs shoulder-width apart OR closer (lanky stance), slight knee unlock
-- Head tilted ~5° forward (curious / pondering) — Wilson signature pose
+- Hands relaxed fist or open mitten
+- Legs shoulder-width apart, slight knee unlock
+- Head straight or tilted ~5° forward
 
-### 2.7 NO-list (chibi/anime drift markers — reject if present)
+### 2.7 NO-list (drift markers — reject if present)
 
-- ✗ Big head ≥ 1/3 body height (chibi proportion)
-- ✗ Small body with stubby limbs (chibi)
 - ✗ Smooth airbrush gradients (anime cel)
-- ✗ Detailed iris with highlight in eyes (anime)
-- ✗ Sparkles, magical effect on character (anime)
-- ✗ Saturated bright colors (#ff or #f0 hex peaks) (anime / kawaii)
-- ✗ Clean uniform digital outline (vector / cell-shaded)
-- ✗ Cute facial expression with raised eyebrows + open mouth (kawaii)
-- ✗ Heart shapes / sparkles in eyes
-- ✗ Hair with multiple highlight stripes (anime gloss)
-- ✗ Skin shading via cel-shading hard edge (anime)
+- ✗ Sparkles / hearts / stars in eyes (kawaii)
+- ✗ Multi-color iris with rim highlight (anime)
+- ✗ Saturated bright colors (`#f0c020` lemon yellow, `#e48c2e` neon orange)
+- ✗ Pure black `#000000` outline (use sepia `#1a1408`)
+- ✗ Uniform vector clean digital outline at 0px wobble (use slight hand-drawn quality)
+- ✗ Hair with multiple anime gloss highlight stripes
+- ✗ Cute kawaii expression (raised brows + open mouth + pink blush all over)
+- ✗ Bell-flow flaring kimono sleeves (atomic-rig kills this)
+- ✗ Floating hands/feet not attached to limbs
 
-## §3 Wuxia layer (added on top of DST canon)
+## §3 Wuxia identity layer (mandatory, ~80%+ adherence target)
 
-Game identity = "Linh Khí Wuxia × DST" lock — DST aesthetic + 4 wuxia signature
-traits:
+These wuxia signature traits MUST be preserved in every generated part:
 
-1. **Cream wuxia kimono** instead of Wilson's white shirt + black pants
-2. **Gold sash with bow knot at waist** instead of red bow tie at neck
-3. **Jade pendant + cloud sigil** on chest (cultivation essence symbol)
-4. **Topknot bun with cream silk ribbon** instead of mad-scientist hair sweep
+1. **Cream wuxia kimono** with V-neck collar, hip-length (NOT long-flowing past hip)
+2. **Gold sash with bow knot** tied at right waist, ribbon ends draping ~15% of
+   torso height
+3. **Brown cuff trim** band at sleeve wrist (~8% of arm length)
+4. **Jade pendant + cloud sigil** on chest (upper torso, readable)
+5. **Topknot bun on crown** with cream silk ribbon trailing
+6. **Single asymmetric forelock** at front
+7. **Warm-charcoal trousers** visible mid-shin
+8. **Brown leather boots** with cream toe stitch / ankle strap
 
-These wuxia elements MUST follow DST stylization rules above (muddied palette,
-brush outline, minimalist detail). Don't render the kimono with detailed embroidery
-threads — keep it gouache flat with simple silhouette.
-
-## §4 Sample DST-canon prompt block (use as preamble for all 30 parts)
+## §4 Sample soft-DST chibi-wuxia preamble (use for all 30 parts)
 
 ```
-Don't Starve Together cutout art, by Jeff Agala / Klei Entertainment.
-Hand-painted gouache + watercolor wash. Visible brush strokes inside fills.
-Pencil sketch construction lines peeking through outline (~15% opacity).
-Calligraphy ink outline with variable width 4-12px (thick on shadow side,
-thin on highlight). Sepia-tinted black outline #1a1408 (NOT pure black).
-Muddied desaturated palette, saturation cap 30%, sepia/ochre tonal overlay.
-Adult young-male proportion ~5 head-tall (Wilson reference, lanky narrow
-shoulders, long limbs). NOT chibi, NOT anime, NOT kawaii.
-Minimalist face: dot eyes, line mouth, tiny angle nose, expressive brush-stroke
-eyebrows. NO detailed iris. NO sparkles.
-Oversized mitten-style hands. Oversized boot soles.
-Clean transparent background. Tight alpha bbox no padding.
-Linh Khí Wuxia overlay: cream kimono robe, gold sash bow knot at waist,
-jade pendant + cloud sigil on chest, topknot bun with cream silk ribbon.
-Negative: no chibi, no big head, no anime style, no kawaii, no detailed eyes,
-no clean digital outline, no smooth flat fills, no airbrush, no saturated
-colors, no Chinese cartoon, no manga, no smooth gradient skin, no shadow on
-ground, no border frame, no watermark, no text, no extra body parts.
+Chibi wuxia hand-painted illustration, soft Don't Starve Together aesthetic.
+Klei-style ink outline (sepia-tinted #1a1408, NOT pure black, thickness 8-16px
+at 1024 canvas). Muddied desaturated palette saturation cap 30%, sepia/ochre
+tonal overlay. Flat 3-color stops per material with subtle wash gradient.
+
+Chibi proportion ~3.5-4 head-tall (cute young cultivator, NOT lanky adult).
+Wuxia identity: cream V-neck kimono robe (highlight #e8d8b8 mid #c8b094 fold
+#8a6f47), brown cuff trim (#8a6f47) at sleeve wrist, gold sash bow knot at
+waist (light #a8884a shadow #7a5a30, NOT bright lemon yellow), jade pendant
++ cloud sigil on chest (#7a9078), topknot bun ink-black hair (#2a2418, NOT
+pure black) with cream silk ribbon trailing, single asymmetric forelock,
+warm-charcoal trousers (#3a3530), brown leather boots (#5a4830) with cream
+toe / strap (#a89878). Skin warm muddied tan highlight #c8a884 mid #a08868
+shadow #5a4828.
+
+Face: small almond eye with single black pupil #1a1408, single line mouth,
+tiny angle nose. NO anime sparkle, NO multi-color iris, NO kawaii expression.
+
+Background: transparent RGBA, no shadow on ground, no border, no watermark,
+no text.
+
+Negative: no anime sparkle, no kawaii heart eyes, no multi-color iris, no
+smooth airbrush gradient, no pure black #000 outline, no saturated bright
+colors, no lemon yellow, no neon orange, no anime gloss highlight stripes,
+no cute open mouth surprised expression, no bell-flow flaring sleeves, no
+floating hands, no shadow on ground, no background, no border, no watermark,
+no text, no extra body parts.
 ```
 
 ## §5 Acceptance test for re-generated style ref
 
-Before generating all 30 atomic parts, gen 1 NEW style ref (full body, side view)
-using §4 preamble + this addition:
-```
-Side profile facing right. Full body. Standing relaxed neutral pose with slight
-slouch. Looking forward with curious expression. Single character isolated.
-```
+Before generating all 30 atomic parts, gen 1 NEW style ref (full body, side
+view) using §4 preamble. Compare against this checklist:
 
-Compare new ref against this checklist:
+- [ ] Wuxia outfit: cream kimono + bow sash + jade pendant + cloud sigil +
+      topknot + forelock + cuff trim + leather boot ALL visible
+- [ ] Saturation ≤30%: skin reads "muddied tan" (NOT "warm orange"), sash
+      reads "muted gold" (NOT "bright yellow"), hair reads "warm-dark"
+      (NOT "pure black")
+- [ ] Outline sepia-tinted (NOT pure `#000`), thickness 8-16px
+- [ ] Eye is small almond with single black pupil (NOT detailed iris with
+      sparkle / multiple colors)
+- [ ] Sleeve TIGHT to arm, NOT bell-flow / flaring
+- [ ] Hand visible at end of arm (mitten or small fist OK)
+- [ ] No anime/kawaii markers (no sparkle, no heart eyes, no smooth airbrush)
+- [ ] Cream `#e8d8b8` family (washed-out), NOT `#f0e8d0` family (bright)
+- [ ] Sash `#a8884a` family (muted gold), NOT `#f0c020` family (lemon yellow)
+- [ ] Atomic-rig friendly: silhouette decomposable into head / torso-trunk /
+      arms / forearms / legs / shins (no body parts fused)
 
-- [ ] Proportion: head height fits ~5× into total body height (count squares)
-- [ ] Outline visibly variable-width brush, not uniform digital line
-- [ ] Visible brush stroke marks inside cream robe fill (not smooth flat)
-- [ ] Pencil construction lines faintly visible at outline edges
-- [ ] Palette saturation ≤30% (eyeball: skin should look "muddied tan", not "warm orange")
-- [ ] Eyes are dots/dashes, not detailed almond+iris
-- [ ] Hands are mitten-style oversized, not slender realistic
-- [ ] Cream robe color reads `#e8d8b8` family, not `#f0e8d0` family (washed-out feel)
-- [ ] Gold sash reads `#a8884a` family, not `#d4a64a` (muted gold not bright gold)
-- [ ] No anime/kawaii markers (no sparkle, no cute expression, no smooth gradients)
-
-If ≥8 boxes check → proceed gen 30 atomic parts.
-If <8 boxes → adjust prompt with stronger DST language + re-test ref.
+If ≥7/10 boxes check → proceed gen 30 atomic parts.
+If <7/10 boxes → adjust prompt with stronger language emphasis on the failed
+boxes + re-test.
 
 ## §6 References
 
 - Atomic prompts: [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md)
 - Composition rules: [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md)
 - Validator: `.agents/scripts/validate_player_art.py`
-- Style lock §1: [`AI_PROMPTS.md`](AI_PROMPTS.md#§1-linh-khí-wuxia--dst-8-luật)
-- DST visual reference: search "Don't Starve Together character lineup",
-  "Wilson DST sprite", "Webber DST sprite", "Klei art Jeff Agala"
+- Style ref image: [`assets/style_refs/player_E.png`](assets/style_refs/player_E.png)
+- Style lock §1: [`AI_PROMPTS.md`](AI_PROMPTS.md)

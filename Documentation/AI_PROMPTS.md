@@ -103,17 +103,21 @@ Mỗi entity có 4 phần (mỗi part PNG là 1 fenced block tự chứa, copy 1
 
 **Folder:** `Art/Characters/player/`
 
-> **⚠ DST canon regen pipeline (PR 5+ / DST-100 update):** vai trò của §3.1 prompts dưới đây bị
+> **⚠ Soft-DST regen pipeline (PR 5+ / chibi-wuxia update):** vai trò của §3.1 prompts dưới đây bị
 > đè bởi [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md) +
 > [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md) +
-> [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md). Atomic+DST version enforces:
-> - **DST proportion lock**: ~5 head-tall lanky adult (Wilson reference), NOT chibi 3-4 head-tall
-> - **DST visual signature**: variable-width brush outline 4-12px, sepia-tinted ink, visible
->   brush strokes inside fills, pencil construction lines, muddied palette saturation ≤30%
-> - **Atomic composition**: trunk only / no baked sleeves / mitten hand visible in forearm
+> [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md). Identity locked to
+> "Chibi Wuxia × Soft-DST" (May 2026 iteration: chibi proportion accepted, DST
+> signature traits preserved). Atomic version enforces:
+> - **Chibi proportion**: ~3.5-4 head-tall (Webber-leaning), NOT super-deformed >1/3 head
+> - **Soft-DST signature**: sepia-tinted ink outline `#1a1408` 8-16px (NOT pure black),
+>   muddied palette saturation ≤30%, flat 3-color stops + subtle wash gradient
+> - **Atomic composition**: trunk only / no baked sleeves / hand visible in forearm
+> - **Wuxia identity**: cream V-neck kimono + brown cuff trim + muted gold sash bow +
+>   jade pendant + topknot bun + cream ribbon + asymmetric forelock
 >
 > Mandatory cho rig không bị "rời rạc" (4 sleeves overlap khi rig render) + giữ
-> identity "Linh Khí Wuxia × DST". Trước khi gen player art, **đọc 3 file kia** +
+> identity. Trước khi gen player art, **đọc 3 file kia** +
 > chạy `python3 .agents/scripts/validate_player_art.py` sau khi gen.
 
 **Concept:** young SEA-Asian male qi-cultivator (early 20s, sun-kissed warm complexion), cream-white martial arts robe with bow-knot gold sash at right waist, warm-brown cuff trim at sleeve cuffs, warm-charcoal trousers visible mid-shin, brown cloth shoes with ivory tip stitch line, ink-black topknot bun with cream silk ribbon side-tied (drape trailing), single asymmetric forelock strand falling forward (signature trait), jade pendant + jade cloud sigil on chest. Bipedal humanoid puppet (10 parts × 3 dirs = 30 PNG).
@@ -144,18 +148,18 @@ Mỗi entity có 4 phần (mỗi part PNG là 1 fenced block tự chứa, copy 1
 - ~~Sash: gold `#d4a64a` / shadow `#a08038`~~
 - ~~Outline: ink `#1a1a1a` uniform~~
 
-**Anatomy + ornament details (DST canon — inherit in ALL 30 parts):**
-- **Body proportion: ~5 head-tall lanky adult (Wilson DST reference).** NOT chibi 3-4 head-tall. Head ≤ 1/5 body height. Long thin arms reaching mid-thigh, long legs, narrow shoulders (~1.2× head width), oversized mitten-style hands (~1.3× wrist width), oversized boot soles (~1.3× shin width).
+**Anatomy + ornament details (chibi wuxia × soft-DST — inherit in ALL 30 parts):**
+- **Body proportion: ~3.5-4 head-tall chibi cute young cultivator (Webber-leaning).** NOT pure-DST 5-head Wilson lanky. NOT super-deformed >1/3 head. Head ~1/4 body height. Arms reaching mid-thigh. Narrow-medium shoulders (~1.0-1.2× head width). Hands readable size (small fist or mitten OK).
 - Hair silhouette CLEAN: topknot bun + cream ribbon side-tied + ONE asymmetric forelock falling forward. NO multiple spike strands radiating from bun. NO anime gloss highlight stripes.
-- Face minimalism: dot eyes `#1a1408` ~3-5px, single line mouth ~1-3px, tiny angle nose ~5-8px brush stroke, expressive brush-stroke eyebrows ~10-15px. NOT detailed almond iris. NOT anime eye sparkle.
-- Sash: gold tied in BOW KNOT at right side of waist with ribbon ends draping ~15 % of torso height (NOT horizontal wrap).
-- Sleeve: cream robe TIGHT TO ARM + WARM-BROWN CUFF TRIM band at wrist (~8 % of arm length thick). NO bell-flow.
+- Face: small almond eye with single black pupil `#1a1408` ~3-5px, single line mouth ~1-3px, tiny angle nose ~5-8px, single-stroke eyebrow ~10-15px. NO anime sparkle, NO multi-color iris, NO kawaii expression.
+- Sash: gold tied in BOW KNOT at right side of waist with ribbon ends draping ~15% of torso height (NOT horizontal wrap). Color MUTED gold `#a8884a` (NOT bright lemon yellow `#f0c020`).
+- Sleeve: cream robe TIGHT TO ARM + WARM-BROWN CUFF TRIM band at wrist (~8% of arm length thick). NO bell-flow.
 - Pendant + sigil: jade pendant + jade cloud sigil positioned on CHEST (upper torso, readable at 64×64 game zoom). NOT lower hem.
 - Trousers: WARM CHARCOAL `#3a3530` (NOT pure black). Visible mid-shin under robe.
-- Shoes/boots: brown leather with cream-tan strap wrapping ankle. Oversized sole.
-- **Outline: VARIABLE WIDTH 4-12px** calligraphy ink brush, sepia-tinted `#1a1408`, thick on shadow side / thin on highlight side. NOT uniform clean digital line. Wobbly hand-drawn quality. Slight overshoot at corners.
-- **Fill texture**: visible brush strokes inside fills + pencil sketch construction lines ~15% opacity at edges. NO smooth airbrush gradient.
-- Pose for STYLE-REF: relaxed neutral with slight slouch (curious Wilson pose). NOT strict T-pose.
+- Shoes/boots: brown leather with cream-tan strap wrapping ankle.
+- **Outline: SEPIA-TINTED INK `#1a1408`** (NOT pure black `#000`), thickness 8-16px at 1024 canvas. Variable-width nice-to-have but uniform OK. Slight wobble hand-drawn quality nice-to-have.
+- **Fill**: flat 3-color stops per material with subtle wash gradient at edges. Visible brush strokes nice-to-have. NO smooth airbrush gradient. NO pure flat solid color.
+- Pose for STYLE-REF: relaxed neutral with slight slouch (curious cultivator pose).
 
 #### §3.1.0 STYLE-REF master v3 (gen FIRST, save as `player_style_ref.png`)
 
