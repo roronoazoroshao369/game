@@ -9,11 +9,15 @@ Run from repo root:
 Pipeline per part:
   1. Crop bbox from source board.
   2. Color-key remove parchment bg (RGB ~199,187,170) via soft feather (alpha lerp).
-  3. Tight-crop to alpha bbox + 5px padding.
+  3. Tight-crop to alpha bbox + 5px padding (keeps content flush to sprite bounds).
   4. Apply optional occlusion_mute (fade RGB toward bg) to far-side limbs in side view.
-  5. Pad to target aspect range (so subsequent resize lands within validator dim spec).
-  6. Resize Lanczos to comfortable mid-point of validator dim range.
-  7. Save PNG.
+  5. Resize Lanczos to fit target h (preserving natural aspect — NO aspect padding).
+     Why: aspect padding inserts transparent strips above/below content, which causes
+     visible gaps in the rig (e.g. between sash and trouser top, between trouser and
+     boot). With auto-PPU normalize, world height stays equal to placeholder regardless
+     of source pixel dims — so squatter source art just renders as a chunkier (wider)
+     character without joint dislocation. World width adapts to natural aspect.
+  6. Save PNG.
 
 Validate result: python3 .agents/scripts/validate_player_art.py
 """
@@ -32,7 +36,13 @@ BG_RGB = np.array([199, 187, 170], dtype=np.float32)
 # pixels beyond `soft_outer` → fully opaque; in-between → linear feather.
 SOFT_INNER = 18.0
 SOFT_OUTER = 50.0
-PADDING = 5  # tight bbox padding
+PADDING = 2  # tight bbox padding (small to avoid bleed of next callout content)
+
+# Alpha threshold: pixels with alpha below this are dropped before tight-crop, to
+# avoid sparse low-opacity ghost pixels from soft color-key edges extending the bbox
+# into adjacent callout territory (e.g. C2 torso bbox accidentally including the top
+# of C5 thigh callout below it).
+ALPHA_HARD_THRESHOLD = 96
 
 
 def remove_bg(img_rgb: Image.Image) -> Image.Image:
@@ -43,6 +53,15 @@ def remove_bg(img_rgb: Image.Image) -> Image.Image:
     alpha8 = (alpha * 255.0).astype(np.uint8)
     rgba = np.dstack([arr.astype(np.uint8), alpha8])
     return Image.fromarray(rgba, "RGBA")
+
+
+def hard_threshold_alpha(img: Image.Image, threshold: int = ALPHA_HARD_THRESHOLD) -> Image.Image:
+    """Drop pixels with alpha below threshold to avoid sparse ghost halos extending
+    bbox into adjacent callout content. Pixels above threshold keep their soft alpha."""
+    arr = np.array(img)
+    mask = arr[..., 3] < threshold
+    arr[mask, 3] = 0
+    return Image.fromarray(arr, "RGBA")
 
 
 def tight_crop(img: Image.Image, padding: int = PADDING) -> Image.Image:
@@ -98,40 +117,48 @@ def pad_to_aspect(img: Image.Image, min_aspect: float, max_aspect: float,
     return canvas
 
 
-def fit_to_dims(img: Image.Image, max_w: int, max_h: int, min_w: int, min_h: int) -> Image.Image:
-    """Resize so dims fit within (min..max) range. Preserves aspect.
-
-    Caller must pre-pad to a feasible aspect range via `pad_to_aspect` first.
+def fit_to_target_h(img: Image.Image, target_h: int) -> Image.Image:
+    """Resize so sprite is exactly `target_h` pixels tall, preserving natural aspect.
+    Auto-PPU import then normalizes world height to placeholder. World width adapts
+    to the natural aspect of source content. NO transparent padding inserted.
     """
     w, h = img.size
-    # Compute h range satisfying both width-derived and height-derived constraints.
     aspect = w / h
-    h_lo = max(min_h, int(round(min_w / aspect)))
-    h_hi = min(max_h, int(round(max_w / aspect)))
-    if h_lo > h_hi:
-        # No feasible solution — clamp to nearest.
-        target_h = max(min_h, min(max_h, h))
-    else:
-        target_h = (h_lo + h_hi) // 2
-    target_w = int(round(target_h * aspect))
-    target_w = max(min_w, min(max_w, target_w))
+    target_w = max(1, int(round(target_h * aspect)))
     return img.resize((target_w, target_h), Image.LANCZOS)
 
 
+# Target sprite height per role. Width is derived from natural source aspect.
+# Height is what determines auto-PPU world-h normalize, so this is the canonical
+# spec. All E/N/S sprites of the same role render at the same world height.
+TARGET_H = {
+    "head":    220,
+    "torso":   280,
+    "arm":     200,
+    "forearm": 200,
+    "leg":     200,
+    "shin":    200,
+}
+
+
+def target_h_for(out_path: Path) -> int:
+    name = out_path.stem  # "head", "torso", "arm_left", ...
+    for key in TARGET_H:
+        if name.startswith(key):
+            return TARGET_H[key]
+    raise ValueError(f"unknown role for {out_path}")
+
+
 def extract(board: Image.Image, bbox: tuple[int, int, int, int],
-            target_w: tuple[int, int], target_h: tuple[int, int],
-            out_path: Path, occlusion_mute: float = 0.0,
-            vertical_anchor: str = "center") -> None:
-    """Crop bbox from board, key out bg, tight-crop, resize, save.
+            out_path: Path, occlusion_mute: float = 0.0) -> None:
+    """Crop bbox from board, key out bg, hard-threshold halo, tight-crop, resize, save.
 
     occlusion_mute: 0..1, fade RGB toward parchment color to imply far-side depth.
-    vertical_anchor: "top" (arm/forearm/leg/shin), "bottom" (head), "center" (torso).
-        Determines on which side transparent padding goes when extending aspect range,
-        so pivot stays anchored on actual content edge.
     """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     crop = board.crop(bbox)
     rgba = remove_bg(crop)
+    rgba = hard_threshold_alpha(rgba, ALPHA_HARD_THRESHOLD)
     rgba = tight_crop(rgba, padding=PADDING)
     if occlusion_mute > 0.0:
         arr = np.array(rgba).astype(np.float32)
@@ -139,14 +166,7 @@ def extract(board: Image.Image, bbox: tuple[int, int, int, int],
         muted = rgb * (1.0 - occlusion_mute) + BG_RGB * occlusion_mute
         arr[..., :3] = muted
         rgba = Image.fromarray(arr.astype(np.uint8), "RGBA")
-    min_w, max_w = target_w
-    min_h, max_h = target_h
-    # Pad to feasible aspect first so resize lands within target dim range.
-    # Anchor controls which side gets transparent padding so pivot stays on content.
-    min_aspect = min_w / max_h
-    max_aspect = max_w / min_h
-    rgba = pad_to_aspect(rgba, min_aspect, max_aspect, vertical_anchor=vertical_anchor)
-    rgba = fit_to_dims(rgba, max_w, max_h, min_w, min_h)
+    rgba = fit_to_target_h(rgba, target_h_for(out_path))
     rgba.save(out_path, "PNG")
     print(f"  -> {out_path}  ({rgba.size[0]}x{rgba.size[1]})")
 
@@ -177,76 +197,51 @@ def main() -> None:
     #   C5 thigh:    x~440-660, y~1290-1500
     #   C6 shin+boot:x~770-980, y~1290-1530
 
-    # Pivot anchors per part type (matches PuppetPlaceholderSpec):
-    #   head: (0.5, 0)   bottom-center → vertical_anchor="bottom" (pad above)
-    #   torso: (0.5, 0.5) center        → vertical_anchor="center"
-    #   arm/forearm/leg/shin: (0.5, 1) top-center → vertical_anchor="top" (pad below)
-    HEAD_ANCHOR, TORSO_ANCHOR, LIMB_ANCHOR = "bottom", "center", "top"
-
     e = ART_ROOT / "E"
     print("[E direction]")
     # Head: callout C1 (high-detail side profile)
-    extract(board, (50, 960, 360, 1260), (160, 250), (200, 270), e / "head.png",
-            vertical_anchor=HEAD_ANCHOR)
-    # Torso: callout C2 (sleeveless trunk, V-neck visible — works for E side too via narrow crop)
-    extract(board, (430, 980, 700, 1280), (100, 150), (240, 340), e / "torso.png",
-            vertical_anchor=TORSO_ANCHOR)
+    extract(board, (50, 960, 360, 1260), e / "head.png")
+    # Torso: E full-body figure side profile (NOT C2 callout — C2 is sleeveless front-view
+    # which has wrong silhouette + V-neck transparency for side rendering, and was bleeding
+    # into C5 thigh callout below it).
+    extract(board, (170, 340, 305, 660), e / "torso.png")
     # Arm right (near-side, full saturation): callout C3
-    extract(board, (830, 970, 960, 1230), (60, 120), (170, 230), e / "arm_right.png",
-            vertical_anchor=LIMB_ANCHOR)
+    extract(board, (830, 970, 960, 1230), e / "arm_right.png")
     # Arm left (far-side): C3 muted
-    extract(board, (830, 970, 960, 1230), (60, 120), (170, 230), e / "arm_left.png",
-            occlusion_mute=0.18, vertical_anchor=LIMB_ANCHOR)
-    # Forearm right: callout C4
-    extract(board, (50, 1280, 310, 1480), (50, 110), (180, 260), e / "forearm_right.png",
-            vertical_anchor=LIMB_ANCHOR)
+    extract(board, (830, 970, 960, 1230), e / "arm_left.png", occlusion_mute=0.18)
+    # Forearm right: callout C4 tight-cropped from cuff-down to fist (forearm + hand only;
+    # full C4 callout is the WHOLE arm including sleeve which would double the upper arm).
+    extract(board, (50, 1370, 310, 1480), e / "forearm_right.png")
     # Forearm left (far-side muted)
-    extract(board, (50, 1280, 310, 1480), (50, 110), (180, 260), e / "forearm_left.png",
-            occlusion_mute=0.18, vertical_anchor=LIMB_ANCHOR)
+    extract(board, (50, 1370, 310, 1480), e / "forearm_left.png", occlusion_mute=0.18)
     # Leg right (thigh): callout C5
-    extract(board, (440, 1280, 670, 1510), (70, 125), (190, 250), e / "leg_right.png",
-            vertical_anchor=LIMB_ANCHOR)
+    extract(board, (440, 1280, 670, 1510), e / "leg_right.png")
     # Leg left (far-side muted)
-    extract(board, (440, 1280, 670, 1510), (70, 125), (190, 250), e / "leg_left.png",
-            occlusion_mute=0.18, vertical_anchor=LIMB_ANCHOR)
+    extract(board, (440, 1280, 670, 1510), e / "leg_left.png", occlusion_mute=0.18)
     # Shin right + boot: callout C6
-    extract(board, (770, 1280, 990, 1530), (70, 130), (180, 240), e / "shin_right.png",
-            vertical_anchor=LIMB_ANCHOR)
+    extract(board, (770, 1280, 990, 1530), e / "shin_right.png")
     # Shin left (far-side muted)
-    extract(board, (770, 1280, 990, 1530), (70, 130), (180, 240), e / "shin_left.png",
-            occlusion_mute=0.18, vertical_anchor=LIMB_ANCHOR)
+    extract(board, (770, 1280, 990, 1530), e / "shin_left.png", occlusion_mute=0.18)
 
     # ---- S direction (front view, 6 required) ----
     s = ART_ROOT / "S"
     print("[S direction]")
-    extract(board, (490, 180, 720, 390), (160, 250), (200, 270), s / "head.png",
-            vertical_anchor=HEAD_ANCHOR)
-    extract(board, (530, 410, 690, 690), (100, 150), (240, 340), s / "torso.png",
-            vertical_anchor=TORSO_ANCHOR)
-    extract(board, (485, 690, 600, 810), (70, 125), (190, 250), s / "leg_left.png",
-            vertical_anchor=LIMB_ANCHOR)
-    extract(board, (605, 690, 720, 810), (70, 125), (190, 250), s / "leg_right.png",
-            vertical_anchor=LIMB_ANCHOR)
-    extract(board, (480, 800, 600, 960), (70, 130), (180, 240), s / "shin_left.png",
-            vertical_anchor=LIMB_ANCHOR)
-    extract(board, (605, 800, 730, 960), (70, 130), (180, 240), s / "shin_right.png",
-            vertical_anchor=LIMB_ANCHOR)
+    extract(board, (490, 180, 720, 390), s / "head.png")
+    extract(board, (530, 410, 690, 690), s / "torso.png")
+    extract(board, (485, 690, 600, 810), s / "leg_left.png")
+    extract(board, (605, 690, 720, 810), s / "leg_right.png")
+    extract(board, (480, 800, 600, 960), s / "shin_left.png")
+    extract(board, (605, 800, 730, 960), s / "shin_right.png")
 
     # ---- N direction (back view, 6 required) ----
     n = ART_ROOT / "N"
     print("[N direction]")
-    extract(board, (760, 180, 970, 380), (160, 250), (200, 270), n / "head.png",
-            vertical_anchor=HEAD_ANCHOR)
-    extract(board, (790, 400, 950, 690), (100, 150), (240, 340), n / "torso.png",
-            vertical_anchor=TORSO_ANCHOR)
-    extract(board, (760, 690, 870, 810), (70, 125), (190, 250), n / "leg_left.png",
-            vertical_anchor=LIMB_ANCHOR)
-    extract(board, (875, 690, 985, 810), (70, 125), (190, 250), n / "leg_right.png",
-            vertical_anchor=LIMB_ANCHOR)
-    extract(board, (755, 800, 875, 960), (70, 130), (180, 240), n / "shin_left.png",
-            vertical_anchor=LIMB_ANCHOR)
-    extract(board, (875, 800, 990, 960), (70, 130), (180, 240), n / "shin_right.png",
-            vertical_anchor=LIMB_ANCHOR)
+    extract(board, (760, 180, 970, 380), n / "head.png")
+    extract(board, (790, 400, 950, 690), n / "torso.png")
+    extract(board, (760, 690, 870, 810), n / "leg_left.png")
+    extract(board, (875, 690, 985, 810), n / "leg_right.png")
+    extract(board, (755, 800, 875, 960), n / "shin_left.png")
+    extract(board, (875, 800, 990, 960), n / "shin_right.png")
 
     print("\nDone. 22 PNGs extracted.")
 

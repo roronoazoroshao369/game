@@ -74,3 +74,4 @@ Thumbs.db
 .idea/
 .vscode/
 tools/__pycache__/
+.agents/scripts/__pycache__/
