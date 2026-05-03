@@ -4,7 +4,8 @@ Procedural rigid-limb puppet (Don't Starve / Cuphead style). Same animation core
 swap "skin" via folder. Demo runs **without art** via auto-generated colored-rectangle skeleton.
 
 > Layered docs: scope + tradeoffs trong [`AI_PROMPTS.md`](AI_PROMPTS.md), animation math
-> trong `Scripts/Vfx/PuppetAnimController.cs` xml-doc.
+> trong `Scripts/Vfx/PuppetAnimController.cs` xml-doc, và asset-side practical rules trong
+> [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md).
 
 ---
 
@@ -13,6 +14,7 @@ swap "skin" via folder. Demo runs **without art** via auto-generated colored-rec
 1. **No art?** Bootstrap → 13-joint colored-rectangle skeleton di chuyển → demo runs ngay.
 2. **Drop PNG vào `Art/Characters/{id}/{E|N|S}/`** → re-Bootstrap → puppet uses real art.
 3. **New character = folder + tunings struct.** Zero animation code thay đổi.
+4. Nếu art nhìn rời rạc / paper-doll → đọc [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md) trước khi regen.
 
 ---
 
