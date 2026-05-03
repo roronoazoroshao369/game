@@ -1,7 +1,7 @@
 # AI prompts cho asset pipeline
 
 Bộ prompt sẵn để sinh asset cho Wilderness Cultivation Chronicle.
-Mỗi prompt follow template 5-part trong [`../Documentation/ART_STYLE.md`](../Documentation/ART_STYLE.md) §5.2.
+Mỗi prompt follow template 5-part trong [`../Documentation/art/ART_STYLE.md`](../Documentation/art/ART_STYLE.md) §5.2.
 
 ## Tool support
 
@@ -53,7 +53,7 @@ no grid lines, no ui elements
 
 ## Naming output PNG
 
-Khi save từ Leonardo về local, follow naming convention `Documentation/ART_STYLE.md` §4.4:
+Khi save từ Leonardo về local, follow naming convention `Documentation/art/ART_STYLE.md` §4.4:
 
 ```
 hero_forest_dawn.png
@@ -124,6 +124,7 @@ Apprentice plan ($10/tháng = 8500 token) đủ cho cả Phase 1+2+3.
 
 ## Tham khảo
 
-- [`../Documentation/ART_STYLE.md`](../Documentation/ART_STYLE.md) — full style bible
-- [`../Documentation/WORLD_MAP_DESIGN.md`](../Documentation/WORLD_MAP_DESIGN.md) — biome palette & decoration list
+- [`../Documentation/INDEX.md`](../Documentation/INDEX.md) — knowledge-base map
+- [`../Documentation/art/ART_STYLE.md`](../Documentation/art/ART_STYLE.md) — full style bible
+- [`../Documentation/design/WORLD_MAP_DESIGN.md`](../Documentation/design/WORLD_MAP_DESIGN.md) — biome palette & decoration list
 - Leonardo docs: https://docs.leonardo.ai/

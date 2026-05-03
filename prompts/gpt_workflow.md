@@ -131,4 +131,4 @@ Theo workflow PR #76:
 - [`README.md`](README.md) — Leonardo workflow gốc
 - [`tileset.txt`](tileset.txt) — Leonardo tile prompts
 - [`tileset_gpt.txt`](tileset_gpt.txt) — GPT-adapted tile prompts (this PR)
-- [`../Documentation/ART_STYLE.md`](../Documentation/ART_STYLE.md) — style bible
+- [`../Documentation/art/ART_STYLE.md`](../Documentation/art/ART_STYLE.md) — style bible

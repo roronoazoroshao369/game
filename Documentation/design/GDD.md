@@ -1,3 +1,12 @@
+---
+name: gdd
+audience: both
+status: active
+scope: Game Design Document — vision, core loop, hệ thống tu tiên, sinh tồn, art direction.
+depends-on:
+  - MVP_SCOPE.md
+  - ROADMAP.md
+---
 # Game Design Document (GDD) — Sơ bộ
 
 > **Tên tạm:** *Hoang Vực Tu Tiên Ký* (Wilderness Cultivation Chronicle)

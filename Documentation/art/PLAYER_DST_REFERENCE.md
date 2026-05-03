@@ -1,10 +1,18 @@
+---
+name: player-dst-reference
+audience: both
+status: active — Player identity locked
+scope: Visual signature reference for player art regen. Đọc trước AI_PROMPTS.md §3.
+depends-on:
+  - ART_STYLE.md
+---
 # Player Soft-DST + Wuxia Reference Lock
 
 Visual signature reference for player art regen. Read this BEFORE
 [`AI_PROMPTS.md`](AI_PROMPTS.md) §3 — đây là single source of truth cho player prompt workflow.
 
 Nếu mục tiêu là rig-ready asset nhìn mượt trong procedural puppet hiện tại, đọc thêm
-[`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md) để biết 7 nguyên tắc practical về silhouette,
+[`DST_RIG_ASSET_GUIDE.md`](../pipelines/DST_RIG_ASSET_GUIDE.md) để biết 7 nguyên tắc practical về silhouette,
 pivot boundary, overlap, near/far depth, và front/back ownership.
 
 > **Identity decision (May 2026):** After 3 iteration rounds testing strict DST
@@ -16,7 +24,7 @@ pivot boundary, overlap, near/far depth, và front/back ownership.
 > outline, atomic-rig composition) preserved. This is the game's distinct visual
 > identity, NOT pure DST clone.
 
-> **Reference image** — see [`Documentation/assets/style_refs/player_E.png`](assets/style_refs/player_E.png).
+> **Reference image** — see [`Documentation/assets/style_refs/player_E.png`](../assets/style_refs/player_E.png).
 > Use this as image guidance / `--cref` / IP-Adapter input when generating the
 > 30 atomic body parts. The 30 parts must match this reference's: chibi
 > proportion, ink outline, hair silhouette (topknot bun + cream ribbon), wuxia
@@ -213,5 +221,5 @@ boxes + re-test.
 - Prompt workflow + atomic prompts: [`AI_PROMPTS.md`](AI_PROMPTS.md)
 - Full asset source-board prompt: [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md)
 - Validator: `.agents/scripts/validate_player_art.py`
-- Style ref image: [`assets/style_refs/player_E.png`](assets/style_refs/player_E.png)
-- Practical rig rules: [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md)
+- Style ref image: [`assets/style_refs/player_E.png`](../assets/style_refs/player_E.png)
+- Practical rig rules: [`DST_RIG_ASSET_GUIDE.md`](../pipelines/DST_RIG_ASSET_GUIDE.md)

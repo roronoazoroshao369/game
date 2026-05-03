@@ -52,7 +52,7 @@ Nếu folder con empty (0 PNG):
   (importer auto-tính PPU). Khuyến nghị 64×96 (2×) hoặc 128×192 (4×) cho mobile.
 - **Top-down 90° view** (KHÔNG perspective) cho world prop. Character / mob có thể ¾ view.
 - **No drop shadow built-in** (engine có DropShadow VFX riêng).
-- Style: xem [`../../Documentation/ART_STYLE.md`](../../../Documentation/ART_STYLE.md).
+- Style: xem [`../../Documentation/art/ART_STYLE.md`](../../../Documentation/art/ART_STYLE.md).
 
 ## Placeholder size reference (BootstrapWizard.CreateSprites)
 

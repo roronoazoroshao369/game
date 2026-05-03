@@ -30,7 +30,7 @@ Mục tiêu demo:
 Phím tắt demo: **Esc** hoặc **P** mở menu tạm dừng (Tiếp tục / Lưu ngay / Thoát + slider âm lượng).
 Welcome panel đóng vai trò **main menu**: Bắt đầu mới (xoá save + reload scene) / Tiếp tục (chỉ hiện khi có save) / Thoát Demo. Autosave chạy 2 phút/lần.
 
-Xem trạng thái chi tiết từng hạng mục MVP: [Documentation/MVP_SCOPE.md](Documentation/MVP_SCOPE.md).
+Xem trạng thái chi tiết từng hạng mục MVP: [Documentation/design/MVP_SCOPE.md](Documentation/design/MVP_SCOPE.md). Index toàn bộ docs: [Documentation/INDEX.md](Documentation/INDEX.md).
 
 ---
 
@@ -56,7 +56,12 @@ game/
 │   ├── Data/SO/          (ScriptableObject assets — tạo trong Unity Editor)
 │   ├── Prefabs/
 │   └── Scenes/           Game.unity (bạn tạo)
-├── Documentation/        GDD.md, ROADMAP.md, MVP_SCOPE.md
+├── Documentation/        knowledge base — xem INDEX.md
+│   ├── INDEX.md          map tổng (audience tag, status, depends-on)
+│   ├── design/           GDD, ROADMAP, MVP_SCOPE, WORLD_MAP_DESIGN, DESIGN_PERMADEATH_AWAKENING
+│   ├── art/              ART_STYLE, AI_PROMPTS, PLAYER_DST_REFERENCE, PLAYER_FULL_ASSET_SOURCE_PROMPT, PLAYER_SOURCE_BOARD_EXTRACTION
+│   ├── pipelines/        PUPPET_PIPELINE, BONE_RIG_GUIDE, DST_RIG_ASSET_GUIDE, PNG_TO_3D_TO_SPRITE_PIPELINE
+│   └── assets/           style_refs PNG (gitignored content tới APK)
 └── README.md
 ```
 
@@ -447,11 +452,11 @@ UI: gắn `StatusEffectBarUI` lên Canvas với `iconContainer` (HorizontalLayou
 
 ## 🗺️ Roadmap
 
-Xem [`Documentation/ROADMAP.md`](Documentation/ROADMAP.md) cho 5 giai đoạn (Pre-production → Release) và [`Documentation/MVP_SCOPE.md`](Documentation/MVP_SCOPE.md) cho scope MVP cụ thể.
+Xem [`Documentation/design/ROADMAP.md`](Documentation/design/ROADMAP.md) cho 5 giai đoạn (Pre-production → Release) và [`Documentation/design/MVP_SCOPE.md`](Documentation/design/MVP_SCOPE.md) cho scope MVP cụ thể.
 
 ## 📖 Game Design
 
-Xem [`Documentation/GDD.md`](Documentation/GDD.md) cho hệ thống tu tiên (linh căn, cảnh giới, công pháp, đan dược, thiên kiếp), sinh tồn, thế giới mở, art direction.
+Xem [`Documentation/design/GDD.md`](Documentation/design/GDD.md) cho hệ thống tu tiên (linh căn, cảnh giới, công pháp, đan dược, thiên kiếp), sinh tồn, thế giới mở, art direction.
 
 ---
 

@@ -55,7 +55,7 @@ Nếu folder con empty (0 PNG):
   4× thành 2×2 grid → check không có hard line ở edge.
 - **Top-down 90° view** (KHÔNG 30° như character / hero).
 - **Không drop shadow built-in** trên transparent BG.
-- Chi tiết style: xem [`../../Documentation/ART_STYLE.md`](../../../Documentation/ART_STYLE.md).
+- Chi tiết style: xem [`../../Documentation/art/ART_STYLE.md`](../../../Documentation/art/ART_STYLE.md).
 - Prompt sẵn cho Leonardo: xem [`../../prompts/tileset.txt`](../../../prompts/tileset.txt).
 
 ## Subfolder chưa generate?

@@ -14,7 +14,7 @@ namespace WildernessCultivation.Vfx
     ///   - <see cref="TriggerLunge"/> → trigger <see cref="lungeTrigger"/> + flip sprite root by direction.
     ///   - <see cref="TriggerSquash"/> → trigger <see cref="squashTrigger"/> (duration ignored — clip own length).
     ///
-    /// Setup workflow xem <c>Documentation/BONE_RIG_GUIDE.md</c>.
+    /// Setup workflow xem <c>Documentation/pipelines/BONE_RIG_GUIDE.md</c>.
     ///
     /// Compose: GameObject phải có <see cref="Animator"/> + <see cref="Rigidbody2D"/>. Sprite root
     /// (default <c>this.transform</c>) flips X scale based on movement direction → re-uses rig

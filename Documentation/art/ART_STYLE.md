@@ -1,3 +1,10 @@
+---
+name: art-style
+audience: both
+status: active — locked
+scope: Style bible: palette HEX, line weight, naming convention. Đọc trước khi gen art.
+depends-on: []
+---
 # Art Style Bible
 
 > **Lock document** cho mọi asset visual của Wilderness Cultivation Chronicle.
@@ -394,9 +401,9 @@ no text, no watermark, no hard tile boundary lines.
 
 ## 9. Cross-references
 
-- **World design**: [`WORLD_MAP_DESIGN.md`](WORLD_MAP_DESIGN.md) — palette + tile variants gợi ý per biome.
-- **Architecture**: [`../ARCHITECTURE.md`](../ARCHITECTURE.md) §1 — folder layout (Art/ folder convention).
-- **MVP scope**: [`MVP_SCOPE.md`](MVP_SCOPE.md) — APK budget < 150 MB constraint.
+- **World design**: [`WORLD_MAP_DESIGN.md`](../design/WORLD_MAP_DESIGN.md) — palette + tile variants gợi ý per biome.
+- **Architecture**: [`../ARCHITECTURE.md`](../../ARCHITECTURE.md) §1 — folder layout (Art/ folder convention).
+- **MVP scope**: [`MVP_SCOPE.md`](../design/MVP_SCOPE.md) — APK budget < 150 MB constraint.
 - **Code**: `Scripts/World/BiomeSO.cs` (`groundTileVariants[]` field từ PR #72).
 
 ---

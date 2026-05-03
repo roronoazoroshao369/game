@@ -8,9 +8,10 @@
 > 2. [`DESIGN_PRINCIPLES.md`](DESIGN_PRINCIPLES.md) — 10 DO / DON'T với code example
 > 3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — module map, pattern inventory, data flow, save pipeline
 > 4. [`REFACTOR_HISTORY.md`](REFACTOR_HISTORY.md) — R1..R7 timeline (pattern từ đâu tới)
-> 5. [`Documentation/WORLD_MAP_DESIGN.md`](Documentation/WORLD_MAP_DESIGN.md) — 3 biome chi tiết + asset checklist
-> 6. [`Documentation/ART_STYLE.md`](Documentation/ART_STYLE.md) — style lock + palette + Leonardo workflow
-> 7. [`.agents/skills/README.md`](.agents/skills/README.md) — procedures "làm X như thế nào"
+> 5. [`Documentation/INDEX.md`](Documentation/INDEX.md) — knowledge-base map (toàn bộ doc theo theme: design / art / pipelines)
+> 6. [`Documentation/design/WORLD_MAP_DESIGN.md`](Documentation/design/WORLD_MAP_DESIGN.md) — 3 biome chi tiết + asset checklist
+> 7. [`Documentation/art/ART_STYLE.md`](Documentation/art/ART_STYLE.md) — style lock + palette + Leonardo workflow
+> 8. [`.agents/skills/README.md`](.agents/skills/README.md) — procedures "làm X như thế nào"
 
 ## Project overview
 
@@ -169,7 +170,8 @@ Skills hiện có: `add-edit-mode-test`, `add-play-mode-test`, `add-mob`, `add-n
 - [REFACTOR_HISTORY.md](REFACTOR_HISTORY.md) — R1..R7 log (patterns introduced)
 - [.agents/skills/README.md](.agents/skills/README.md) — skill index
 - [README.md](README.md) — project setup
-- [Documentation/MVP_SCOPE.md](Documentation/MVP_SCOPE.md) — feature scope
-- [Documentation/ROADMAP.md](Documentation/ROADMAP.md) — long-term roadmap
+- [Documentation/INDEX.md](Documentation/INDEX.md) — knowledge-base map
+- [Documentation/design/MVP_SCOPE.md](Documentation/design/MVP_SCOPE.md) — feature scope
+- [Documentation/design/ROADMAP.md](Documentation/design/ROADMAP.md) — long-term roadmap
 - `.editorconfig` — format rules
 - `.github/workflows/` — CI definitions

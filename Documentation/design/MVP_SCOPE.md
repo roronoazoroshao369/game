@@ -1,10 +1,19 @@
+---
+name: mvp-scope
+audience: both
+status: active — auto-updated mỗi PR
+scope: Feature scope hiện tại của MVP build. Check trước khi propose feature mới.
+depends-on:
+  - GDD.md
+  - ROADMAP.md
+---
 # MVP Scope — Cụ thể & Đo được
 
 Mục tiêu MVP: **Build được 1 APK Android chạy ổn định, demo core loop trong 30 phút gameplay.**
 
 > **Status (auto-updated khi PR merge):** Mã cho phần lớn hệ thống đã có — xem checklist bên dưới.
 > Việc còn lại tập trung ở: Unity license CI + build APK thực tế + polish UX.
-> Chạy thử demo 60 giây: xem section "Quickstart" trong [README.md](../README.md#-quickstart-bootstrap-default-scene-1-click).
+> Chạy thử demo 60 giây: xem section "Quickstart" trong [README.md](../../README.md#-quickstart-bootstrap-default-scene-1-click).
 
 ## Feature list MVP (cắt tối đa)
 

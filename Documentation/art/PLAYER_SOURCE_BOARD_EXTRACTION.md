@@ -1,3 +1,13 @@
+---
+name: player-source-board-extraction
+audience: both
+status: active
+scope: Extract 30 atomic part từ source board (image-edit / manual crop).
+depends-on:
+  - PLAYER_FULL_ASSET_SOURCE_PROMPT.md
+  - AI_PROMPTS.md
+  - ../pipelines/DST_RIG_ASSET_GUIDE.md
+---
 # Player Source Board → Per-Part Extraction (Codex CLI / GPT image 2.0)
 
 Workflow để biến `Documentation/assets/style_refs/player_source_board_v1.png` thành **30 PNG rig-ready** mà không bị drift / paper-doll.
@@ -376,7 +386,7 @@ Nếu rig còn rời rạc → đọc `DST_RIG_ASSET_GUIDE.md` 7 nguyên tắc t
 
 - Source board prompt: [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md)
 - Full atomic spec (palette HEX, exact bbox): [`AI_PROMPTS.md`](AI_PROMPTS.md) §3.3
-- Asset-side rig rules: [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md)
+- Asset-side rig rules: [`DST_RIG_ASSET_GUIDE.md`](../pipelines/DST_RIG_ASSET_GUIDE.md)
 - Validator: `.agents/scripts/validate_player_art.py`
 - Pivot spec: `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs`
 - Rig spec: `Assets/_Project/Scripts/Core/CharacterRigSpec.cs`

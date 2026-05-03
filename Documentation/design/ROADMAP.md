@@ -1,3 +1,11 @@
+---
+name: roadmap
+audience: both
+status: active
+scope: Long-term 5-stage roadmap (Pre-production → Release) + tech stack đề xuất.
+depends-on:
+  - GDD.md
+---
 # Roadmap & Tech Stack
 
 ## 1. Đề xuất Tech Stack (cho Android)
