@@ -1,8 +1,7 @@
 # Player Soft-DST + Wuxia Reference Lock
 
 Visual signature reference for player art regen. Read this BEFORE
-[`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md) — these are the
-style rules AI generation must follow.
+[`AI_PROMPTS.md`](AI_PROMPTS.md) §3 — đây là single source of truth cho player prompt workflow.
 
 Nếu mục tiêu là rig-ready asset nhìn mượt trong procedural puppet hiện tại, đọc thêm
 [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md) để biết 7 nguyên tắc practical về silhouette,
@@ -211,8 +210,8 @@ boxes + re-test.
 
 ## §6 References
 
-- Atomic prompts: [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md)
-- Composition rules: [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md)
+- Prompt workflow + atomic prompts: [`AI_PROMPTS.md`](AI_PROMPTS.md)
+- Full asset source-board prompt: [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md)
 - Validator: `.agents/scripts/validate_player_art.py`
 - Style ref image: [`assets/style_refs/player_E.png`](assets/style_refs/player_E.png)
-- Style lock §1: [`AI_PROMPTS.md`](AI_PROMPTS.md)
+- Practical rig rules: [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md)
