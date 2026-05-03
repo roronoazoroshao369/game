@@ -108,6 +108,36 @@ namespace WildernessCultivation.Vfx
                  "0 = disable, 2-5 đẹp cho humanoid biped, 0 cho mob 4-leg.")]
         public float bodyTorsionDeg = 3f;
 
+        [Header("Polish — head nod + layered breathing (PR M — DST-grade smoothness)")]
+        [Tooltip("Head nod (deg, ±) khi walk — head rotates Z lagged behind torso phase by " +
+                 "walkHeadPhaseLagSeconds. Tạo cảm giác cổ trễ nhịp body, weight transfer tự nhiên. " +
+                 "0 = disable, 2-4 đẹp cho biped chibi.")]
+        public float headWalkNodDeg = 3f;
+        [Tooltip("Head transform phase lag (seconds) behind torso/walk phase. " +
+                 "0 = no lag (snap-on), 0.04-0.10 = visible follow-through.")]
+        public float walkHeadPhaseLagSeconds = 0.06f;
+        [Tooltip("Head idle wobble (deg, ±) — slow secondary sway khi đứng yên. " +
+                 "0 = disable, 0.8-1.5 = subtle alive feel (vs robotic still).")]
+        public float headIdleWobbleDeg = 1.2f;
+        [Tooltip("Head idle wobble frequency (Hz). 0.5-1.0 = relaxed slow drift; " +
+                 "intentionally desync với idleBreathFrequency để không lockstep robotic.")]
+        public float headIdleWobbleFreq = 0.7f;
+        [Tooltip("Layered idle breathing — secondary frequency (Hz) added on top of " +
+                 "idleBreathFrequency. 0 = single-freq legacy, 3-5Hz = micro-jitter giúp ngực " +
+                 "thở organic (DST grade).")]
+        public float idleBreathSecondaryFreq = 3.5f;
+        [Tooltip("Layered idle breathing — secondary amplitude relative to primary [0..0.5]. " +
+                 "0 = disable, 0.2-0.3 = noticeable but subtle. Clamped internally.")]
+        public float idleBreathSecondaryRelAmp = 0.25f;
+
+        [Header("Polish — lunge anticipation (snappier attack)")]
+        [Tooltip("Lunge anticipation fraction [0..0.4]: u<thres = arm winds back BEFORE strike. " +
+                 "DST/Cuphead snap. 0 = no anticipation (legacy bell curve), 0.15-0.20 = visible windup.")]
+        public float lungeAnticipationFraction = 0.18f;
+        [Tooltip("Lunge windup pull-back angle relative to maxDeg [0..0.5]. " +
+                 "0 = no pull-back, 0.25-0.35 = visible windup contrast với strike forward.")]
+        public float lungeWindupRelAmp = 0.30f;
+
         [Header("Tail (optional)")]
         [Tooltip("Tail sway tần số.")]
         public float tailSwayFrequency = 1.5f;
@@ -190,7 +220,7 @@ namespace WildernessCultivation.Vfx
         Quaternion baseWingLeftRot, baseWingRightRot;
         Quaternion baseBodySegment1Rot, baseBodySegment2Rot, baseBodySegment3Rot, baseBodySegment4Rot;
         Vector3 baseTorsoPos, baseHeadPos;
-        Quaternion baseTorsoRot;
+        Quaternion baseTorsoRot, baseHeadRot;
         Vector3 baseSpriteRootScale;
 
         // Cached SpriteRenderers từ body part transforms — dung sprite swap khi đổi direction.
@@ -250,7 +280,11 @@ namespace WildernessCultivation.Vfx
                 baseTorsoPos = torso.localPosition;
                 baseTorsoRot = torso.localRotation;
             }
-            if (head != null) baseHeadPos = head.localPosition;
+            if (head != null)
+            {
+                baseHeadPos = head.localPosition;
+                baseHeadRot = head.localRotation;
+            }
             if (spriteRoot != null) baseSpriteRootScale = spriteRoot.localScale;
         }
 
@@ -409,10 +443,12 @@ namespace WildernessCultivation.Vfx
                 if (forearmRight != null) forearmRight.localRotation = baseForearmRightRot;
             }
 
-            // Torso bob: walking → speed-proportional sin; idle → slow breath.
+            // Torso bob: walking → speed-proportional sin; idle → layered breath
+            // (primary 1.2Hz + secondary micro-jitter 3.5Hz) cho organic chest rise/fall.
             float bobY = moving
                 ? walkSin * torsoBobAmplitude
-                : Mathf.Sin(t * 2f * Mathf.PI * idleBreathFrequency) * idleBreathAmplitude;
+                : ComputeLayeredBreath(t, idleBreathFrequency, idleBreathAmplitude,
+                    idleBreathSecondaryFreq, idleBreathSecondaryRelAmp);
 
             // Crouch lerp (sticky toggle).
             float crouchTarget = crouching ? crouchTorsoYOffset : 0f;
@@ -454,8 +490,17 @@ namespace WildernessCultivation.Vfx
                 torso.localRotation = baseTorsoRot * Quaternion.Euler(0f, 0f, torsion);
             }
 
-            // Head follows torso (already child of torso typically), additional bob optional.
-            // Skip independent head transform if head is child of torso (Unity propagate auto).
+            // Head follows torso (already child of torso typically) — additional Z rotation
+            // adds DST-grade aliveness. Walk: head nods opposite torso, lagged by walkHeadPhaseLagSeconds.
+            // Idle: slow wobble desync với breathing freq để không lockstep robotic.
+            if (head != null)
+            {
+                float headAngle = moving
+                    ? ComputeHeadWalkNodAngle(t, walkFrequency, speedRatio,
+                        walkHeadPhaseLagSeconds, headWalkNodDeg)
+                    : ComputeHeadIdleWobbleAngle(t, headIdleWobbleFreq, headIdleWobbleDeg);
+                head.localRotation = baseHeadRot * Quaternion.Euler(0f, 0f, headAngle);
+            }
 
             // Tail sway (independent slow sin).
             if (tail != null)
@@ -527,7 +572,11 @@ namespace WildernessCultivation.Vfx
             {
                 float age = t - lungeStartTime;
                 float u = lungeDuration > 0f ? Mathf.Clamp01(age / lungeDuration) : 1f;
-                float lungeAngle = ComputeLungeArmAngle(u, lungeArmDeg);
+                // Anticipation curve: arm winds back trong first ~18% rồi strike forward.
+                // Snappier hơn raw bell curve — DST/Cuphead grade. Set
+                // lungeAnticipationFraction=0 để fallback bell curve thuần.
+                float lungeAngle = ComputeAnticipationLungeAngle(u, lungeArmDeg,
+                    lungeAnticipationFraction, lungeWindupRelAmp);
                 // Direction: positive x → arms swing forward (right). Sign mirrors with direction.
                 float signedAngle = lungeDir.x >= 0f ? -lungeAngle : lungeAngle;
                 if (armRight != null)
@@ -902,6 +951,92 @@ namespace WildernessCultivation.Vfx
             // → wave travels head→tail (segmentIndex 0 leads, segmentIndex N-1 lags).
             float phase = time * 2f * Mathf.PI * frequency - segmentIndex * waveSpreadPerSegment;
             return Mathf.Sin(phase) * amplitude;
+        }
+
+        /// <summary>
+        /// Layered idle breathing (PR M — DST-grade smoothness). Combines primary slow chest
+        /// rise/fall (1.0-1.4Hz) với secondary micro-jitter (3-5Hz) ở amplitude scaled relative.
+        /// Tổng amplitude max ≈ primaryAmp × (1 + secondaryRelAmp). Single-freq fallback nếu
+        /// secondaryFreq ≤ 0 hoặc secondaryRelAmp ≤ 0 (legacy backwards compatible).
+        ///
+        /// <para>secondaryRelAmp clamped [0, 0.5] internally để tránh secondary dominate primary
+        /// (giữ chest rise/fall là dominant motion, jitter chỉ overlay subtle).</para>
+        /// </summary>
+        public static float ComputeLayeredBreath(float time, float primaryFreq, float primaryAmp,
+            float secondaryFreq, float secondaryRelAmp)
+        {
+            float primary = Mathf.Sin(time * 2f * Mathf.PI * primaryFreq) * primaryAmp;
+            if (secondaryFreq <= 0f || secondaryRelAmp <= 0f) return primary;
+            float relAmp = Mathf.Clamp(secondaryRelAmp, 0f, 0.5f);
+            float secondary = Mathf.Sin(time * 2f * Mathf.PI * secondaryFreq) * primaryAmp * relAmp;
+            return primary + secondary;
+        }
+
+        /// <summary>
+        /// Head walk nod angle (PR M). Head rotates Z opposite torso phase, lagged behind by
+        /// <paramref name="lagSeconds"/> để cảm giác cổ trễ nhịp body. Mirrors walk frequency
+        /// (sync với leg/arm swing pattern) nhưng phase-shifted.
+        ///
+        /// <para>Formula: <c>-sin(2π × walkFreq × speedRatio × (t - lag)) × maxDeg</c>.
+        /// Negative sign tạo opposite phase với torso bob (head dips xuống khi torso lift).</para>
+        ///
+        /// <para>Range: [-maxDeg, +maxDeg]. Returns 0 nếu walkFreq ≤ 0 (defensive).</para>
+        /// </summary>
+        public static float ComputeHeadWalkNodAngle(float time, float walkFreq, float speedRatio,
+            float lagSeconds, float maxDeg)
+        {
+            if (walkFreq <= 0f) return 0f;
+            float laggedTime = time - lagSeconds;
+            float phase = laggedTime * walkFreq * speedRatio;
+            return -Mathf.Sin(phase * 2f * Mathf.PI) * maxDeg;
+        }
+
+        /// <summary>
+        /// Head idle wobble angle (PR M). Slow secondary sway khi đứng yên (frequency
+        /// intentionally desync với idleBreathFrequency — tránh lockstep robotic).
+        ///
+        /// <para>Range: [-maxDeg, +maxDeg]. Returns 0 nếu freq ≤ 0.</para>
+        /// </summary>
+        public static float ComputeHeadIdleWobbleAngle(float time, float freq, float maxDeg)
+        {
+            if (freq <= 0f) return 0f;
+            return Mathf.Sin(time * 2f * Mathf.PI * freq) * maxDeg;
+        }
+
+        /// <summary>
+        /// Lunge với anticipation (PR M — DST/Cuphead snap). Arm pulls BACK trong first
+        /// <paramref name="anticipationFraction"/> của u, rồi strike forward (peak at mid),
+        /// rồi recover. Snappier hơn raw bell curve.
+        ///
+        /// <para>Profile:
+        /// <list type="bullet">
+        ///   <item>u ∈ [0, anticipationFraction]: <c>angle = -sin(π × u/frac) × maxDeg × windupRelAmp</c>
+        ///         (negative = arm winds back)</item>
+        ///   <item>u ∈ [anticipationFraction, 1]: <c>angle = sin(π × (u-frac)/(1-frac)) × maxDeg</c>
+        ///         (positive = arm strikes forward then recovers)</item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para>Fallback to legacy bell curve nếu anticipationFraction ≤ 0 hoặc windupRelAmp ≤ 0
+        /// (matches <see cref="ComputeLungeArmAngle"/>).</para>
+        ///
+        /// <para>anticipationFraction clamped [0.05, 0.4]; windupRelAmp clamped [0, 0.5].</para>
+        /// </summary>
+        public static float ComputeAnticipationLungeAngle(float u, float maxDeg,
+            float anticipationFraction, float windupRelAmp)
+        {
+            float clamped = Mathf.Clamp01(u);
+            if (anticipationFraction <= 0f || windupRelAmp <= 0f)
+                return Mathf.Sin(Mathf.PI * clamped) * maxDeg;
+            float frac = Mathf.Clamp(anticipationFraction, 0.05f, 0.4f);
+            float windupAmp = Mathf.Clamp(windupRelAmp, 0f, 0.5f);
+            if (clamped < frac)
+            {
+                float windupU = clamped / frac;
+                return -Mathf.Sin(Mathf.PI * windupU) * maxDeg * windupAmp;
+            }
+            float strikeU = (clamped - frac) / (1f - frac);
+            return Mathf.Sin(Mathf.PI * strikeU) * maxDeg;
         }
     }
 }
