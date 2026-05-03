@@ -14,7 +14,7 @@ Checks each PNG in Assets/_Project/Art/Characters/player/{E,N,S}/:
 
 Exits non-zero if any FAIL — useful in CI later.
 
-Reference: Documentation/PLAYER_ATOMIC_RULES.md, PLAYER_ATOMIC_ART_PROMPTS.md.
+Reference: Documentation/AI_PROMPTS.md §3 (player prompts + composition rules).
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ except ImportError:
 ART_ROOT = Path("Assets/_Project/Art/Characters/player")
 
 # Expected dimensions per part. (min_w, max_w, min_h, max_h).
-# Tolerance ±30 from target dims documented in PLAYER_ATOMIC_RULES.md.
+# Tolerance ±30 from target dims documented in AI_PROMPTS.md §3.
 # Tighter widths than the current "kimono-baked" art forces narrow trunk gen.
 EXPECTED_DIMS = {
     "head":           (160, 250, 200, 270),

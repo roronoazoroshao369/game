@@ -75,8 +75,9 @@ Tham chiếu: `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` `RectFor(r
 ## §3 Player master prompt v2 (LOCKED)
 
 > **Đây là prompt CANONICAL cho player full-body reference.** PASS 10/10 acceptance test (xem [§6](#6-acceptance-test-workflow)). Dùng làm:
-> 1. Acceptance test trước khi gen 30 atomic parts.
-> 2. Image guidance / `--cref` / IP-Adapter input cho atomic part prompts ở [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md).
+> 1. Acceptance test trước khi gen asset player.
+> 2. Image guidance / `--cref` / IP-Adapter input cho final atomic part prompts ở §3.3.
+> 3. Base identity lock trước khi dùng [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md) để gen source board đồng bộ.
 >
 > **Concept:** chibi young SEA-Asian male qi-cultivator (age 12–14, chibi cute proportion), cream V-neck wuxia kimono robe HIP-LENGTH với brown cuff trim band ở wrist + gold sash bow knot ở right waist + jade pendant + jade cloud sigil trên ngực + warm-charcoal trousers + brown leather boots với cream toe stitch + ink-black topknot bun + cream silk ribbon trailing + single asymmetric forelock at front.
 >
@@ -350,7 +351,7 @@ Sau khi master prompt §3.1 PASS 10/10 (xem [§6](#6-acceptance-test-workflow)),
 - `Assets/_Project/Art/Characters/player/N/{part}.png` — 6 required + 4 optional (arms auto-hidden by `PuppetAnimController.hideArmsInFrontBackView=true`)
 - `Assets/_Project/Art/Characters/player/S/{part}.png` — same as N
 
-**Atomic-symbol composition rules** (mọi prompt đã inline — chi tiết xem [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md)):
+**Atomic-symbol composition rules** (đã inline trong từng prompt dưới):
 1. ONE part = ONE anatomical region. NO baked-in adjacent parts.
 2. Tight alpha bbox (≤5px transparent padding all sides).
 3. Pivot convention: top-of-sprite = attach point cho parent joint (head→neck base, torso→hip base, arm→shoulder, forearm→elbow, leg→hip, shin→knee).
@@ -1906,8 +1907,8 @@ It checks:
 - Composition violations (silhouette only — flag oversized canvases, missing alpha, etc.)
 
 Per-part detailed prompts: see §3.3 above (each part has self-contained fenced block with specific composition + palette + numerical anchors + negative).
-Composition rules: see PLAYER_ATOMIC_RULES.md.
-Visual signature: see PLAYER_DST_REFERENCE.md.
+Practical asset-side rules: see `DST_RIG_ASSET_GUIDE.md`.
+Visual signature: see `PLAYER_DST_REFERENCE.md`.
 ```
 
 #### Recommended GPT-2 batch script (Python)
@@ -1961,8 +1962,9 @@ print("Run python3 .agents/scripts/validate_player_art.py to verify")
 
 ### §3.5 References cho atomic gen
 
-- Composition rules per part: [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md)
 - Visual signature reference: [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md)
+- Full asset source-board workflow: [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md)
+- Practical rig rules: [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md)
 - Mechanical validator: `.agents/scripts/validate_player_art.py` (RGBA + bbox + dimensions per part)
 - Anatomy spec source of truth: `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` `RectFor(role)`
 
@@ -2164,12 +2166,13 @@ errors, no blurry edges, no anti-alias bleeding past outline.
 5. Score each against §6.1 checklist (10 boxes)
 6. ≥ 7/10 → save best as Documentation/assets/style_refs/player_E_v2.png
    < 7/10 → regen with §6.1 troubleshooting
-7. Use player_E_v2.png as --cref / IP-Adapter input
-8. Gen 30 atomic parts per PLAYER_ATOMIC_ART_PROMPTS.md §E/§N/§S
-9. Save to Assets/_Project/Art/Characters/player/{E,N,S}/{part}.png
-10. Run: python3 .agents/scripts/validate_player_art.py
-11. Re-bootstrap MainScene: Tools → Wilderness Cultivation → Bootstrap Default Scene
-12. Verify rig in Play mode (idle/walk/attack animations)
+7. Optional but recommended: gen 1 source board via `PLAYER_FULL_ASSET_SOURCE_PROMPT.md`
+8. Use player_E_v2.png or source board as --cref / IP-Adapter input
+9. Gen 30 atomic parts from §3.3 in this file
+10. Save to Assets/_Project/Art/Characters/player/{E,N,S}/{part}.png
+11. Run: python3 .agents/scripts/validate_player_art.py
+12. Re-bootstrap MainScene: Tools → Wilderness Cultivation → Bootstrap Default Scene
+13. Verify rig in Play mode (idle/walk/attack animations)
 ```
 
 ---
@@ -2274,11 +2277,11 @@ Recommend: **Midjourney `--cref`** for character consistency (best style match a
 ## §10 References
 
 - [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md) — visual signature lock + reference image
-- [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md) — 30 atomic per-part prompts (E/N/S × 10 parts)
-- [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md) — composition rules (no baked sleeves, pivot convention, …)
+- [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md) — one GPT prompt to generate a coherent full asset source board before extraction
 - [`ART_STYLE.md`](ART_STYLE.md) — biome palettes (forest / stone highlands / desert)
 - [`PUPPET_PIPELINE.md`](PUPPET_PIPELINE.md) — rig hierarchy + animation math
-- [`BONE_RIG_GUIDE.md`](BONE_RIG_GUIDE.md) — bone weighting (cho ai dùng Spine/DragonBones)
+- [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md) — practical rules for making assets animate smoothly in the current puppet rig
+- [`BONE_RIG_GUIDE.md`](BONE_RIG_GUIDE.md) — alternative Unity 2D bone workflow (not default pipeline)
 - `prompts/hero.txt`, `prompts/tileset.txt`, `prompts/tileset_gpt.txt`, `prompts/gpt_workflow.md` — tile/scene workflow
 - `.agents/scripts/validate_player_art.py` — mechanical validator (RGBA + bbox + dimensions per part)
 - `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` — `RectFor(role)` source of truth cho anatomy table §2

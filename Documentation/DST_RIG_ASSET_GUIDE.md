@@ -51,6 +51,7 @@ Player final nên đi theo thứ tự này:
 ### Trong repo này nghĩa là gì
 
 - `Documentation/AI_PROMPTS.md` nên được dùng để lock `master ref` + `direction logic`
+- `Documentation/PLAYER_FULL_ASSET_SOURCE_PROMPT.md` nên được dùng để gen 1 source board đồng bộ trước khi extract
 - Part production nên ưu tiên:
   - **image-edit từ cùng ref**, hoặc
   - **direction sheet rồi extract/crop**, hoặc
@@ -474,7 +475,8 @@ Nếu phải chọn ưu tiên, thì thứ tự đúng là:
 # Liên kết với docs khác
 
 - `Documentation/PUPPET_PIPELINE.md` — pipeline tổng quát drop PNG → bootstrap → run puppet
-- `Documentation/AI_PROMPTS.md` — prompt generation rules và atomic composition rules
+- `Documentation/AI_PROMPTS.md` — prompt generation rules + final atomic prompts
+- `Documentation/PLAYER_FULL_ASSET_SOURCE_PROMPT.md` — one-source-board workflow trước khi tách part
 - `Documentation/PLAYER_DST_REFERENCE.md` — visual identity lock (Soft-DST × Wuxia)
 - `Documentation/BONE_RIG_GUIDE.md` — hướng khác dùng Unity 2D bones; không phải pipeline mặc định của rig player hiện tại
 
