@@ -3,13 +3,14 @@
 Atomic-symbol composition rules cho rig-based puppet animation. **Bắt buộc** đối với
 mọi PNG vào `Assets/_Project/Art/Characters/player/{E,N,S}/`. Vi phạm bất kỳ rule nào
 sẽ tạo "rời rạc" effect (double-arm, baked sleeves overlapping rig sleeves, paper-doll
-gaps).
+gaps) HOẶC drift khỏi DST canon (chibi proportion, anime face, smooth airbrush).
 
 > **Tại sao lại có rule này:** rig overlay separate body-part sprites trên 1 hierarchy.
 > Nếu mỗi sprite có nội dung "thừa" (sleeve trong torso, neck trong head, hand trong
-> forearm), rig sẽ render trùng nhiều lần → user nhìn 4 cánh tay thay vì 2.
+> forearm), rig sẽ render trùng nhiều lần → user nhìn 4 cánh tay thay vì 2. Nếu style
+> drift khỏi DST canon → game mất identity "Linh Khí Wuxia × DST".
 
-## TL;DR — 5 luật atomic
+## TL;DR — 7 luật atomic
 
 1. **One part = one anatomical region. No more, no less.**
 2. **Each PNG isolated, RGBA transparent BG, alpha bbox tight (≤5px padding).**
@@ -22,6 +23,17 @@ gaps).
 5. **3 directions consistent.** Cùng 1 part ở E/N/S phải cùng style/palette/proportion.
    N = back view (nhìn phía sau), S = front view (nhìn phía trước), E = side view
    (camera nhìn từ phải; W = flipX của E, không cần gen riêng).
+6. **DST proportion lock** (§6 below). Mỗi part phải fit vào ~5-head-tall lanky adult
+   skeleton. Head ≤ 1/5 body height. Arms long, legs long, shoulders narrow, hands
+   oversized mitten-style, boots oversized sole. NO chibi 3-4 head-tall.
+7. **DST visual signature lock** (§7 below). Variable-width brush outline 4-12px
+   sepia-tinted (NOT pure black uniform). Visible brush strokes inside fills + pencil
+   sketch construction lines. Muddied palette saturation ≤30%. Face minimalism (dot eyes,
+   line mouth). NO smooth airbrush, NO clean uniform digital outline, NO anime/kawaii.
+
+> **Read [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md) FIRST** — full Klei /
+> Jeff Agala canon doc với reference characters (Wilson/Maxwell/Webber), proportion
+> chart, palette LOCK, signature trait checklist.
 
 ---
 
@@ -149,5 +161,102 @@ auto-detect và recommend crop.
 - Animation rig logic: `Assets/_Project/Scripts/Vfx/PuppetAnimController.cs`
 - Bootstrap pipeline: `Documentation/PUPPET_PIPELINE.md`
 - Style lock + palette + ink-wash spec: `Documentation/ART_STYLE.md`
-- Prompts: `Documentation/PLAYER_ATOMIC_ART_PROMPTS.md`
+- DST canon visual signature: [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md)
+- Prompts: [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md)
 - Validator: `.agents/scripts/validate_player_art.py`
+
+---
+
+## §6 DST proportion lock (HARD constraint)
+
+Reference character: **Wilson Percival Higgsbury** (DST default scientist hero).
+Lanky adult, **~5 head-tall** total body height. Each atomic part must fit:
+
+| Part | Height (head-units) | Width relative to head |
+|---|---|---|
+| head | 1.0 H | 1.0 W (head W = head H roughly) |
+| torso (trunk only) | ~1.5 H | 1.2 W (narrow shoulders, NOT broad) |
+| arm (upper) | ~1.4 H | 0.4 W (narrow lanky) |
+| forearm + mitten hand | ~1.5 H | 0.4 W forearm / 0.5 W hand (oversized) |
+| leg (upper) | ~1.5 H | 0.45 W |
+| shin + boot | ~1.4 H | 0.45 W shin / 0.6 W boot sole (oversized) |
+
+Total stack: head (1.0) + neck-stub (~0.2 baked into top of torso) + torso (1.5) +
+leg (1.5) + shin (1.4) ≈ 5.6 H. Arms (1.4 + 1.5 = 2.9 H) hang from shoulder reaching
+mid-thigh.
+
+### NO-list (chibi/anime drift markers)
+
+- ✗ Head ≥ 1/3 of body height (chibi big head)
+- ✗ Arm shorter than 1.0 H (stubby chibi arm)
+- ✗ Leg shorter than 1.0 H (stubby chibi leg)
+- ✗ Shoulders wider than 1.5 W (broad superhero shoulders)
+- ✗ Hands smaller than forearm-end width (anime slender hands)
+- ✗ Boot sole same width as shin (no oversized sole)
+
+---
+
+## §7 DST visual signature lock (HARD constraint)
+
+Klei / Jeff Agala signature traits — apply to EVERY PNG. Without these, output drifts
+toward generic chibi/anime cartoon.
+
+### 7.1 Outline
+
+- **Variable width 4-12px** calligraphy ink brush
+- Thick (10-12px) on shadow side of limb, thin (4-6px) on highlight side
+- **Wobbly hand-drawn quality** — not pixel-perfect digital line
+- Slight overshoot at corners (line extends ~3px past intersection)
+- **Sepia-tinted ink** `#1a1408` — never pure black `#000000`
+
+### 7.2 Fill
+
+- **Gouache + watercolor wash** — visible brush strokes inside fills
+- Flat 3-color stops per material (light / mid / dark) with **wash gradient at edge**
+- **Pencil sketch construction lines visible** at edges of fills (~10-20% opacity)
+- NO smooth airbrush gradient
+- NO solid flat color
+
+### 7.3 Palette LOCK (muddied DST tones, saturation cap 30%)
+
+| Color | Hex | Notes |
+|---|---|---|
+| Skin highlight | `#c8a884` | warm muddied tan, NOT orange |
+| Skin mid | `#a08868` | sepia overlay |
+| Skin shadow | `#5a4828` | strong sepia |
+| Robe cream highlight | `#e8d8b8` | washed-out, NOT bright cream |
+| Robe cream mid | `#c8b094` | warm tan-cream |
+| Robe fold | `#8a6f47` | strong sepia fold |
+| Sash gold light | `#a8884a` | muted gold, NOT bright |
+| Sash gold shadow | `#7a5a30` | dark muted gold |
+| Pendant jade light | `#7a9078` | muddied green |
+| Pendant jade shadow | `#4a5a48` | dark muddied green |
+| Hair ink-black base | `#2a2418` | warm-dark, NOT pure black |
+| Hair highlight | `#4a4030` | subtle sepia gloss |
+| Trousers base | `#3a3530` | dark olive-charcoal |
+| Trousers shadow | `#1a1812` | near-black olive |
+| Boot leather base | `#5a4830` | warm dark brown |
+| Boot strap | `#a89878` | cream-tan |
+| Outline ink | `#1a1408` | sepia-tinted, variable width |
+
+**Saturation check**: every color HSL saturation ≤30%. If hex looks "clean cartoon
+bright", desaturate.
+
+### 7.4 Face minimalism (head sprite)
+
+- **Eyes**: small dots `#1a1408` ~3-5px diameter, OR simple curved-line dashes
+- **Mouth**: single horizontal line OR small curve, ~1-3px thick
+- **Nose**: tiny angle line `<` or `^` shape ~5-8px
+- **Eyebrows**: short brush stroke ~10-15px, expressive
+- **Cheek blush** (optional): subtle `#c89878` opacity 40%, ~15-20px diameter
+
+### 7.5 NO-list (anime/kawaii drift markers)
+
+- ✗ Detailed almond eye with iris + highlight (anime)
+- ✗ Eye sparkles, hearts (kawaii)
+- ✗ Smooth airbrush gradient skin (anime cel)
+- ✗ Clean uniform digital outline (vector)
+- ✗ Saturated bright colors (#ff or #f0 hex peaks)
+- ✗ Multiple anime gloss highlight stripes in hair
+- ✗ Cute kawaii facial expression (raised brows + open mouth)
+- ✗ Pure black `#000000` outline (use sepia `#1a1408`)

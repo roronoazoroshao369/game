@@ -103,40 +103,59 @@ Mỗi entity có 4 phần (mỗi part PNG là 1 fenced block tự chứa, copy 1
 
 **Folder:** `Art/Characters/player/`
 
-> **⚠ Atomic-symbol regen pipeline (PR 5+):** vai trò của §3.1 prompts dưới đây bị
+> **⚠ DST canon regen pipeline (PR 5+ / DST-100 update):** vai trò của §3.1 prompts dưới đây bị
 > đè bởi [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md) +
-> [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md). Atomic version enforces
-> "trunk only / no baked sleeves / hand visible in forearm" — mandatory cho rig
-> không bị "rời rạc" effect (4 sleeves overlap khi rig render). Trước khi gen
-> player art, **đọc 2 file kia** + chạy `python3 .agents/scripts/validate_player_art.py`
-> sau khi gen.
+> [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md) +
+> [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md). Atomic+DST version enforces:
+> - **DST proportion lock**: ~5 head-tall lanky adult (Wilson reference), NOT chibi 3-4 head-tall
+> - **DST visual signature**: variable-width brush outline 4-12px, sepia-tinted ink, visible
+>   brush strokes inside fills, pencil construction lines, muddied palette saturation ≤30%
+> - **Atomic composition**: trunk only / no baked sleeves / mitten hand visible in forearm
+>
+> Mandatory cho rig không bị "rời rạc" (4 sleeves overlap khi rig render) + giữ
+> identity "Linh Khí Wuxia × DST". Trước khi gen player art, **đọc 3 file kia** +
+> chạy `python3 .agents/scripts/validate_player_art.py` sau khi gen.
 
 **Concept:** young SEA-Asian male qi-cultivator (early 20s, sun-kissed warm complexion), cream-white martial arts robe with bow-knot gold sash at right waist, warm-brown cuff trim at sleeve cuffs, warm-charcoal trousers visible mid-shin, brown cloth shoes with ivory tip stitch line, ink-black topknot bun with cream silk ribbon side-tied (drape trailing), single asymmetric forelock strand falling forward (signature trait), jade pendant + jade cloud sigil on chest. Bipedal humanoid puppet (10 parts × 3 dirs = 30 PNG).
 
-**Palette LOCK (v3 — production-grade after iteration):**
-- Skin: warm tan light `#d4a880` / mid `#a87858` / shadow `#5a3d28` (SEA-young-cultivator complexion, NOT pale Chinese-monk cream)
-- Hair: ink black `#1a1a1a` + gloss highlight `#3a3030`
-- Ribbon: cream `#f0e8d0`
-- Robe: cream light `#f0e8d0` / mid `#c8b094` / deep fold `#8a6f47`
-- Cuff trim: warm brown `#8a6f47` / shadow `#5a4030`
-- Sash: gold `#d4a64a` / shadow `#a08038`
-- Pendant + cloud sigil: jade `#6b8e62` + glow `#a8c69b`
-- Trousers: warm charcoal `#3a3530` / shadow `#1a1a1a` (NOT pure black — keeps surface readability at 64×64 game zoom + contrasts with brown shoes)
-- Shoe: brown `#5a4030` / dark `#3a2820` / **ivory tip stitch line `#c8b094`** (separates shoe from trouser dark mass)
-- Outline: ink `#1a1a1a` textured (sumi-e calligraphy, NOT pure `#000`)
-- Qi-glow rim (Linh Khí signature, REQUIRED): faint jade `#a8c69b` 5 % opacity, soft 4–6px outer rim around entire silhouette — almost subliminal but visible on close inspection
+**Palette LOCK (DST-canon muddied — v4 superseding v3):**
 
-**Anatomy + ornament details (inherit in ALL 30 parts):**
-- Head ratio: 1.4× torso width (DST chibi-adjacent — bigger than anime, smaller than DST extreme). NOT 1.2× anime-leaning.
-- Hair silhouette CLEAN: topknot bun + cream ribbon side-tied + ONE asymmetric forelock falling forward. NO multiple spike strands radiating from bun.
-- Eye: DST round-bead pupil (small filled circle), NOT anime sharp-pointed pupil, NOT anime sparkle.
+> The v3 palette below was too saturated/bright vs DST canon. v4 (DST-100 update)
+> shifts every color into Klei's muddied desaturated range (saturation cap 30%,
+> sepia/ochre overlay). Use **v4** for new gen. v3 kept for legacy reference.
+
+**v4 palette (DST canon, current LOCK):**
+- Skin: highlight `#c8a884` / mid `#a08868` / shadow `#5a4828` (muddied warm tan, sepia)
+- Hair: ink-black base `#2a2418` + highlight `#4a4030` (warm-dark, NOT pure black)
+- Ribbon: cream `#e8d8b8` (washed-out)
+- Robe: cream highlight `#e8d8b8` / mid `#c8b094` / fold `#8a6f47`
+- Cuff trim: warm brown `#8a6f47` / shadow `#5a4030`
+- Sash: gold light `#a8884a` / shadow `#7a5a30` (muted gold, NOT bright)
+- Pendant + cloud sigil: jade light `#7a9078` / shadow `#4a5a48` (muddied green)
+- Trousers: warm charcoal base `#3a3530` / shadow `#1a1812` (dark olive)
+- Boot leather: base `#5a4830` / shadow `#3a2818` / strap `#a89878`
+- Outline: variable-width brush ink `#1a1408` (sepia-tinted, 4-12px, NOT pure black uniform)
+- Cheek blush (optional): `#c89878` opacity 40%
+- Qi-glow rim (Linh Khí signature): faint jade `#7a9078` 5% opacity, subtle outer rim
+
+**v3 palette (legacy, DO NOT use for new gen):**
+- ~~Skin: warm tan light `#d4a880` / mid `#a87858` / shadow `#5a3d28`~~
+- ~~Hair: ink black `#1a1a1a` + gloss highlight `#3a3030`~~
+- ~~Sash: gold `#d4a64a` / shadow `#a08038`~~
+- ~~Outline: ink `#1a1a1a` uniform~~
+
+**Anatomy + ornament details (DST canon — inherit in ALL 30 parts):**
+- **Body proportion: ~5 head-tall lanky adult (Wilson DST reference).** NOT chibi 3-4 head-tall. Head ≤ 1/5 body height. Long thin arms reaching mid-thigh, long legs, narrow shoulders (~1.2× head width), oversized mitten-style hands (~1.3× wrist width), oversized boot soles (~1.3× shin width).
+- Hair silhouette CLEAN: topknot bun + cream ribbon side-tied + ONE asymmetric forelock falling forward. NO multiple spike strands radiating from bun. NO anime gloss highlight stripes.
+- Face minimalism: dot eyes `#1a1408` ~3-5px, single line mouth ~1-3px, tiny angle nose ~5-8px brush stroke, expressive brush-stroke eyebrows ~10-15px. NOT detailed almond iris. NOT anime eye sparkle.
 - Sash: gold tied in BOW KNOT at right side of waist with ribbon ends draping ~15 % of torso height (NOT horizontal wrap).
-- Sleeve: cream robe + WARM-BROWN CUFF TRIM band at wrist (~8 % of arm length thick).
+- Sleeve: cream robe TIGHT TO ARM + WARM-BROWN CUFF TRIM band at wrist (~8 % of arm length thick). NO bell-flow.
 - Pendant + sigil: jade pendant + jade cloud sigil positioned on CHEST (upper torso, readable at 64×64 game zoom). NOT lower hem.
 - Trousers: WARM CHARCOAL `#3a3530` (NOT pure black). Visible mid-shin under robe.
-- Shoes: brown cloth with IVORY TIP STITCH line (breaks dark-on-dark trouser/shoe).
-- Outline: UNIFORM 16–24px @ 1024 canvas across head, robe, limbs (no thin areas, no breaks).
-- Pose for STYLE-REF: strict static T-pose (no flutter, no hunched shoulders, no leg-cross, no head tilt).
+- Shoes/boots: brown leather with cream-tan strap wrapping ankle. Oversized sole.
+- **Outline: VARIABLE WIDTH 4-12px** calligraphy ink brush, sepia-tinted `#1a1408`, thick on shadow side / thin on highlight side. NOT uniform clean digital line. Wobbly hand-drawn quality. Slight overshoot at corners.
+- **Fill texture**: visible brush strokes inside fills + pencil sketch construction lines ~15% opacity at edges. NO smooth airbrush gradient.
+- Pose for STYLE-REF: relaxed neutral with slight slouch (curious Wilson pose). NOT strict T-pose.
 
 #### §3.1.0 STYLE-REF master v3 (gen FIRST, save as `player_style_ref.png`)
 
