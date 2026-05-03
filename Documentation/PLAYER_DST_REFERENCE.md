@@ -4,6 +4,10 @@ Visual signature reference for player art regen. Read this BEFORE
 [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md) — these are the
 style rules AI generation must follow.
 
+Nếu mục tiêu là rig-ready asset nhìn mượt trong procedural puppet hiện tại, đọc thêm
+[`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md) để biết 7 nguyên tắc practical về silhouette,
+pivot boundary, overlap, near/far depth, và front/back ownership.
+
 > **Identity decision (May 2026):** After 3 iteration rounds testing strict DST
 > canon prompts (5 head-tall lanky Wilson proportion + variable-width brush
 > outline + smooth gouache fills + face minimalism), generic AI gen tools could
