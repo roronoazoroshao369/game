@@ -1964,6 +1964,7 @@ print("Run python3 .agents/scripts/validate_player_art.py to verify")
 
 - Visual signature reference: [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md)
 - Full asset source-board workflow: [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md)
+- Source board → per-part extraction (image-edit / manual crop): [`PLAYER_SOURCE_BOARD_EXTRACTION.md`](PLAYER_SOURCE_BOARD_EXTRACTION.md)
 - Practical rig rules: [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md)
 - Mechanical validator: `.agents/scripts/validate_player_art.py` (RGBA + bbox + dimensions per part)
 - Anatomy spec source of truth: `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` `RectFor(role)`

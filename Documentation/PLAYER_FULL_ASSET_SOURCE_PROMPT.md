@@ -222,8 +222,9 @@ Nếu fail 2-3 box lớn, regen board. Đừng cố nhảy thẳng sang final pa
 
 ## Relationship với các docs khác
 
-- `Documentation/AI_PROMPTS.md` — master catalog + atomic prompts rig-ready
+- `Documentation/AI_PROMPTS.md` — master catalog + atomic prompts rig-ready (§3.3)
+- `Documentation/PLAYER_SOURCE_BOARD_EXTRACTION.md` — bước tiếp theo: extract 22 PNG rig-ready từ board (image-edit + manual crop workflow)
 - `Documentation/PLAYER_DST_REFERENCE.md` — identity lock
 - `Documentation/DST_RIG_ASSET_GUIDE.md` — 7 nguyên tắc practical để asset animate mượt trong rig hiện tại
 - `Documentation/PUPPET_PIPELINE.md` — cách drop asset vào repo rồi bootstrap rig
-- `Documentation/AI_PROMPTS.md` §3.3 — final atomic prompts rig-ready
+- `Documentation/assets/style_refs/player_source_board_v1.png` — board đã PASS, dùng làm reference image cho extraction
