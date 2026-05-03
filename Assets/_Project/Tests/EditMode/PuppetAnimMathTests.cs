@@ -728,5 +728,191 @@ namespace WildernessCultivation.Tests.EditMode
         {
             Assert.AreEqual(0f, PuppetAnimController.ComputeWalkElbowBend(0f, 12f), 0.0001f);
         }
+
+        // ---------- PR M — ComputeLayeredBreath (DST-grade idle smoothness) ----------
+
+        [Test]
+        public void LayeredBreath_AtZero_Zero()
+        {
+            // sin(0) primary + sin(0) secondary = 0.
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeLayeredBreath(0f, 1.2f, 0.03f, 3.5f, 0.25f),
+                0.0001f);
+        }
+
+        [Test]
+        public void LayeredBreath_SecondaryDisabled_FallsBackToPrimary()
+        {
+            // secondaryRelAmp=0 → exactly primary sin only (legacy behavior).
+            float t = 0.2f;
+            float expected = Mathf.Sin(t * 2f * Mathf.PI * 1.2f) * 0.03f;
+            Assert.AreEqual(expected,
+                PuppetAnimController.ComputeLayeredBreath(t, 1.2f, 0.03f, 3.5f, 0f),
+                0.00001f);
+        }
+
+        [Test]
+        public void LayeredBreath_SecondaryFreqZero_FallsBackToPrimary()
+        {
+            // secondaryFreq=0 → primary only.
+            float t = 0.4f;
+            float expected = Mathf.Sin(t * 2f * Mathf.PI * 1.2f) * 0.03f;
+            Assert.AreEqual(expected,
+                PuppetAnimController.ComputeLayeredBreath(t, 1.2f, 0.03f, 0f, 0.25f),
+                0.00001f);
+        }
+
+        [Test]
+        public void LayeredBreath_SecondaryClampedAt50Percent()
+        {
+            // secondaryRelAmp=2.0 (extreme) clamped to 0.5 internally → secondary max amp =
+            // primaryAmp × 0.5. Test bằng cách check tổng amplitude bounded.
+            float maxValue = float.MinValue;
+            for (int i = 0; i < 1000; i++)
+            {
+                float t = i * 0.001f;
+                float v = PuppetAnimController.ComputeLayeredBreath(t, 1.2f, 0.03f, 3.5f, 2.0f);
+                if (v > maxValue) maxValue = v;
+            }
+            // Max ≤ primaryAmp × (1 + 0.5) = 0.045. Allow small tolerance.
+            Assert.LessOrEqual(maxValue, 0.045f + 0.001f);
+        }
+
+        // ---------- PR M — ComputeHeadWalkNodAngle ----------
+
+        [Test]
+        public void HeadWalkNod_ZeroFreq_Zero()
+        {
+            // walkFreq=0 → defensive 0.
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeHeadWalkNodAngle(0.5f, 0f, 1f, 0.06f, 3f),
+                0.0001f);
+        }
+
+        [Test]
+        public void HeadWalkNod_OppositePhaseToTorso()
+        {
+            // Negative sign: head opposite torso.
+            // Without lag: at t=quarter period of walkFreq=3Hz speedRatio=1, head dips negative.
+            float quarterPeriod = 1f / (4f * 3f);
+            float angle = PuppetAnimController.ComputeHeadWalkNodAngle(quarterPeriod, 3f, 1f, 0f, 3f);
+            Assert.AreEqual(-3f, angle, 0.001f);
+        }
+
+        [Test]
+        public void HeadWalkNod_RangeBoundedByAmplitude()
+        {
+            // For any time, |angle| ≤ maxDeg.
+            for (int i = 0; i < 100; i++)
+            {
+                float t = i * 0.05f;
+                float v = PuppetAnimController.ComputeHeadWalkNodAngle(t, 3f, 1f, 0.06f, 3f);
+                Assert.LessOrEqual(Mathf.Abs(v), 3f + 0.001f, $"t={t}");
+            }
+        }
+
+        // ---------- PR M — ComputeHeadIdleWobbleAngle ----------
+
+        [Test]
+        public void HeadIdleWobble_ZeroFreq_Zero()
+        {
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeHeadIdleWobbleAngle(0.5f, 0f, 1.2f),
+                0.0001f);
+        }
+
+        [Test]
+        public void HeadIdleWobble_AtQuarterPeriod_PeakPositive()
+        {
+            // sin(π/2) = 1 → max +deg.
+            float quarterPeriod = 1f / (4f * 0.7f);
+            Assert.AreEqual(1.2f,
+                PuppetAnimController.ComputeHeadIdleWobbleAngle(quarterPeriod, 0.7f, 1.2f),
+                0.001f);
+        }
+
+        // ---------- PR M — ComputeAnticipationLungeAngle (DST/Cuphead snap) ----------
+
+        [Test]
+        public void AnticipationLunge_DisabledAnticipation_FallsBackToBellCurve()
+        {
+            // anticipationFraction=0 → matches ComputeLungeArmAngle output.
+            for (float u = 0f; u <= 1.001f; u += 0.1f)
+            {
+                float legacy = PuppetAnimController.ComputeLungeArmAngle(u, 60f);
+                float modern = PuppetAnimController.ComputeAnticipationLungeAngle(u, 60f, 0f, 0.3f);
+                Assert.AreEqual(legacy, modern, 0.0001f, $"u={u}");
+            }
+        }
+
+        [Test]
+        public void AnticipationLunge_DisabledWindup_FallsBackToBellCurve()
+        {
+            // windupRelAmp=0 → bell curve fallback.
+            for (float u = 0f; u <= 1.001f; u += 0.1f)
+            {
+                float legacy = PuppetAnimController.ComputeLungeArmAngle(u, 60f);
+                float modern = PuppetAnimController.ComputeAnticipationLungeAngle(u, 60f, 0.18f, 0f);
+                Assert.AreEqual(legacy, modern, 0.0001f, $"u={u}");
+            }
+        }
+
+        [Test]
+        public void AnticipationLunge_AtZero_ZeroNotPullback()
+        {
+            // u=0 windup curve = -sin(0) = 0 (pullback starts at 0, peaks mid-windup).
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeAnticipationLungeAngle(0f, 60f, 0.18f, 0.3f),
+                0.0001f);
+        }
+
+        [Test]
+        public void AnticipationLunge_DuringWindup_NegativeAngle()
+        {
+            // u inside [0, frac) → arm pulls back (negative). At u = frac/2, peak windup
+            // = -maxDeg × windupRelAmp.
+            float halfWindup = 0.18f * 0.5f;
+            float angle = PuppetAnimController.ComputeAnticipationLungeAngle(halfWindup, 60f, 0.18f, 0.3f);
+            Assert.AreEqual(-60f * 0.3f, angle, 0.001f);
+            Assert.Less(angle, 0f);
+        }
+
+        [Test]
+        public void AnticipationLunge_AtStrikePeak_PositiveMaxDeg()
+        {
+            // u at strike phase mid (frac + (1-frac)/2) → sin(π/2)·max = +maxDeg.
+            float strikeMid = 0.18f + (1f - 0.18f) * 0.5f;
+            float angle = PuppetAnimController.ComputeAnticipationLungeAngle(strikeMid, 60f, 0.18f, 0.3f);
+            Assert.AreEqual(60f, angle, 0.001f);
+        }
+
+        [Test]
+        public void AnticipationLunge_AtEnd_ReturnsZero()
+        {
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeAnticipationLungeAngle(1f, 60f, 0.18f, 0.3f),
+                0.001f);
+        }
+
+        [Test]
+        public void AnticipationLunge_OutOfRange_Clamped()
+        {
+            // u > 1 → 0 (strike phase end); u < 0 → 0 (windup phase start).
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeAnticipationLungeAngle(1.5f, 60f, 0.18f, 0.3f),
+                0.001f);
+            Assert.AreEqual(0f,
+                PuppetAnimController.ComputeAnticipationLungeAngle(-0.5f, 60f, 0.18f, 0.3f),
+                0.001f);
+        }
+
+        [Test]
+        public void AnticipationLunge_WindupAmpClampedAt50Percent()
+        {
+            // Pass extreme windupRelAmp=2.0 → clamped to 0.5. Pull-back peak = -maxDeg × 0.5.
+            float halfWindup = 0.18f * 0.5f;
+            float angle = PuppetAnimController.ComputeAnticipationLungeAngle(halfWindup, 60f, 0.18f, 2.0f);
+            Assert.AreEqual(-60f * 0.5f, angle, 0.001f);
+        }
     }
 }
