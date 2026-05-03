@@ -180,18 +180,1022 @@ bright yellow), single dot eye (NOT iris), CHUNKY 10-14px sepia outline
 | Outline ink | `#1a1408` | — | — | Sepia-tinted, variable width 8–16px |
 | Cheek blush (optional) | `#c89878` @ 40% opacity | — | — | Cheek apple only |
 
-### §3.3 Atomic 30-part prompts → see [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md)
+### §3.3 Atomic 30-part prompts (full self-contained, copy-paste ready)
 
-Sau khi master prompt §3.1 PASS 10/10 (xem [§6](#6-acceptance-test-workflow)), dùng output làm `--cref` / IP-Adapter input cho 30 atomic part prompts ở [`PLAYER_ATOMIC_ART_PROMPTS.md`](PLAYER_ATOMIC_ART_PROMPTS.md):
+Sau khi master prompt §3.1 PASS 10/10 (xem [§6](#6-acceptance-test-workflow)), dùng output làm `--cref` / IP-Adapter / Image Guidance input cho 30 atomic part prompts dưới đây. Mỗi prompt **self-contained** — copy đúng 1 fenced block, paste vào tool, xong. Inherit palette LOCK §3.2 + style §1 + anatomy §2.
 
-- **§E (East / side profile right)** — 10 parts: `head`, `torso`, `arm_left`, `arm_right`, `forearm_left`, `forearm_right`, `leg_left`, `leg_right`, `shin_left`, `shin_right`
-- **§N (North / back view)** — 6 parts: `head`, `torso`, `leg_left`, `leg_right`, `shin_left`, `shin_right` (arms skipped — auto-hidden by `hideArmsInFrontBackView`)
-- **§S (South / front view)** — 6 parts: same as §N
+**Output folders**:
+- `Assets/_Project/Art/Characters/player/E/{part}.png` — 10 parts (E direction required)
+- `Assets/_Project/Art/Characters/player/N/{part}.png` — 6 required + 4 optional (arms auto-hidden by `PuppetAnimController.hideArmsInFrontBackView=true`)
+- `Assets/_Project/Art/Characters/player/S/{part}.png` — same as N
 
-→ Total 30 atomic prompts, mỗi prompt self-contained, inherit palette LOCK §3.2 + style §1 + anatomy §2.
+**Atomic-symbol composition rules** (mọi prompt đã inline — chi tiết xem [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md)):
+1. ONE part = ONE anatomical region. NO baked-in adjacent parts.
+2. Tight alpha bbox (≤5px transparent padding all sides).
+3. Pivot convention: top-of-sprite = attach point cho parent joint (head→neck base, torso→hip base, arm→shoulder, forearm→elbow, leg→hip, shin→knee).
+4. NO shadow on ground, NO background, NO border, NO watermark, NO text.
 
-Composition rules per part: [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md).
-Visual signature reference: [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md).
+---
+
+#### §E — East direction (right-side profile, character facing right)
+
+> 10 parts. W = flipX của E (skip — sprite system tự flip).
+
+##### §E/head.png — target ~210×220, canvas 1024×1024
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused with
+Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink outline
+#1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 10-14px at 1024 canvas with
+slight hand-drawn wobble. Muddied desaturated palette saturation cap 30%,
+sepia/ochre tonal overlay. Flat 3-color tonal stops (light/mid/shadow) with
+subtle watercolor wash gradient. Visible brush stroke texture inside fills.
+
+Subject: ISOLATED HUMAN HEAD ONLY, side profile facing right, neck cut
+clean at jaw line. Chibi cute young-male cultivator (age 12-14), head ~25-28%
+of total body height in 3.5-4 head chibi proportion (NOT super-deformed,
+NOT lanky adult).
+
+Composition: ONLY skull + face + hair. Single profile-right view: ONE small
+SOLID DOT pupil eye visible (color #1a1408, 3-5px, NO iris, NO sclera, NO
+eyelash, NO highlight star, NO anime eye), tiny angle nose pointing right
+~5-8px brush stroke, ear visible, single-stroke eyebrow ~10-15px above eye
+color #2a2418, single line mouth ~1-2px thick color #6a3a28. Hair tied in
+topknot bun on crown with cream silk ribbon (#e8d8b8) trailing back ~1.5
+head-heights long. Single asymmetric forelock falling forward at front of
+forehead ~1 head width long. Bottom edge = horizontal cut at jaw line — NO
+neck visible past jawline, NO collar, NO shoulders.
+
+Palette LOCK: hair ink-black base #2a2418 + highlight #4a4030 (warm-dark,
+NOT pure #000), ribbon cream #e8d8b8, skin highlight #c8a884 / mid #a08868
+/ shadow #5a4828 (muddied warm tan with sepia overlay), lip line #6a3a28,
+optional cheek blush #c89878 at 40% opacity, outline sepia-ink #1a1408
+variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding, NO ground,
+NO drop shadow, NO border, NO color background.
+
+Negative: NO neck below jaw, NO shoulders, NO collar, NO torso, NO body,
+NO multiple eyes, NO detailed almond iris, NO anime eye sparkle, NO
+multi-color iris, NO eye highlight star, NO front view in this image,
+NO back view in this image, NO super-deformed >1/3 head, NO 5 head tall
+adult, NO kawaii heart eyes, NO smooth airbrush gradient, NO pure black
+#000 outline, NO clean uniform thin vector line, NO saturated bright colors,
+NO lemon yellow, NO neon orange, NO anime gloss highlight stripes on hair,
+NO open mouth surprised expression, NO floating hair strands, no shadow,
+no ground, no background, no border, no watermark, no text, no anatomy
+errors, no blurry edges.
+```
+
+##### §E/torso.png — target ~120×260, canvas 1024×1536, TRUNK ONLY
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 10-14px at 1024
+canvas with slight hand-drawn wobble. Muddied desaturated palette saturation
+cap 30%, sepia/ochre tonal overlay. Flat 3-color tonal stops with subtle
+watercolor wash gradient. Visible brush stroke texture inside fills.
+
+Subject: ISOLATED HUMAN TORSO ONLY (TRUNK), side profile facing right.
+Cylindrical narrow trunk shape — chest + belly + back area only. Chibi
+cute young-male cultivator proportion (head ~1/4 body, this torso = ~1.5
+head-heights tall). NO sleeves, NO arms, NO shoulders extending past body
+width, NO neck visible above shoulder line, NO hips/legs visible below
+hip line.
+
+Composition: narrow vertical cylinder profile, ~1.5 head heights tall,
+chibi cute build (NOT broad superhero, NOT lanky adult). Top edge = clean
+horizontal cut at shoulder height (where arm will attach separately).
+Bottom edge = clean horizontal cut at hip height. Width consistent
+top-to-bottom with slight waist taper at sash ≤15%, NO flaring at top
+or bottom.
+
+Clothing (HIP-LENGTH wuxia kimono):
+- Cream V-neck wuxia kimono robe TIGHT TO TRUNK only, NO bell-flow,
+  NO flaring past body width. Robe ends cleanly at hip line — MUST NOT
+  drape past hip, MUST NOT reach knee. Robe palette highlight #e8d8b8 /
+  mid #c8b094 / fold shadow #8a6f47 with watercolor wash on cream.
+- Gold sash bow knot wrapped at right side of waist (visible on side
+  view), ribbon ends draping ~15% of torso height. Sash MUTED DUSTY GOLD
+  light #a8884a / shadow #7a5a30 — CRITICAL: NOT bright lemon yellow,
+  NOT neon yellow, must read as muddied earthy gold.
+- Jade pendant on green-brown silk cord hanging on chest center, pendant
+  color muddied jade #7a9078 / shadow #4a5a48.
+- Cloud sigil embroidered on chest at heart area, color jade #7a9078
+  curling cloud-pattern ~1/8 of torso area.
+- V-neck collar visible at top edge.
+
+Palette LOCK: robe cream #e8d8b8 / #c8b094 / #8a6f47, sash gold #a8884a /
+#7a5a30, pendant jade #7a9078 / #4a5a48, cloud sigil #7a9078, outline
+sepia-ink #1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO sleeves baked into torso, NO arms, NO hands, NO shoulders
+flaring past trunk width, NO bell-flow fabric, NO triangular silhouette,
+NO flowing hem past hip, NO knee-length robe, NO mid-shin robe, NO legs,
+NO pants, NO feet, NO neck visible above shoulder, NO head, NO double
+layers, NO bright lemon yellow sash, NO 5 head tall adult, NO super-deformed
+>1/3 head, NO anime sparkle, NO smooth airbrush gradient, NO pure black
+#000 outline, NO clean uniform thin vector line, NO saturated bright colors,
+no shadow, no ground, no background, no border, no watermark, no text, no
+anatomy errors.
+```
+
+##### §E/arm_left.png — target ~80×200, canvas 600×1350
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas (scale outline thinner for smaller canvas). Muddied desaturated
+palette saturation cap 30%, sepia/ochre tonal overlay. Flat 3-color tonal
+stops with subtle watercolor wash. Visible brush stroke inside fills.
+
+Subject: ISOLATED LEFT UPPER ARM ONLY (shoulder cap to elbow joint), side
+profile right. Cylindrical chibi limb shape with TIGHT kimono sleeve.
+Chibi cute proportion (~1.4 head-heights tall in 3.5-4 head body system).
+NO hand, NO forearm, NO torso, NO bell-flow, NO flaring sleeve.
+
+Composition: narrow cylinder hanging straight down with slight 5° gap from
+torso axis (relaxed pose). Top edge = rounded shoulder cap (where arm
+meets torso). Bottom edge = clean horizontal cut at elbow joint. Width
+consistent top-to-bottom (max 10% taper).
+
+Clothing: kimono sleeve TIGHT TO LIMB matching torso color (cream highlight
+#e8d8b8 / mid #c8b094 / fold #8a6f47). Outline follows limb axis parallel
+— sleeve fabric does NOT flare out at bottom. Sleeve ends cleanly at
+elbow line. NO cuff trim band yet (cuff is at wrist on forearm part).
+
+Palette LOCK: sleeve cream #e8d8b8 / #c8b094 / #8a6f47, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flow sleeve, NO triangular silhouette, NO flaring at
+bottom, NO hand, NO fingers, NO mitten fist, NO forearm cylinder below
+elbow, NO elbow joint detail past cut line, NO shoulder padding past arm
+width, NO torso visible, NO neck, NO head, NO super-deformed stubby chibi
+limb, NO 5 head tall adult lanky arm, NO anime style, NO smooth airbrush
+gradient, NO clean uniform thin vector line outline, NO pure black #000
+outline, NO saturated colors, no shadow, no ground, no background, no
+border, no watermark, no text, no anatomy errors.
+```
+
+##### §E/arm_right.png — target ~80×200, canvas 600×1350
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT UPPER ARM ONLY (shoulder cap to elbow joint), side
+profile right with character facing right (so right arm is on far side
+of body, slight perspective foreshorten ~5%). Cylindrical chibi limb
+shape with TIGHT kimono sleeve. Chibi cute proportion ~1.4 head-heights
+tall in 3.5-4 head body system. NO hand, NO forearm, NO torso, NO bell-flow.
+
+Composition: narrow cylinder hanging straight down with slight 5° gap from
+torso axis. Slight foreshorten ~5% (further leg/arm in side view appears
+slightly narrower and shorter). Top edge = rounded shoulder cap. Bottom
+edge = clean horizontal cut at elbow joint. Width consistent (max 10%
+taper).
+
+Clothing: kimono sleeve TIGHT TO LIMB matching torso color (cream highlight
+#e8d8b8 / mid #c8b094 / fold #8a6f47). Outline follows limb axis parallel.
+Sleeve ends cleanly at elbow line.
+
+Palette LOCK: sleeve cream #e8d8b8 / #c8b094 / #8a6f47, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flow sleeve, NO triangular silhouette, NO flaring at
+bottom, NO hand, NO fingers, NO mitten fist, NO forearm below elbow, NO
+shoulder padding past arm width, NO torso, NO neck, NO head, NO 5 head
+tall lanky arm, NO super-deformed stubby chibi limb, NO anime, NO smooth
+airbrush, NO clean uniform thin vector line, NO pure black #000 outline,
+NO saturated colors, no shadow, no ground, no background, no border, no
+watermark, no text, no anatomy errors.
+```
+
+##### §E/forearm_left.png — target ~70×220, canvas 540×1080
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 540px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED LEFT FOREARM + HAND ONLY (elbow joint to fingertips),
+side profile right. Forearm cylinder + visible mitten-style chibi hand
+at bottom in relaxed neutral pose (small fist or closed mitten OK). NO
+upper arm above elbow, NO torso, NO weapon, NO accessory.
+
+Composition: cylindrical forearm hanging down from elbow, ~1.5 head-heights
+tall in 3.5-4 head body system. Top edge = rounded elbow joint (matches
+arm_left bottom edge clean). Brown CUFF TRIM BAND wrapping sleeve at wrist
+~70% down (color #8a6f47 / shadow #5a4030, ~8% of arm length wide).
+Mitten-style hand visible at bottom 20-30% — small chibi closed fist or
+mitten with thumb separate (NO realistic detailed 5-finger anatomy, DST
+mitten preferred). Hand readable size (~1.0-1.2× forearm-end width).
+
+Clothing: kimono sleeve TIGHT TO LIMB cream #e8d8b8 / #c8b094 / fold
+#8a6f47 (matching upper arm). Brown cuff trim band at wrist #8a6f47 /
+#5a4030. Hand skin tone matches face: highlight #c8a884 / mid #a08868 /
+sepia shadow #5a4828.
+
+Palette LOCK: sleeve cream #e8d8b8 / #c8b094 / #8a6f47, cuff brown #8a6f47
+/ #5a4030, skin #c8a884 / #a08868 / #5a4828, outline sepia-ink #1a1408
+variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating hand (must attach to forearm cylinder), NO bell-flow
+sleeve, NO sleeve covering hand completely, NO realistic detailed 5-finger
+hand (DST = mitten style preferred), NO weapon, NO accessory, NO ring, NO
+upper arm above elbow, NO torso, NO 5 head tall adult lanky forearm, NO
+super-deformed >1/3 head, NO anime sparkle, NO smooth airbrush, NO clean
+uniform thin vector outline, NO pure black #000 outline, NO saturated
+colors, NO bright lemon yellow cuff, no shadow, no ground, no background,
+no border, no watermark, no text, no anatomy errors.
+```
+
+##### §E/forearm_right.png — target ~70×220, canvas 540×1080
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 540px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT FOREARM + HAND ONLY (elbow joint to fingertips),
+side profile right (right arm on far side of body, mitten/palm facing in
+toward body center). Forearm cylinder + visible mitten-style chibi hand
+at bottom. Slight foreshorten ~5%. NO upper arm above elbow, NO torso.
+
+Composition: cylindrical forearm hanging down from elbow, ~1.5 head-heights
+tall. Top edge = rounded elbow joint. Brown cuff trim band at wrist ~70%
+down (#8a6f47 / #5a4030). Mitten-style chibi hand at bottom 20-30% — small
+closed fist or mitten visible. Hand readable size (~1.0-1.2× forearm-end
+width).
+
+Clothing: kimono sleeve cream #e8d8b8 / #c8b094 / #8a6f47. Brown cuff trim
+band #8a6f47 / #5a4030. Hand skin #c8a884 / #a08868 / #5a4828.
+
+Palette LOCK: sleeve cream #e8d8b8 / #c8b094 / #8a6f47, cuff #8a6f47 /
+#5a4030, skin #c8a884 / #a08868 / #5a4828, outline sepia-ink #1a1408
+variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating hand, NO bell-flow sleeve, NO sleeve covering hand
+completely, NO realistic detailed 5-finger hand, NO weapon, NO upper arm,
+NO torso, NO 5 head tall adult, NO anime sparkle, NO smooth airbrush, NO
+clean uniform vector outline, NO pure black #000 outline, NO saturated
+colors, no shadow, no ground, no background, no border, no watermark, no
+text, no anatomy errors.
+```
+
+##### §E/leg_left.png — target ~95×225, canvas 660×1760
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-14px at 660px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED LEFT UPPER LEG / THIGH ONLY (hip joint to knee joint),
+side profile right. Cylindrical chibi thigh with TIGHT trousers fabric.
+Chibi cute proportion ~1.5 head-heights tall in 3.5-4 head body system.
+NO foot, NO shin below knee, NO boot, NO hip detail past joint, NO sash.
+
+Composition: cylindrical thigh hanging down with slight knee unlock. Top
+edge = clean horizontal cut at hip line (where leg attaches to torso).
+Bottom edge = rounded knee joint. Width consistent top-to-bottom (max 15%
+taper at knee).
+
+Clothing: warm-charcoal trousers TIGHT to thigh — fabric base #3a3530 /
+shadow #1a1812 / mid-fold #2a2520. Pants fabric does NOT flare at knee.
+NO drape past knee line.
+
+Palette LOCK: trousers base #3a3530 / shadow #1a1812 / mid-fold #2a2520,
+outline sepia-ink #1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flare hakama pants, NO flowing fabric past knee, NO
+foot, NO shoe, NO boot, NO shin below knee, NO calf detail past knee,
+NO hip detail past joint, NO torso, NO sash, NO super-deformed stubby
+short chibi limb, NO 5 head tall adult lanky leg, NO anime, NO smooth
+airbrush gradient, NO clean uniform vector outline, NO pure black #000
+outline, no shadow, no ground, no background, no border, no watermark,
+no text, no anatomy errors.
+```
+
+##### §E/leg_right.png — target ~95×220, canvas 660×1760
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-14px at 660px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT UPPER LEG / THIGH ONLY (hip joint to knee joint),
+side profile right (right leg on far side of body, slight perspective
+foreshorten ~5%). Cylindrical chibi thigh with TIGHT trousers fabric.
+Chibi cute proportion ~1.5 head-heights tall. NO foot, NO shin, NO boot.
+
+Composition: cylindrical thigh hanging down. Slight foreshorten ~5%. Top
+edge = clean horizontal cut at hip line. Bottom edge = rounded knee joint.
+Width consistent (max 15% taper).
+
+Clothing: warm-charcoal trousers TIGHT to thigh — fabric base #3a3530 /
+shadow #1a1812 / mid-fold #2a2520.
+
+Palette LOCK: trousers #3a3530 / #1a1812 / #2a2520, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flare hakama, NO flowing fabric past knee, NO foot, NO
+boot, NO shin, NO hip detail past joint, NO torso, NO sash, NO 5 head
+tall lanky leg, NO super-deformed stubby short limb, NO anime, NO smooth
+airbrush, NO clean uniform vector outline, NO pure black outline, no
+shadow, no ground, no background, no border, no watermark, no text, no
+anatomy errors.
+```
+
+##### §E/shin_left.png — target ~95×210, canvas 600×1200
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED LEFT SHIN + FOOT/BOOT ONLY (knee joint to sole), side
+profile right. Shin cylinder with trousers fabric + ankle wrap + brown
+leather boot with slightly oversized chibi sole at bottom. NO upper leg
+above knee, NO knee detail past joint.
+
+Composition: shin hanging down from knee, ~1.4 head-heights tall in 3.5-4
+head body system. Top edge = rounded knee joint (matches leg_left bottom
+edge clean). Trousers visible from knee down to ~70% length (mid-shin
+where boot starts). Bottom 25-30% = brown leather ankle boot with cream-tan
+strap visible. Slightly oversized chibi sole at bottom = horizontal ground
+line (NOT clown-foot exaggerated, just chibi-friendly proportional).
+
+Clothing: shin has tight trousers fabric warm-charcoal #3a3530 / #1a1812
+matching upper leg. Brown leather boot #5a4830 / shadow #3a2818, cream-tan
+strap and toe stitch #a89878. Sole sepia-ink #1a1408.
+
+Palette LOCK: trousers #3a3530 / #1a1812, boot leather #5a4830 / #3a2818,
+strap + toe stitch #a89878, sole #1a1408, outline sepia-ink #1a1408
+variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating foot, NO upper leg / thigh above knee, NO knee
+detail past joint, NO calf-flare bell-shape pants, NO realistic small
+shoe (chibi oversized sole preferred), NO clown-foot exaggerated boot,
+NO super-deformed stubby short shin, NO 5 head tall lanky leg, NO anime,
+NO smooth airbrush, NO clean uniform vector outline, NO pure black #000
+outline, no shadow, no ground, no background, no border, no watermark,
+no text, no anatomy errors.
+```
+
+##### §E/shin_right.png — target ~110×210, canvas 600×1200
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT SHIN + FOOT/BOOT ONLY (knee joint to sole), side
+profile right (right leg on far side of body, slight perspective foreshorten
+~10%). Shin cylinder with trousers + ankle wrap + brown leather boot with
+oversized chibi sole.
+
+Composition: shin hanging down from knee. Slight foreshorten ~10%. Top
+edge = rounded knee joint. Trousers visible from knee to ~70% length.
+Bottom 25-30% = brown leather boot. Oversized chibi sole at bottom =
+horizontal ground line.
+
+Clothing: trousers warm-charcoal #3a3530 / #1a1812. Boot leather #5a4830
+/ #3a2818, strap + toe stitch #a89878. Sole #1a1408.
+
+Palette LOCK: trousers #3a3530 / #1a1812, boot #5a4830 / #3a2818, strap
+#a89878, sole #1a1408, outline sepia-ink #1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating foot, NO upper leg, NO knee past joint, NO bell-flare
+pants, NO realistic small shoe, NO clown-foot, NO 5 head tall lanky leg,
+NO anime, NO smooth airbrush, NO clean uniform vector outline, NO pure
+black outline, no shadow, no ground, no background, no border, no watermark,
+no text, no anatomy errors.
+```
+
+---
+
+#### §N — North direction (back view, character walking away from camera)
+
+> 6 required parts (head, torso, leg×2, shin×2). Arms/forearms auto-hidden by `PuppetAnimController.hideArmsInFrontBackView=true` — gen optional 4 parts only if needed for special poses.
+
+##### §N/head.png — target ~200×220, canvas 1024×1024
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 10-14px at 1024
+canvas with slight hand-drawn wobble. Muddied desaturated palette saturation
+cap 30%, sepia/ochre tonal overlay. Flat 3-color tonal stops with subtle
+watercolor wash gradient. Visible brush stroke texture inside fills.
+
+Subject: ISOLATED HUMAN HEAD ONLY, BACK-VIEW (back of skull facing camera).
+NO face, NO eyes, NO mouth, NO nose visible — just back-of-head ink-black
+hair with topknot bun + cream silk ribbon trailing visible from rear.
+Chibi cute young-male cultivator (age 12-14) head proportion (~25-28% of
+3.5-4 head body), neck stub ZERO past jaw line.
+
+Composition: hair has subtle gloss highlight on crown (NOT anime gloss
+stripe). Topknot bun visible on top of crown with cream ribbon (#e8d8b8)
+flowing back ~1.5 head-heights long, ribbon fluttering. Single asymmetric
+forelock NOT visible from back (hidden behind head). Bottom edge = clean
+horizontal cut at jaw line / nape of neck.
+
+Palette LOCK: hair ink-black base #2a2418 + highlight #4a4030 (warm-dark,
+NOT pure #000), ribbon cream #e8d8b8, faint nape skin tone #c8a884 /
+#a08868 at very bottom edge if visible, outline sepia-ink #1a1408 variable
+width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO face, NO eyes, NO mouth, NO nose, NO front view, NO side
+profile, NO ear visible from back, NO neck below jaw, NO shoulders, NO
+collar, NO torso, NO super-deformed >1/3 head, NO 5 head tall adult, NO
+anime gloss highlight stripe on hair, NO smooth airbrush gradient, NO
+clean uniform vector outline, NO pure black #000 outline, NO saturated
+bright colors, no shadow, no ground, no background, no border, no
+watermark, no text, no anatomy errors.
+```
+
+##### §N/torso.png — target ~140×280, canvas 1024×1536, TRUNK ONLY back view
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 10-14px at 1024
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED HUMAN TORSO ONLY (TRUNK), BACK-VIEW. Back panel of cream
+wuxia kimono robe + back of gold sash bow knot. Chibi cute young-male
+proportion (~1.5 head-heights tall in 3.5-4 head body). NO sleeves, NO
+arms, NO neck visible above shoulder, NO legs/pants below hip, NO front
+of body.
+
+Composition: rectangular trunk silhouette TIGHT TO BODY, narrow-medium
+shoulder chibi cute build, ~1.5 head-heights tall. Top edge = clean
+horizontal cut at shoulder height. Bottom edge = clean horizontal cut at
+hip height. Width consistent with slight waist taper at sash ≤15%.
+
+Clothing (HIP-LENGTH wuxia kimono back panel):
+- Cream wuxia kimono robe back panel TIGHT TO TRUNK, robe ENDS at hip line
+  (NOT past hip, NOT knee-length). Cream highlight #e8d8b8 / mid #c8b094
+  / fold #8a6f47 with watercolor wash.
+- Back of gold sash bow knot visible at right side of waist (knot on side,
+  ribbon ends draping ~15%). Sash MUTED gold #a8884a / #7a5a30.
+- Cloud sigil embroidered on upper back center (subtle, muddied jade
+  #7a9078).
+- NO bell-flow sleeves visible at top, NO collar visible (back of neck =
+  top edge cut clean).
+
+Palette LOCK: robe cream #e8d8b8 / #c8b094 / #8a6f47, sash gold #a8884a /
+#7a5a30, cloud sigil jade #7a9078, outline sepia-ink #1a1408 variable
+width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO sleeves baked into torso, NO arms, NO shoulders flaring out,
+NO front view in this image, NO side profile in this image, NO neck above
+shoulders, NO head, NO legs, NO pants, NO bell-flow fabric, NO triangular
+silhouette, NO knee-length robe, NO mid-shin robe, NO 5 head tall adult,
+NO super-deformed >1/3 head, NO bright lemon yellow sash, NO anime, NO
+smooth airbrush, NO clean uniform vector outline, NO pure black outline,
+NO saturated bright colors, no shadow, no ground, no background, no
+border, no watermark, no text, no anatomy errors.
+```
+
+##### §N/arm_left.png + §N/arm_right.png + §N/forearm_left.png + §N/forearm_right.png
+
+> **OPTIONAL** — auto-hidden in N view by `PuppetAnimController.hideArmsInFrontBackView=true`. Skip để tiết kiệm compute. Nếu vẫn muốn gen (cho special poses sau này), dùng SAME prompts như §E/arm_left, §E/arm_right, §E/forearm_left, §E/forearm_right nhưng đổi orientation thành back-view (mitten-style hand shows back of fist instead of palm side). Replace mọi mention "side profile right" → "back view orientation". Negative thêm `NO front view in this image, NO side profile`.
+
+##### §N/leg_left.png — target ~95×225, canvas 660×1760
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-14px at 660px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED LEFT UPPER LEG / THIGH ONLY (hip joint to knee joint),
+BACK-VIEW (calf-from-behind angle, character walking away from camera).
+Cylindrical chibi thigh with TIGHT trousers fabric. Chibi cute proportion
+~1.5 head-heights tall in 3.5-4 head body system. NO foot, NO shin, NO
+hip detail past joint.
+
+Composition: cylindrical chibi thigh from rear angle, ~1.5 head-heights
+tall. Top edge = hip joint clean horizontal cut. Bottom edge = knee joint
+rounded. Width consistent (max 15% taper at knee). Slight fabric fold
+visible at back of knee (anatomy hint, subtle watercolor wash).
+
+Clothing: warm-charcoal trousers TIGHT to thigh, fabric base #3a3530 /
+shadow #1a1812 / mid-fold #2a2520. Center crease line down the back of
+the thigh (subtle anatomy hint).
+
+Palette LOCK: trousers #3a3530 / #1a1812 / #2a2520, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flare hakama, NO flowing fabric past knee, NO foot, NO
+boot, NO shin, NO hip detail past joint, NO torso, NO sash, NO front view
+in this image, NO side profile, NO 5 head tall lanky leg, NO super-deformed
+stubby short limb, NO anime, NO smooth airbrush, NO clean uniform vector
+outline, NO pure black outline, no shadow, no ground, no background, no
+border, no watermark, no text, no anatomy errors.
+```
+
+##### §N/leg_right.png — target ~95×225, canvas 660×1760
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-14px at 660px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT UPPER LEG / THIGH ONLY (hip joint to knee joint),
+BACK-VIEW (mirror of N/leg_left.png). Cylindrical chibi thigh with TIGHT
+trousers. Chibi cute proportion ~1.5 head-heights tall.
+
+Composition: cylindrical thigh from rear angle. Top edge = hip joint clean
+cut. Bottom edge = rounded knee. Width consistent (max 15% taper). Center
+crease line down back of thigh.
+
+Clothing: trousers warm-charcoal #3a3530 / #1a1812 / #2a2520.
+
+Palette LOCK: trousers #3a3530 / #1a1812 / #2a2520, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flare hakama, NO foot, NO boot, NO shin, NO hip past
+joint, NO torso, NO front view, NO side profile, NO 5 head tall, NO
+super-deformed, NO anime, NO smooth airbrush, NO clean vector outline, NO
+pure black outline, no shadow, no ground, no background, no border, no
+watermark, no text, no anatomy errors.
+```
+
+##### §N/shin_left.png — target ~95×210, canvas 600×1200
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED LEFT SHIN + FOOT/BOOT ONLY (knee joint to sole), BACK-VIEW
+(boot heel visible at back, character walking away). Shin cylinder with
+trousers fabric + ankle wrap + brown leather boot with chibi-friendly
+oversized sole.
+
+Composition: shin hanging down from knee, ~1.4 head-heights tall in 3.5-4
+head body system. Top edge = rounded knee joint. Trousers visible from
+knee to ~70% length. Bottom 25-30% = brown leather boot with cream-tan
+strap visible at ankle. **Boot heel visible at back** (back-view detail).
+Oversized chibi sole at bottom = horizontal ground line.
+
+Clothing: shin trousers warm-charcoal #3a3530 / #1a1812. Brown leather
+boot #5a4830 / shadow #3a2818, cream-tan strap and rear heel stitch
+#a89878. Sole sepia-ink #1a1408.
+
+Palette LOCK: trousers #3a3530 / #1a1812, boot leather #5a4830 / #3a2818,
+strap + heel stitch #a89878, sole #1a1408, outline sepia-ink #1a1408
+variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating foot, NO upper leg above knee, NO knee past joint,
+NO bell-flare pants, NO realistic small shoe, NO clown-foot, NO front
+view, NO side profile, NO 5 head tall lanky leg, NO super-deformed stubby
+shin, NO anime, NO smooth airbrush, NO clean uniform vector outline, NO
+pure black outline, no shadow, no ground, no background, no border, no
+watermark, no text, no anatomy errors.
+```
+
+##### §N/shin_right.png — target ~110×210, canvas 600×1200
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT SHIN + FOOT/BOOT ONLY (knee joint to sole),
+BACK-VIEW (mirror of N/shin_left.png). Boot heel visible at back. Oversized
+chibi sole at bottom.
+
+Composition: shin from knee down. Top edge = rounded knee. Trousers ~70%
+length, boot 25-30%. Sole horizontal at bottom.
+
+Clothing: trousers #3a3530 / #1a1812, boot leather #5a4830 / #3a2818,
+strap #a89878, sole #1a1408.
+
+Palette LOCK: trousers #3a3530 / #1a1812, boot #5a4830 / #3a2818, strap
+#a89878, sole #1a1408, outline sepia-ink #1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating foot, NO upper leg, NO knee past joint, NO bell-flare,
+NO clown-foot, NO front view, NO side profile, NO 5 head tall, NO anime,
+NO smooth airbrush, NO clean vector outline, NO pure black outline, no
+shadow, no ground, no background, no border, no watermark, no text, no
+anatomy errors.
+```
+
+---
+
+#### §S — South direction (front view, character facing camera)
+
+> 6 required parts (head, torso, leg×2, shin×2). Arms/forearms auto-hidden bởi `PuppetAnimController.hideArmsInFrontBackView=true` — optional 4 parts.
+
+##### §S/head.png — target ~210×230, canvas 1024×1024
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 10-14px at 1024
+canvas with slight hand-drawn wobble. Muddied desaturated palette saturation
+cap 30%, sepia/ochre tonal overlay. Flat 3-color tonal stops with subtle
+watercolor wash. Visible brush stroke inside fills.
+
+Subject: ISOLATED HUMAN HEAD ONLY, FRONT-VIEW facing camera, neck cut clean
+at jaw line. Chibi cute young-male cultivator (age 12-14), head ~25-28%
+of 3.5-4 head body proportion (NOT super-deformed >1/3, NOT lanky adult).
+
+Composition: ONLY skull + face + hair. Front view: TWO small SOLID DOT
+pupil eyes visible (color #1a1408, 3-5px each, NO iris, NO sclera, NO
+eyelash, NO highlight star, NO anime eye), tiny angle nose centered ~5-8px
+brush stroke between eyes, single line mouth small relaxed ~1-2px thick
+color #6a3a28, ears at sides. Hair tied in topknot bun on crown with cream
+silk ribbon (#e8d8b8) showing as small loops/ends at sides. Single asymmetric
+forelock falling at front of forehead ~1 head width long. Subtle center
+hair part visible. Bottom edge = horizontal cut at jaw line.
+
+Anatomy: chibi cute young-male proportion. Slight slouch forward (curious
+pose). Skin tone muddied warm tan highlight #c8a884 / mid #a08868 / sepia
+shadow #5a4828. Optional subtle round cheek blush #c89878 at 40% opacity
+on cheek apple area only. Single-stroke eyebrows ~10-15px above each eye
+color #2a2418.
+
+Palette LOCK: hair ink-black base #2a2418 + highlight #4a4030 (warm-dark,
+NOT pure #000), ribbon cream #e8d8b8, skin #c8a884 / #a08868 / #5a4828,
+lip line #6a3a28, optional cheek blush #c89878 @40%, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO neck below jaw, NO shoulders, NO collar, NO torso, NO body,
+NO side profile, NO back view, NO multiple faces, NO detailed almond iris,
+NO anime eye sparkle, NO multi-color iris, NO eye highlight star, NO
+kawaii heart eyes, NO open mouth surprised expression, NO smile teeth,
+NO super-deformed >1/3 head, NO 5 head tall adult, NO anime gloss highlight
+stripes on hair, NO smooth airbrush gradient, NO clean uniform vector
+outline, NO pure black #000 outline, NO saturated bright colors, no shadow,
+no ground, no background, no border, no watermark, no text, no anatomy
+errors, no blurry edges.
+```
+
+##### §S/torso.png — target ~140×290, canvas 1024×1536, TRUNK ONLY front view
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 10-14px at 1024
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED HUMAN TORSO ONLY (TRUNK), FRONT-VIEW. Front panel of
+cream V-neck wuxia kimono robe + V-neck collar + jade pendant + cloud
+sigil + front of gold sash bow knot. Chibi cute young-male proportion
+(~1.5 head-heights tall in 3.5-4 head body). NO sleeves, NO arms, NO neck
+visible above shoulder, NO legs/pants below hip, NO back of body.
+
+Composition: rectangular trunk silhouette TIGHT TO BODY, chibi cute build,
+~1.5 head-heights tall. Top edge = clean horizontal cut at shoulder height.
+Bottom edge = clean horizontal cut at hip height. Width consistent with
+slight waist taper at sash ≤15%.
+
+Clothing (HIP-LENGTH wuxia kimono front panel):
+- Cream V-neck wuxia kimono robe front panel TIGHT TO TRUNK, robe ENDS at
+  hip line (NOT past hip, NOT knee). V-neck collar visible at top center
+  with cream highlight #e8d8b8 / mid #c8b094 / fold #8a6f47, watercolor wash.
+- Gold sash with bow knot wrapped at right side of waist (knot visible
+  front-side, ribbon ends draping ~15% of torso height). Sash MUTED DUSTY
+  GOLD light #a8884a / shadow #7a5a30.
+- Jade pendant on green-brown silk cord hanging at chest center (#7a9078
+  / #4a5a48).
+- Cloud sigil embroidered on left chest (heart side from viewer), curling
+  cloud-pattern ~1/8 of torso area, color jade #7a9078.
+
+Palette LOCK: robe cream #e8d8b8 / #c8b094 / #8a6f47, sash gold #a8884a /
+#7a5a30, pendant jade #7a9078 / #4a5a48, cloud sigil jade #7a9078, outline
+sepia-ink #1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO sleeves baked into torso, NO arms, NO hands, NO shoulders
+flaring past trunk width, NO bell-flow fabric, NO flowing hem past hip,
+NO knee-length robe, NO mid-shin robe, NO legs, NO pants, NO feet, NO
+neck visible above shoulders, NO head, NO triangular silhouette, NO 5
+head tall adult, NO super-deformed >1/3 head, NO bright lemon yellow sash,
+NO anime, NO smooth airbrush, NO clean uniform vector outline, NO pure
+black #000 outline, NO saturated bright colors, no shadow, no ground, no
+background, no border, no watermark, no text, no anatomy errors.
+```
+
+##### §S/arm_left.png + §S/arm_right.png + §S/forearm_left.png + §S/forearm_right.png
+
+> **OPTIONAL** — auto-hidden in S view by `PuppetAnimController.hideArmsInFrontBackView=true`. Skip để tiết kiệm compute. Nếu cần gen, dùng SAME prompts như §E/arm_left, §E/arm_right, §E/forearm_left, §E/forearm_right nhưng đổi orientation thành front-view (mitten-style hand shows palm-side or front of fist). Replace "side profile right" → "front view orientation". Negative thêm `NO back view in this image, NO side profile`.
+
+##### §S/leg_left.png — target ~95×225, canvas 660×1760
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-14px at 660px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED LEFT UPPER LEG / THIGH ONLY (hip joint to knee joint),
+FRONT-VIEW. Cylindrical chibi thigh with TIGHT trousers fabric. Chibi
+cute proportion ~1.5 head-heights tall in 3.5-4 head body system. NO
+foot, NO shin, NO hip detail past joint.
+
+Composition: cylindrical thigh hanging down, front view. Top edge = clean
+horizontal cut at hip line. Bottom edge = rounded knee joint. Width
+consistent (max 15% taper). Center fabric crease line down the front of
+the leg axis (subtle anatomy hint).
+
+Clothing: warm-charcoal trousers TIGHT to thigh, fabric base #3a3530 /
+shadow #1a1812 / mid-fold #2a2520.
+
+Palette LOCK: trousers #3a3530 / #1a1812 / #2a2520, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flare hakama, NO flowing fabric past knee, NO foot, NO
+boot, NO shin, NO hip past joint, NO torso, NO sash, NO back view, NO
+side profile, NO 5 head tall lanky leg, NO super-deformed stubby short
+limb, NO anime, NO smooth airbrush, NO clean vector outline, NO pure
+black outline, no shadow, no ground, no background, no border, no
+watermark, no text, no anatomy errors.
+```
+
+##### §S/leg_right.png — target ~95×225, canvas 660×1760
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-14px at 660px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT UPPER LEG / THIGH ONLY (hip joint to knee joint),
+FRONT-VIEW (mirror of S/leg_left.png). Cylindrical chibi thigh with TIGHT
+trousers.
+
+Composition: cylindrical thigh hanging down, front view. Top edge = hip
+line clean cut. Bottom edge = rounded knee. Width consistent (max 15%
+taper). Center crease line down front.
+
+Clothing: trousers warm-charcoal #3a3530 / #1a1812 / #2a2520.
+
+Palette LOCK: trousers #3a3530 / #1a1812 / #2a2520, outline sepia-ink
+#1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO bell-flare, NO foot, NO boot, NO shin, NO hip past joint,
+NO torso, NO back view, NO side profile, NO 5 head tall, NO super-deformed,
+NO anime, NO smooth airbrush, NO clean vector outline, NO pure black
+outline, no shadow, no ground, no background, no border, no watermark,
+no text, no anatomy errors.
+```
+
+##### §S/shin_left.png — target ~95×210, canvas 600×1200
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED LEFT SHIN + FOOT/BOOT ONLY (knee joint to sole),
+FRONT-VIEW (boot toe visible at front). Shin cylinder with trousers
+fabric + ankle wrap + brown leather boot with cream-tan toe stitch +
+chibi-friendly oversized sole.
+
+Composition: shin hanging down from knee, ~1.4 head-heights tall. Top
+edge = rounded knee joint. Trousers visible from knee to ~70% length.
+Bottom 25-30% = brown leather boot. **Boot toe visible at front with
+cream-tan toe stitch line** (front-view detail). Oversized chibi sole at
+bottom = horizontal ground line.
+
+Clothing: shin trousers warm-charcoal #3a3530 / #1a1812. Brown leather
+boot #5a4830 / shadow #3a2818, cream-tan strap and toe stitch #a89878.
+Sole sepia-ink #1a1408.
+
+Palette LOCK: trousers #3a3530 / #1a1812, boot leather #5a4830 / #3a2818,
+strap + toe stitch #a89878, sole #1a1408, outline sepia-ink #1a1408
+variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating foot, NO upper leg above knee, NO knee past joint,
+NO bell-flare pants, NO realistic small shoe, NO clown-foot, NO back
+view, NO side profile, NO 5 head tall lanky leg, NO super-deformed stubby
+shin, NO anime, NO smooth airbrush, NO clean vector outline, NO pure
+black outline, no shadow, no ground, no background, no border, no
+watermark, no text, no anatomy errors.
+```
+
+##### §S/shin_right.png — target ~110×210, canvas 600×1200
+
+```
+Hand-painted painterly illustration in Don't Starve Together style fused
+with Chinese wuxia cultivation aesthetic. Klei-style sepia-tinted ink
+outline #1a1408 (NOT pure black), CHUNKY VARIABLE-WIDTH 8-12px at 600px
+canvas. Muddied desaturated palette saturation cap 30%, sepia/ochre tonal
+overlay. Flat 3-color tonal stops with subtle watercolor wash. Visible
+brush stroke inside fills.
+
+Subject: ISOLATED RIGHT SHIN + FOOT/BOOT ONLY (knee joint to sole),
+FRONT-VIEW (mirror of S/shin_left.png). Boot toe visible at front with
+cream-tan toe stitch. Oversized chibi sole at bottom.
+
+Composition: shin from knee down, front view. Top edge = rounded knee.
+Trousers ~70% length, boot 25-30%. Sole horizontal at bottom.
+
+Clothing: trousers #3a3530 / #1a1812, boot leather #5a4830 / #3a2818,
+strap + toe stitch #a89878, sole #1a1408.
+
+Palette LOCK: trousers #3a3530 / #1a1812, boot #5a4830 / #3a2818, strap
+#a89878, sole #1a1408, outline sepia-ink #1a1408 variable width.
+
+Background: transparent RGBA, tight alpha bbox ~5px padding.
+
+Negative: NO floating foot, NO upper leg, NO knee past joint, NO bell-flare,
+NO clown-foot, NO back view, NO side profile, NO 5 head tall, NO anime,
+NO smooth airbrush, NO clean vector outline, NO pure black outline, no
+shadow, no ground, no background, no border, no watermark, no text, no
+anatomy errors.
+```
+
+---
+
+### §3.4 MEGA-PROMPT (1-shot batch tool)
+
+Nếu AI tool support batch in single prompt (vd Comfy workflow / API script loop), paste preamble dưới làm style anchor + per-part loop variable:
+
+```
+Generate 30 PNG sprites for atomic puppet rig (Chibi Wuxia × Soft-DST
+cutout animation style). All RGBA transparent BG. All same aesthetic:
+Klei-style sepia-tinted ink outline #1a1408 (NOT pure black), CHUNKY
+VARIABLE-WIDTH 8-14px scaled to canvas, slight hand-drawn wobble. Muddied
+desaturated palette saturation cap 30%, sepia/ochre tonal overlay. Flat
+3-color tonal stops per material with subtle watercolor wash gradient.
+Visible brush stroke texture inside fills.
+
+Proportion LOCK: chibi 3.5-4 head-tall cute young-male wuxia cultivator
+(age 12-14, Webber-leaning chibi). NOT lanky 5-head Wilson adult. NOT
+super-deformed >1/3 head ratio. Head ~25-28% of body height. Shoulders
+narrow 1.0-1.2× head width. Arms reaching mid-thigh. Hands as small mitten
+fists at sleeve cuff. Slightly oversized chibi boot sole.
+
+Wuxia identity LOCK (every relevant part): cream V-neck wuxia kimono robe
+HIP-LENGTH (highlight #e8d8b8 / mid #c8b094 / fold #8a6f47), TIGHT sleeves
+with brown cuff trim band at wrist (#8a6f47 / #5a4030), gold sash bow
+knot at right waist (MUTED #a8884a / #7a5a30, NOT bright lemon yellow),
+jade pendant + cloud sigil on chest (#7a9078 / #4a5a48), ink-black topknot
+bun (#2a2418 + #4a4030, NOT pure #000) with cream silk ribbon trailing
+(#e8d8b8) + asymmetric forelock at front, warm-charcoal trousers (#3a3530
+/ #1a1812), brown leather boots (#5a4830 / #3a2818) with cream-tan strap
+and toe stitch (#a89878). Skin muddied warm tan #c8a884 / #a08868 /
+#5a4828.
+
+Face minimalism LOCK: SOLID DOT pupil eyes #1a1408 (3-5px each, NO iris,
+NO sclera, NO eyelash, NO highlight star), single line mouth #6a3a28
+~1-2px, tiny angle nose ~5-8px brush stroke, single-stroke eyebrows
+~10-15px color #2a2418. Optional subtle cheek blush #c89878 @40% opacity
+cheek apple only. NO anime sparkle, NO multi-color iris, NO kawaii.
+
+Generate 10 body parts × 3 directions = 30 PNG total:
+- 10 parts: head, torso, arm_left, arm_right, forearm_left, forearm_right,
+  leg_left, leg_right, shin_left, shin_right
+- 3 directions: E (right-side profile), N (back view), S (front view)
+- W = flipX of E (skip — sprite system auto-flips)
+
+CRITICAL atomic-symbol composition rules (BREAK = REJECT each PNG):
+1. ONE part = ONE anatomical region. NO baked-in adjacent parts.
+2. Torso = TRUNK ONLY. NO sleeves, NO arms, NO shoulders flaring, NO
+   neck above shoulder, NO legs below hip.
+3. Arm = upper arm ONLY (shoulder cap to elbow). Cylindrical, sleeve TIGHT
+   to limb, NO bell-flow, NO hand visible.
+4. Forearm = lower arm + mitten-style chibi hand at bottom. Brown cuff
+   trim band at wrist ~70% down. Hand readable as small fist or closed
+   mitten (NO realistic 5-finger anatomy).
+5. Leg = thigh ONLY (hip to knee). Cylindrical, trousers tight, NO foot,
+   NO shin, NO bell-flare hakama.
+6. Shin = lower leg + boot with oversized chibi sole. Sole horizontal at
+   bottom = ground line.
+7. Head = skull + face + hair ONLY. Bottom edge = clean horizontal cut at
+   jaw line. NO neck visible past jawline.
+8. Each PNG: tight alpha bbox ~5px padding, RGBA transparent BG, no
+   shadow, no ground, no background, no border, no watermark.
+
+Direction quirks:
+- E (East): right-side profile facing right. ONE dot eye visible, ear
+  visible, single line mouth, asymmetric forelock front.
+- N (North): back view. NO face, NO eyes, NO mouth — back-of-head hair
+  + ribbon trailing only. Boot heel visible at back of shin.
+- S (South): front view facing camera. TWO dot eyes visible, V-neck collar
+  visible on torso, jade pendant + cloud sigil centered on chest. Boot
+  toe stitch visible at front of shin.
+
+Negative (apply to ALL 30 PNGs): NO super-deformed >1/3 head, NO 5 head
+tall lanky adult, NO anime sparkle, NO kawaii heart eyes, NO multi-color
+iris, NO eye highlight star, NO anime gloss highlight stripes on hair,
+NO smooth airbrush gradient, NO clean uniform thin vector line, NO vector
+cel-shaded, NO pure black #000 outline, NO saturated bright colors, NO
+neon yellow, NO lemon yellow sash, NO bell-flow flaring sleeves, NO
+knee-length robe, NO mid-shin robe, NO ankle-length robe, NO clown-foot
+oversized boot, NO floating hands, NO realistic detailed 5-finger hand,
+NO shadow on ground, NO ground, NO background, NO border, NO watermark,
+NO text, NO extra body parts, NO duplicate limbs, NO anatomy errors.
+
+After gen, ALWAYS run validator: python3 .agents/scripts/validate_player_art.py
+from repo root. It will flag composition violation (alpha bbox, dimensions,
+naming) before rig re-bootstrap.
+
+Per-part detailed prompts: see §3.3 above (each part has self-contained
+fenced block with specific composition + palette + negative).
+Composition rules: see PLAYER_ATOMIC_RULES.md.
+Visual signature: see PLAYER_DST_REFERENCE.md.
+```
+
+---
+
+### §3.5 References cho atomic gen
+
+- Composition rules per part: [`PLAYER_ATOMIC_RULES.md`](PLAYER_ATOMIC_RULES.md)
+- Visual signature reference: [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md)
+- Mechanical validator: `.agents/scripts/validate_player_art.py` (RGBA + bbox + dimensions per part)
+- Anatomy spec source of truth: `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` `RectFor(role)`
 
 ---
 
