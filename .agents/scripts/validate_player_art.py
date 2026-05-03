@@ -31,21 +31,21 @@ except ImportError:
 ART_ROOT = Path("Assets/_Project/Art/Characters/player")
 
 # Expected dimensions per part. (min_w, max_w, min_h, max_h).
-# Tolerance ±30 from target dims documented in AI_PROMPTS.md §3.
-# Tighter widths than the current "kimono-baked" art forces narrow trunk gen.
+# Heights are pinned by extract script's TARGET_H to match auto-PPU normalize math.
+# Widths range allows natural source aspect (no aspect padding) — chibi proportions
+# can produce squatter/wider parts than placeholder, which is fine because auto-PPU
+# normalizes world-h to placeholder; world-w adapts to aspect.
 EXPECTED_DIMS = {
-    "head":           (160, 250, 200, 270),
-    "torso":          (100, 150, 240, 340),  # NEW: max width 150 forces trunk-only,
-                                              # flags torsos with sleeves baked.
-    "arm_left":       (60,  120, 170, 230),
-    "arm_right":      (60,  120, 170, 230),
-    "forearm_left":   (50,  110, 180, 260),  # NEW: must include hand → taller +
-                                              # slightly wider at bottom (hand width).
-    "forearm_right":  (50,  110, 180, 260),
-    "leg_left":       (70,  125, 190, 250),
-    "leg_right":      (70,  125, 190, 250),
-    "shin_left":      (70,  130, 180, 240),
-    "shin_right":     (70,  130, 180, 240),
+    "head":           (180, 260, 200, 240),  # h=220 from TARGET_H
+    "torso":          (100, 200, 260, 300),  # h=280 from TARGET_H
+    "arm_left":       (40,  140, 180, 220),  # h=200 from TARGET_H
+    "arm_right":      (40,  140, 180, 220),
+    "forearm_left":   (90,  260, 180, 220),  # h=200 from TARGET_H (cuff+fist callout wide)
+    "forearm_right":  (90,  260, 180, 220),
+    "leg_left":       (100, 240, 180, 220),  # h=200 from TARGET_H
+    "leg_right":      (100, 240, 180, 220),
+    "shin_left":      (100, 260, 180, 220),  # h=200 from TARGET_H
+    "shin_right":     (100, 260, 180, 220),
 }
 
 # N/S can skip arm/forearm (auto-hidden by hideArmsInFrontBackView).
