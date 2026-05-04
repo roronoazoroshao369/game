@@ -1,3 +1,12 @@
+---
+name: bone-rig-guide
+audience: both
+status: active — alternative pipeline
+scope: Unity 2D bone rig (PSB layered). Alternative cho character cần advanced animation.
+depends-on:
+  - ../art/ART_STYLE.md
+  - PUPPET_PIPELINE.md
+---
 # Bone Rig Guide — 2D Animation cho Player + Hero Mobs
 
 > Hướng dẫn rig 2D bone skeleton cho character (Player, Wolf, FoxSpirit, Boss) dùng Unity 2D Animation package. Mob phụ (Rabbit, Crow, Bat...) + world resource (tree/rock/grass) GIỮ procedural — đừng rig.

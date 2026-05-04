@@ -1,3 +1,12 @@
+---
+name: player-full-asset-source-prompt
+audience: both
+status: active
+scope: 1 prompt GPT image gen full asset source board cho player.
+depends-on:
+  - AI_PROMPTS.md
+  - PLAYER_DST_REFERENCE.md
+---
 # Player Full Asset Source Prompt (GPT image 2.0)
 
 Một prompt duy nhất để GPT sinh ra **full asset source board** cho player theo hướng gần DST nhất, sau đó dùng board này làm nguồn để hoàn thiện character rig-ready.

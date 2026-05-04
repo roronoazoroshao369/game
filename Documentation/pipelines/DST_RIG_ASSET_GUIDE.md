@@ -1,3 +1,12 @@
+---
+name: dst-rig-asset-guide
+audience: both
+status: active
+scope: 7 practical rules cho asset rig-ready (silhouette/pivot/overlap/depth ownership).
+depends-on:
+  - PUPPET_PIPELINE.md
+  - ../art/AI_PROMPTS.md
+---
 # 7 nguyên tắc để asset player nhìn mượt như DST trong rig hiện tại
 
 Practical guide cho repo này: làm sao để bộ PNG `head / torso / arm / forearm / leg / shin` khi ráp vào procedural puppet hiện tại nhìn **liền khối, có weight, ít cảm giác paper-doll**.

@@ -14,7 +14,7 @@ Checks each PNG in Assets/_Project/Art/Characters/player/{E,N,S}/:
 
 Exits non-zero if any FAIL — useful in CI later.
 
-Reference: Documentation/AI_PROMPTS.md §3 (player prompts + composition rules).
+Reference: Documentation/art/AI_PROMPTS.md §3 (player prompts + composition rules).
 """
 
 from __future__ import annotations

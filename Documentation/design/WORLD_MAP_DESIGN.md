@@ -1,3 +1,12 @@
+---
+name: world-map-design
+audience: both
+status: active — post-MVP target
+scope: 3 biome chi tiết + mob spawn table + asset checklist. MVP chỉ dùng 1 biome.
+depends-on:
+  - GDD.md
+  - ../art/ART_STYLE.md
+---
 # World Map Design
 
 > Tài liệu thiết kế thế giới cho Wilderness Cultivation Chronicle.
@@ -387,8 +396,8 @@ Những biome này đòi hỏi thêm system mới (underwater, fire dmg type, il
 
 - **Code**: `Scripts/World/BiomeSO.cs`, `Scripts/World/WorldGenerator.cs`, `Scripts/Mobs/MobSpawner.cs`
 - **Editor**: `Editor/BootstrapWizard.cs` (CreateBiomes + BuildExtraNodesFor)
-- **Architecture**: [`ARCHITECTURE.md`](ARCHITECTURE.md) §1 (folder layout) + §2 (pattern)
-- **Refactor**: [`REFACTOR_HISTORY.md`](REFACTOR_HISTORY.md) — R5 + PR #72 biome upgrade
+- **Architecture**: [`ARCHITECTURE.md`](../../ARCHITECTURE.md) §1 (folder layout) + §2 (pattern)
+- **Refactor**: [`REFACTOR_HISTORY.md`](../../REFACTOR_HISTORY.md) — R5 + PR #72 biome upgrade
 - **MVP**: [`MVP_SCOPE.md`](MVP_SCOPE.md) — MVP chỉ dùng 1 biome, design này là post-MVP target
 - **Roadmap**: [`ROADMAP.md`](ROADMAP.md) — long-term biome expansion
 

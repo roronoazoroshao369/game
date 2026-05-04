@@ -1,3 +1,12 @@
+---
+name: design-permadeath-awakening
+audience: both
+status: proposal
+scope: Permadeath + soul awakening gate. Cần user confirm trước khi code.
+depends-on:
+  - GDD.md
+  - MVP_SCOPE.md
+---
 # Design — Permadeath + Awakening Gate (v1)
 
 > Status: Proposal. Cần user confirm trước khi code.

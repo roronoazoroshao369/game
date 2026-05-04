@@ -1,3 +1,12 @@
+---
+name: ai-prompts
+audience: both
+status: active — Player v2 LOCKED 10/10 PASS (May 2026)
+scope: Master AI prompt catalog. Single source of truth. Style identity = Chibi Wuxia × Soft-DST.
+depends-on:
+  - ART_STYLE.md
+  - PLAYER_DST_REFERENCE.md
+---
 # AI Prompts — Chibi Wuxia × Soft-DST Master Catalog (v5)
 
 > **Single source of truth** cho mọi prompt sinh art bằng AI cho `roronoazoroshao369/game`.
@@ -1965,7 +1974,7 @@ print("Run python3 .agents/scripts/validate_player_art.py to verify")
 - Visual signature reference: [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md)
 - Full asset source-board workflow: [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md)
 - Source board → per-part extraction (image-edit / manual crop): [`PLAYER_SOURCE_BOARD_EXTRACTION.md`](PLAYER_SOURCE_BOARD_EXTRACTION.md)
-- Practical rig rules: [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md)
+- Practical rig rules: [`DST_RIG_ASSET_GUIDE.md`](../pipelines/DST_RIG_ASSET_GUIDE.md)
 - Mechanical validator: `.agents/scripts/validate_player_art.py` (RGBA + bbox + dimensions per part)
 - Anatomy spec source of truth: `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` `RectFor(role)`
 
@@ -2280,9 +2289,9 @@ Recommend: **Midjourney `--cref`** for character consistency (best style match a
 - [`PLAYER_DST_REFERENCE.md`](PLAYER_DST_REFERENCE.md) — visual signature lock + reference image
 - [`PLAYER_FULL_ASSET_SOURCE_PROMPT.md`](PLAYER_FULL_ASSET_SOURCE_PROMPT.md) — one GPT prompt to generate a coherent full asset source board before extraction
 - [`ART_STYLE.md`](ART_STYLE.md) — biome palettes (forest / stone highlands / desert)
-- [`PUPPET_PIPELINE.md`](PUPPET_PIPELINE.md) — rig hierarchy + animation math
-- [`DST_RIG_ASSET_GUIDE.md`](DST_RIG_ASSET_GUIDE.md) — practical rules for making assets animate smoothly in the current puppet rig
-- [`BONE_RIG_GUIDE.md`](BONE_RIG_GUIDE.md) — alternative Unity 2D bone workflow (not default pipeline)
+- [`PUPPET_PIPELINE.md`](../pipelines/PUPPET_PIPELINE.md) — rig hierarchy + animation math
+- [`DST_RIG_ASSET_GUIDE.md`](../pipelines/DST_RIG_ASSET_GUIDE.md) — practical rules for making assets animate smoothly in the current puppet rig
+- [`BONE_RIG_GUIDE.md`](../pipelines/BONE_RIG_GUIDE.md) — alternative Unity 2D bone workflow (not default pipeline)
 - `prompts/hero.txt`, `prompts/tileset.txt`, `prompts/tileset_gpt.txt`, `prompts/gpt_workflow.md` — tile/scene workflow
 - `.agents/scripts/validate_player_art.py` — mechanical validator (RGBA + bbox + dimensions per part)
 - `Assets/_Project/Scripts/Core/PuppetPlaceholderSpec.cs` — `RectFor(role)` source of truth cho anatomy table §2
