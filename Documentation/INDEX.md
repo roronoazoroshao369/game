@@ -74,7 +74,7 @@ Documentation/
 | [`pipelines/PUPPET_PIPELINE.md`](pipelines/PUPPET_PIPELINE.md) | both | active — default pipeline | 2D procedural rectangle puppet rig (DST-style). 30 PNG part → demo runs. **Default cho mọi character + mob.** |
 | [`pipelines/BONE_RIG_GUIDE.md`](pipelines/BONE_RIG_GUIDE.md) | both | alternative | Unity 2D bone rig package (PSB layered import). Alternative cho character cần advanced animation, hiện chưa default. |
 | [`pipelines/DST_RIG_ASSET_GUIDE.md`](pipelines/DST_RIG_ASSET_GUIDE.md) | both | active | 7 nguyên tắc practical về silhouette / pivot / overlap / depth ownership cho asset rig-ready. **Đọc trước khi gen art.** |
-| [`pipelines/PNG_TO_3D_TO_SPRITE_PIPELINE.md`](pipelines/PNG_TO_3D_TO_SPRITE_PIPELINE.md) | both | research / proof-of-concept (2026-05) | NEW — pipeline 3D-mediated: PNG concept → Tripo3D/Meshy → Mixamo rig + 10 anim → Blender toon shader + ortho 4-dir bake → Unity sprite atlas + AnimatorController. Áp dụng cho Player + 3 hero mob (cần ≥ 6 anim clip). |
+| [`pipelines/PNG_TO_3D_TO_SPRITE_PIPELINE.md`](pipelines/PNG_TO_3D_TO_SPRITE_PIPELINE.md) | both | active (Stage 4-5 production-ready, chờ user FBX) | Pipeline 3D-mediated: PNG → Tripo3D/Meshy → Mixamo rig + 10 anim → Blender toon shader + ortho 4-dir bake → Unity sprite atlas + AnimatorController. Production tools tại [`tools/blender_sprite_render/`](../tools/blender_sprite_render/) + [`Assets/_Project/Editor/BakedSpriteCharacterImporter.cs`](../Assets/_Project/Editor/BakedSpriteCharacterImporter.cs). |
 
 > Quyết định pipeline cho 1 asset: xem `pipelines/PNG_TO_3D_TO_SPRITE_PIPELINE.md` §2 (decision matrix) hoặc `pipelines/PUPPET_PIPELINE.md` §1.
 
@@ -148,3 +148,4 @@ Khi thêm doc vào `Documentation/`:
 ## §9 Last sync
 
 - 2026-05-03 — Reorg flat `Documentation/*.md` thành `design/`, `art/`, `pipelines/` subfolder. Add `INDEX.md` (this file). Add `pipelines/PNG_TO_3D_TO_SPRITE_PIPELINE.md` (research doc). Update internal links + top-level pointer.
+- 2026-05-04 — Promote `pipelines/PNG_TO_3D_TO_SPRITE_PIPELINE.md` từ "research" → "active" sau khi ship Stage 4-5 production tools (`tools/blender_sprite_render/` + `BakedSpriteCharacterImporter.cs`). Pilot Player chờ user upload FBX từ Meshy/Mixamo.

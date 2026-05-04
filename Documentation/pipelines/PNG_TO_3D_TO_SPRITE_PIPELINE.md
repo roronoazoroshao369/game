@@ -1,8 +1,13 @@
 ---
 name: png-to-3d-to-sprite-pipeline
 audience: ai-agent + human
-status: research / proof-of-concept (2026-05) — chưa ship character nào qua pipeline này
+status: active (Stage 4-5 production-ready, 2026-05) — chờ user upload FBX để pilot character đầu tiên
 scope: 1 character → 3D mesh → rigged → 10 anim → sprite atlas + AnimatorController Unity
+tools:
+  - tools/blender_sprite_render/render_character.py    # Stage 4 Blender bake
+  - tools/blender_sprite_render/frame_packer.py        # Atlas packer + JSON writer
+  - Assets/_Project/Editor/BakedSpriteCharacterImporter.cs  # Stage 5 Unity import menu
+  - Assets/_Project/Scripts/Vfx/BakedSpriteCharacterMetadata.cs  # frame_metadata.json DTO
 depends-on:
   - Documentation/art/AI_PROMPTS.md          # PNG concept input phải pass §6 acceptance
   - Documentation/art/ART_STYLE.md           # palette + outline thickness target
@@ -21,6 +26,26 @@ prerequisites:
 > Pipeline 2D puppet hiện tại (30-part atomic, procedural rig) vẫn là default cho mob phụ + resource.
 > Pipeline 3D-mediated này dùng cho character cần animation library lớn (10+ clip cùng character) — Player + 3 hero mob (Wolf, FoxSpirit, Boss).
 > Output là **2D sprite atlas** giữ nguyên render path 2D Unity hiện tại — KHÔNG đổi engine, KHÔNG thêm 3D dependencies vào APK.
+
+---
+
+## §0 Status (2026-05)
+
+**Implemented:**
+- ✅ Stage 4 Blender bake script — [`tools/blender_sprite_render/render_character.py`](../../tools/blender_sprite_render/render_character.py) + [`README.md`](../../tools/blender_sprite_render/README.md)
+- ✅ Stage 4 atlas packer — [`tools/blender_sprite_render/frame_packer.py`](../../tools/blender_sprite_render/frame_packer.py) (pure-Python, vendor-free, unit-tested)
+- ✅ Stage 5 Unity importer — [`Assets/_Project/Editor/BakedSpriteCharacterImporter.cs`](../../Assets/_Project/Editor/BakedSpriteCharacterImporter.cs) + [`Scripts/Vfx/BakedSpriteCharacterMetadata.cs`](../../Assets/_Project/Scripts/Vfx/BakedSpriteCharacterMetadata.cs)
+- ✅ EditMode test cho metadata parser (15 test) + Python unit test cho atlas packer (25 test)
+- ✅ Schema lock — `frame_metadata.json` field name khớp giữa Blender packer + Unity DTO
+
+**Chờ pilot:**
+- ⏳ User upload FBX (Stage 1-3 user-side: Meshy / Mixamo) → Devin run Blender bake → push atlas + metadata → Unity import
+- ⏳ A/B compare với bone-rig PR #142 + puppet PR (default)
+- ⏳ Tune shader knobs sau review (palette / outline / watercolor noise)
+
+Tracking:
+- Gốc cũ ở §14 (Future TODO) — items ✅ trong list trên đã hoàn thành.
+- Pilot trên Player → sau khi pilot pass review, roll-out cho Wolf/FoxSpirit/Boss.
 
 ---
 
@@ -869,11 +894,12 @@ Repo hiện có `PlayerController` (xem `Scripts/Player/PlayerController.cs`) d�
 
 ## §14 Future TODO
 
-- [ ] Pilot Player end-to-end qua pipeline này (PR follow-up — sau khi user approve doc này)
-- [ ] Add `tools/blender_sprite_render/render_character.py` production-ready (skeleton ở § 7.2)
-- [ ] Add `Assets/_Project/Editor/SpriteAtlasImporter.cs` production-ready (skeleton ở § 8.1-8.2)
-- [ ] Add `BakedSpriteCharacterController` component bridge (skeleton ở § 8.3)
-- [ ] Add EditMode test: import 1 fixture atlas + verify AnimatorController có 10 state đúng tên
+- [ ] Pilot Player end-to-end qua pipeline này (đang chờ user upload FBX)
+- [x] Add `tools/blender_sprite_render/render_character.py` production-ready
+- [x] Add `Assets/_Project/Editor/BakedSpriteCharacterImporter.cs` production-ready
+- [x] Add `BakedSpriteCharacterMetadata` DTO + EditMode parser test (15 test)
+- [x] Add Python unit test cho atlas packer (25 test, vanilla unittest)
+- [ ] Add `BakedSpriteCharacterController` component bridge (Player input → Animator params Direction/Speed)
 - [ ] Benchmark APK size impact: 1 character 3D vs 12 character 2D — quyết định mass-conversion threshold
 - [ ] Document Wolf / FoxSpirit / Boss conversion sau Player pilot pass review
 - [ ] Add CI guard: `Assets/_Project/Art/Characters/{id}/atlas/` size cap (5 MB/character)
