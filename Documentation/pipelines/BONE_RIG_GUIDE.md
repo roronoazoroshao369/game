@@ -28,7 +28,88 @@ depends-on:
   - `com.unity.2d.psdimporter` (multi-layer PSB import)
 - **Photoshop / Krita / Procreate** (any DCC support PSB layered export). Hoặc dùng tool free [Photopea](https://www.photopea.com/) → Save As PSD.
 
-## Pipeline (1 character, ~2-3 giờ)
+## Pilot: One-click Player rig (Editor menu)
+
+> **TL;DR:** đã có sẵn 22 PNG body parts của Player ở `Assets/_Project/Art/Characters/player/{E,N,S}/`
+> (do PR #140 extract). Menu `Tools → Wilderness Cultivation → Build Player Bone Rig` build
+> Player_Rigged.prefab + 5 AnimationClip + AnimatorController qua 1 click — KHÔNG cần PSB import,
+> KHÔNG cần Skinning Editor, KHÔNG cần hand-key animation.
+
+### Output
+
+| Asset | Path | Note |
+|---|---|---|
+| Prefab | `Assets/_Project/Prefabs/Player_Rigged.prefab` | Root + SpriteRoot + bone tree + `BoneAnimController` |
+| Controller | `Assets/_Project/Animations/Player_Rigged/Player.controller` | 5 state FSM với param Speed/Moving/Crouch/Lunge/Squash |
+| Clips | `Assets/_Project/Animations/Player_Rigged/{Idle,Walk,Crouch,Lunge,Squash}.anim` | DST-style timing — curves trong `PlayerBoneClipSpecs.cs` |
+
+### Workflow
+
+1. **Mở Unity Editor 6 LTS** với project này.
+2. **Menu `Tools → Wilderness Cultivation → Build Player Bone Rig`** → tự build prefab + controller + clips.
+   - Idempotent: re-run regenerates (overwrite existing assets) khi tune curve trong `PlayerBoneClipSpecs.cs`.
+3. **Drag `Player_Rigged.prefab` vào scene** (vd: MainScene sau Bootstrap, hoặc empty scene).
+4. **Hit Play** — character chạy state Idle (subtle breath bob).
+5. **Test states qua Animator window:**
+   - Window → Animation → Animator (chọn Player_Rigged trong scene).
+   - Tab Parameters → tick `Moving` = true → state chuyển Idle → Walk.
+   - Tick `Crouch` = true → state chuyển → Crouch.
+   - Click Trigger `Lunge` → state Lunge một lần → return Idle.
+   - Click Trigger `Squash` → state Squash một lần → return Idle.
+6. **Compare side-by-side với Puppet Player:**
+   - Run Bootstrap để có Player default (PuppetAnimController) trong scene.
+   - Drag Player_Rigged kế bên → so sánh feel idle bob, walk swing, attack snap.
+
+### Tune curve
+
+Curve cho mỗi anim sống trong `Assets/_Project/Scripts/Vfx/PlayerBoneClipSpecs.cs` — pure data,
+testable từ EditMode. Edit:
+
+| Method | Tune gì |
+|---|---|
+| `Idle()` | Torso/head bob amplitude, arm sway angle, breath frequency (qua `len`) |
+| `Walk()` | Arm/leg swing degrees, forearm follow-through, knee bend angle, step bob amplitude |
+| `Crouch()` | Torso drop Y, knee bend depth, arm forward bend |
+| `Lunge()` | Arm/forearm snap angle, anticipation timing, follow-through |
+| `Squash()` | Squash compress depth, overshoot bounce |
+
+Sau khi tune → re-run menu → asset overwrite. Test lại trong Editor.
+
+### Test gate
+
+EditMode test `PlayerBoneClipSpecsTests.cs` verify:
+
+- 5 clip với name + loop flag đúng kỳ vọng
+- Mỗi binding dùng bone path trong whitelist (tránh typo break Animator binding)
+- Walk arm trái + phải đối phase (sign opposite)
+- Lunge ArmRight snap value đủ steep (~-90°)
+- Idle breath amplitude trong DST range (subtle, 0.01-0.10)
+
+CI lint + test pass = pilot đã ready cho user playtest.
+
+### Sau pilot — feedback loop
+
+User play scene + report:
+
+- "Walk quá cứng" → tăng `armSwingDeg` / `legSwingDeg` trong `PlayerBoneClipSpecs.Walk()`.
+- "Idle không thấy thở" → tăng `amp` trong `Idle()` từ 0.04 lên 0.06.
+- "Attack chậm quá" → giảm `len` trong `Lunge()` từ 0.4 xuống 0.3.
+- "Hit/death missing" → mở rộng spec, add 2 anim mới, update Animator state machine trong `PlayerBoneRigBuilder.cs`.
+
+Devin push update PR riêng cho từng iteration tune.
+
+### Khi nào không dùng pilot này
+
+- Cần **mesh deformation** (head wobble, hair flow, cloth drape) → cần Unity 2D Animation
+  Skinning Editor flow ở section "Pipeline" bên dưới (PSB + bone weights + Sprite Skin).
+- Cần **N/S direction rig** — pilot chỉ build East direction. Sau review, expand sang N/S là 1 PR riêng.
+- Cần **IK constraint** (foot lock, hand-on-weapon) — Skinning Editor IK Solver yêu cầu PSB workflow.
+
+---
+
+## Pipeline (full PSB workflow, 1 character ~2-3 giờ)
+
+> Approach này dùng khi cần mesh deform / IK / multi-direction. Pilot ở trên là sub-set của workflow này (Transform-only animation, sprite-per-part rigid limb).
 
 ### Bước 1 — Chuẩn bị PSD
 
